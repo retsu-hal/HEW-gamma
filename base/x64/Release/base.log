@@ -1,0 +1,31 @@
+﻿  compilation object save succeeded; see C:\Users\retsu\Documents\２年\DX21\20250708_DX21\shader_pixel_2d.cso
+  compilation object save succeeded; see C:\Users\retsu\Documents\２年\DX21\20250708_DX21\shader_vertex_2d.cso
+  block.cpp
+  debug_ostream.cpp
+  dirext3d.cpp
+  field.cpp
+  keyboard.cpp
+  main.cpp
+C:\Users\retsu\Documents\２年\DX21\20250708_DX21\main.cpp(187,7): warning C4101: 'hdc': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Documents\２年\DX21\20250708_DX21\main.cpp(185,10): warning C4101: 'hbrWhite': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Documents\２年\DX21\20250708_DX21\main.cpp(188,14): warning C4101: 'ps': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Documents\２年\DX21\20250708_DX21\main.cpp(185,20): warning C4101: 'hbrGray': ローカル変数は 1 度も使われていません。
+  mouse.cpp
+  player.cpp
+  shader.cpp
+  sprite.cpp
+  コード生成しています。
+  Previous IPDB was built with incompatible compiler, fall back to full compilation.
+  All 499 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  コード生成が終了しました。
+DirectXTex_Debug.lib(DirectXTexD3D11.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexD3D11.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexWIC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexWIC.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexImage.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexImage.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexUtil.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexUtil.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexConvert.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexCompress.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexCompress.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexMipMaps.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC4BC5.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC4BC5.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC6HBC7.obj)' で、または 'C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+  base.vcxproj -> C:\Users\retsu\Documents\２年\DX21\20250708_DX21\x64\Release\base.exe
