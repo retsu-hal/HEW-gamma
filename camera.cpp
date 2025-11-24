@@ -1,6 +1,6 @@
 #include "camera.h"
 #include"keyboard.h"
-#include"ball.h"
+#include"player3D.h"
 
 //=========================================================================================================
 // グローバル変数
@@ -24,7 +24,7 @@ void Camera_Initialize()
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 
-	g_BallPosOld = GetBallPositon();
+	g_BallPosOld = GetPlayer3DPositon();
 }
 
 //=========================================================================================================
@@ -42,7 +42,7 @@ void Camera_Update()
 {
 	//ボールの座標を取得
 	XMFLOAT3 pos = g_BallPosOld;
-	g_BallPosOld = GetBallPositon();
+	g_BallPosOld = GetPlayer3DPositon();
 
 	//前回のボールと現在のボールの座標の差分
 	pos.x = g_BallPosOld.x - pos.x;

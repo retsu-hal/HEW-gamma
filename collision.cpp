@@ -1,12 +1,13 @@
 #include "Collision.h"
+#include "player3D.h"
 
 //=========================================================================================================
 // ボールとフィールドの当たり判定
 //=========================================================================================================
-float BallField_Collision()
+float Player3DField_Collision()
 {
 	float hit = false;
-	BALL* Ball = GetBall();
+	PLAYER3D* player3D = GetPlayer3D();
 	MAPDATA* Map = GetFieldMap();
 	int i = 0;
 
@@ -20,36 +21,36 @@ float BallField_Collision()
 			break;
 		}
 		//壁との当たり判定
-		if (Map[i].pos.y - BOX_RADIUS < Ball->Position.y && Ball->Position.y < BoxTop - 0.1f)
+		if (Map[i].pos.y - BOX_RADIUS < player3D->Position.y && player3D->Position.y < BoxTop - 0.1f)
 		{
-			if (Map[i].pos.z - BOX_RADIUS < Ball->Position.z && Ball->Position.z < Map[i].pos.z + BOX_RADIUS)
+			if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
 			{
-				if (Map[i].pos.x - BOX_RADIUS < Ball->Position.x + BALL_RADIUS && Ball->Position.x < Map[i].pos.x + BOX_RADIUS)
+				if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x + PLAYER3D_RADIUS && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
 				{//BOXの-X面にぶつかった
-					Ball->Position.x += (Map[i].pos.x - BOX_RADIUS) - (Ball->Position.x + BALL_RADIUS);
-					Ball->Velocity.x *= -COE;//反発させる
+					player3D->Position.x += (Map[i].pos.x - BOX_RADIUS) - (player3D->Position.x + PLAYER3D_RADIUS);
+					player3D->Velocity.x *= -COE;//反発させる
 					hit = COLLISION_HIT::HIT_WALL_NegX;
 				}
-				else if (Map[i].pos.x + BOX_RADIUS > Ball->Position.x - BALL_RADIUS && Ball->Position.x > Map[i].pos.x + BOX_RADIUS)
+				else if (Map[i].pos.x + BOX_RADIUS > player3D->Position.x - PLAYER3D_RADIUS && player3D->Position.x > Map[i].pos.x + BOX_RADIUS)
 				{//BOXの+X面にぶつかった
-					Ball->Position.x += (Map[i].pos.x + BOX_RADIUS) - (Ball->Position.x - BALL_RADIUS);
-					Ball->Velocity.x *= -COE;//反発させる
+					player3D->Position.x += (Map[i].pos.x + BOX_RADIUS) - (player3D->Position.x - PLAYER3D_RADIUS);
+					player3D->Velocity.x *= -COE;//反発させる
 					hit = COLLISION_HIT::HIT_WALL_PlusX;
 
 				}
 			}
-			else if (Map[i].pos.x - BOX_RADIUS < Ball->Position.x && Ball->Position.x < Map[i].pos.x + BOX_RADIUS)
+			else if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
 			{
-				if (Map[i].pos.z - BOX_RADIUS < Ball->Position.z + BALL_RADIUS && Ball->Position.z < Map[i].pos.z + BOX_RADIUS)
+				if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z + PLAYER3D_RADIUS && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
 				{//BOXの-Z面にぶつかった
-					Ball->Position.z += (Map[i].pos.z - BOX_RADIUS) - (Ball->Position.z + BALL_RADIUS);
-					Ball->Velocity.z *= -COE;//反発させる
+					player3D->Position.z += (Map[i].pos.z - BOX_RADIUS) - (player3D->Position.z + PLAYER3D_RADIUS);
+					player3D->Velocity.z *= -COE;//反発させる
 					hit = COLLISION_HIT::HIT_WALL_NegZ;
 				}
-				else if (Map[i].pos.z + BOX_RADIUS > Ball->Position.z - BALL_RADIUS && Ball->Position.z > Map[i].pos.z + BOX_RADIUS)
+				else if (Map[i].pos.z + BOX_RADIUS > player3D->Position.z - PLAYER3D_RADIUS && player3D->Position.z > Map[i].pos.z + BOX_RADIUS)
 				{//BOXの+Z面にぶつかった
-					Ball->Position.z += (Map[i].pos.z + BOX_RADIUS) - (Ball->Position.z - BALL_RADIUS);
-					Ball->Velocity.z *= -COE;//反発させる
+					player3D->Position.z += (Map[i].pos.z + BOX_RADIUS) - (player3D->Position.z - PLAYER3D_RADIUS);
+					player3D->Velocity.z *= -COE;//反発させる
 					hit = COLLISION_HIT::HIT_WALL_PlusZ;
 
 				}
@@ -58,19 +59,19 @@ float BallField_Collision()
 		//床との当たり判定
 		else
 		{
-			if ((Map[i].pos.z - BOX_RADIUS) < Ball->Position.z && Ball->Position.z < (Map[i].pos.z + BOX_RADIUS))
+			if ((Map[i].pos.z - BOX_RADIUS) < player3D->Position.z && player3D->Position.z < (Map[i].pos.z + BOX_RADIUS))
 			{
-				if ((Map[i].pos.x - BOX_RADIUS) < Ball->Position.x && Ball->Position.x < (Map[i].pos.x + BOX_RADIUS))
+				if ((Map[i].pos.x - BOX_RADIUS) < player3D->Position.x && player3D->Position.x < (Map[i].pos.x + BOX_RADIUS))
 				{
-					if ((Map[i].pos.y - BOX_RADIUS) < (Ball->Position.y + BALL_RADIUS) && Ball->Position.y < (Map[i].pos.y - BOX_RADIUS))
+					if ((Map[i].pos.y - BOX_RADIUS) < (player3D->Position.y + PLAYER3D_RADIUS) && player3D->Position.y < (Map[i].pos.y - BOX_RADIUS))
 					{
-						Ball->Position.y += (Map[i].pos.y - BOX_RADIUS) - (Ball->Position.y + BALL_RADIUS);
-						Ball->Velocity.y *= -COE;
+						player3D->Position.y += (Map[i].pos.y - BOX_RADIUS) - (player3D->Position.y + PLAYER3D_RADIUS);
+						player3D->Velocity.y *= -COE;
 					}
-					else if (BoxTop > (Ball->Position.y - BALL_RADIUS) && Ball->Position.y > BoxTop)
+					else if (BoxTop > (player3D->Position.y - PLAYER3D_RADIUS) && player3D->Position.y > BoxTop)
 					{
-						Ball->Position.y += (BoxTop)-(Ball->Position.y - BALL_RADIUS);
-						Ball->Velocity.y = Ball->Velocity.y * (-COE * 1.0f);
+						player3D->Position.y += (BoxTop)-(player3D->Position.y - PLAYER3D_RADIUS);
+						player3D->Velocity.y = player3D->Velocity.y * (-COE * 1.0f);
 						hit = COLLISION_HIT::HIT_WALL_NegX;
 					}
 				}

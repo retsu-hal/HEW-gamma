@@ -10,7 +10,7 @@
 #include	"score.h"
 #include	"Audio.h"
 #include "camera.h"
-#include"ball.h"
+#include"player3D.h"
 #include"direct3d.h"
 
 //=========================================================================================================
@@ -36,7 +36,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//PlayAudio(g_BgmID, false);	//再生開始（ループなし）
 	*/
 	field_Initialize(pDevice, pContext);
-	Ball_Initialize(pDevice, pContext);
+	Player3D_Initialize(pDevice, pContext);
 	Camera_Initialize();
 
 	//ライト初期化
@@ -58,7 +58,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void Game_Finalize()
 {
 	field_Finalize();	
-	Ball_Finalize();
+	Player3D_Finalize();
 	Polygon3D_Finalize();
 	Camera_Finalize();
 	/*
@@ -77,7 +77,7 @@ void Game_Update()
 {
 	Camera_Update();
 	field_Update();
-	Ball_Update();
+	Player3D_Update();
 	/*
 	//Player_Update();
 	//Block_Update();
@@ -99,7 +99,7 @@ void Game_Draw()
 
 	Camera_Draw();		//最初に呼ぶ！
 	field_Draw();
-	Ball_Draw();
+	Player3D_Draw();
 
 	//２D描画
 	Light.SetEnable(FALSE);					//ライティングOFF
