@@ -137,7 +137,7 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="debug_ostream.cpp" />
-    <ClCompile Include="dirext3d.cpp" />
+    <ClCompile Include="direct3d.cpp" />
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="field.cpp" />
