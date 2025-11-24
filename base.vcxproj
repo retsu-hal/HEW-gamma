@@ -213,6 +213,7 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include=".gitignore" />
     <None Include="DirectXTex.inl" />
   </ItemGroup>
   <ItemGroup>
