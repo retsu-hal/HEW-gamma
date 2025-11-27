@@ -16,9 +16,9 @@
 
 #include "DirectXTex.h"/////////////0602
 #if _DEBUG
- #pragma comment(lib, "DirectXTex_Debug.lib");
+ #pragma comment(lib, "DirectXTex_Debug.lib")
 #else
- #pragma comment(lib, "DirectXTex_Release.lib");
+ #pragma comment(lib, "DirectXTex_Release.lib")
 #endif
 
 
