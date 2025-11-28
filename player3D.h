@@ -1,31 +1,30 @@
 #pragma once
+
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
 #include "model.h"
+
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
 #define PLAYER3D_RADIUS (0.2f)			//半径
 
 //=========================================================================================================
-// 列挙
+// 構造体
 //=========================================================================================================
+//プレイヤーステート
 enum PLAYER3D_STATE
 {
-	PLAYER3D_IDLE=0,
-	PLAYER3D_MOVE,					//移動
-	PLAYER3D_DIRECTION,			//方向指示
-	PLAYER3D_POWER,				//威力
-	PLAYER3D_RESPAWN,				//復活
+	PLAYER3D_STATE_IDLE = 0,	//何もしない
+	PLAYER3D_STATE_MOVE,		//移動中
+	PLAYER3D_STATE_FALL,		//落下中
+	PLAYER3D_STATE_UP,			//上昇中
+	PLAYER3D_STATE_ACTION,		//アクション中
 
-	PLAYER3D_MAX,
-
+	PLAYER3D_STATE_MAX,
 };
 
-//=========================================================================================================
-// 構造体宣言
-//=========================================================================================================
 class PLAYER3D
 {
 public:
@@ -33,25 +32,29 @@ public:
 	XMFLOAT3 Rotation;			//回転
 	XMFLOAT3 Scaling;			//サイズ
 	XMFLOAT3 Velocity;			//方向
-	XMFLOAT3 Acceleration;	//
-	PLAYER3D_STATE state;			//状態
-	MODEL* Model;					//モデルデータ
-	XMVECTOR Quaternion;	//
-	XMVECTOR Axis;				//
-	float Speed;						//
+	XMFLOAT3 Acceleration;		//
+	PLAYER3D_STATE state;		//状態
+	MODEL* Model;				//モデルデータ
+	XMVECTOR Quaternion;		//
+
 };
 
 //=========================================================================================================
-//プロトタイプ宣言
+// プロトタイプ宣言
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-void Player3D_Finalize();
+void Player3D_Finalize(void);
 void Player3D_Update();
-void Player3D_Draw();
+void Player3D_Draw(void);
+
 XMFLOAT3 GetPlayer3DPositon();
-void Player3D_Idle();
+
+void Player3D_Gravity();
 void Player3D_Move();
-void Player3D_Power();
-void Player3D_Direction();
-void Player3D_Respawn();
+void Player3D_Jump();
+void Player3D_Change();
+void Player3D_Action();
+void Player3D_Reset();
+void Player3D_Respown();
+
 PLAYER3D* GetPlayer3D();
