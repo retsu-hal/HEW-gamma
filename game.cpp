@@ -10,17 +10,16 @@
 #include	"score.h"
 #include	"Audio.h"
 #include "camera.h"
-#include"player3D.h"
 #include"direct3d.h"
 
 //=========================================================================================================
-//ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+//ƒOƒ[ƒoƒ‹•Ï”
 //=========================================================================================================
-static	int		g_BgmID = NULL;	//ã‚µã‚¦ãƒ³ãƒ‰ç®¡ç†ID
+static	int		g_BgmID = NULL;	//ƒTƒEƒ“ƒhŠÇ—ID
 LIGHTOBJECT Light;
 
 //=========================================================================================================
-//åˆæœŸåŒ–å‡¦ç†
+//‰Šú‰»ˆ—
 //=========================================================================================================
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -30,38 +29,35 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//Effect_Initialize(pDevice, pContext);
 	//Score_Initialize(pDevice, pContext);
 	//Polygon3D_Initialize(pDevice, pContext);
-	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//ã‚µã‚¦ãƒ³ãƒ‰ãƒ­ãƒ¼ãƒ‰
-	//PlayAudio(g_BgmID, true);	//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ã‚ã‚Šï¼‰
-	//PlayAudio(g_BgmID);			//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ãªã—ï¼‰
-	//PlayAudio(g_BgmID, false);	//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ãªã—ï¼‰
+	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//ƒTƒEƒ“ƒhƒ[ƒh
+	//PlayAudio(g_BgmID, true);	//Ä¶ŠJniƒ‹[ƒv‚ ‚èj
+	//PlayAudio(g_BgmID);			//Ä¶ŠJniƒ‹[ƒv‚È‚µj
+	//PlayAudio(g_BgmID, false);	//Ä¶ŠJniƒ‹[ƒv‚È‚µj
 	*/
 	Player3D_Initialize(pDevice, pContext);
 
 	field_Initialize(pDevice, pContext);
-	Player3D_Initialize(pDevice, pContext);
 	Camera_Initialize();
 
-	//ãƒ©ã‚¤ãƒˆåˆæœŸåŒ–
+	//ƒ‰ƒCƒg‰Šú‰»
 	XMFLOAT4 para;
-	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);		//ç’°å¢ƒå…‰ã®è‰²
+	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);		//ŠÂ‹«Œõ‚ÌF
 	Light.SetAmbient(para);
-	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);		//å…‰ã®è‰²
+	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);		//Œõ‚ÌF
 	Light.SetDiffuse(para);
-	para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);		//å…‰ã®æ–¹å‘
+	para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);		//Œõ‚Ì•ûŒü
 	float len = sqrtf(para.x * para.x + para.y * para.y + para.z * para.z);
 	para.x /= len;
 	para.y /= len;
 	para.z /= len;
-	Light.SetDirection(para);		//å…‰ã®æ–¹å‘ï¼ˆæ­£è¦åŒ–æ¸ˆï¼‰
+	Light.SetDirection(para);		//Œõ‚Ì•ûŒüi³‹K‰»Ïj
 }
 //=========================================================================================================
-//çµ‚äº†å‡¦ç†
+//I—¹ˆ—
 //=========================================================================================================
 void Game_Finalize()
 {
-
 	field_Finalize();
-
 	Polygon3D_Finalize();
 	Camera_Finalize();
 	
@@ -73,18 +69,17 @@ void Game_Finalize()
 	
 	//Effect_Finalize();
 	//Score_Finalize();	
-	//UnloadAudio(g_BgmID);//ã‚µã‚¦ãƒ³ãƒ‰ã®è§£æ”¾
+	//UnloadAudio(g_BgmID);//ƒTƒEƒ“ƒh‚Ì‰ğ•ú
 	*/
 }
 
 //=========================================================================================================
-//æ›´æ–°å‡¦ç†
+//XVˆ—
 //=========================================================================================================
 void Game_Update()
 {
 	Camera_Update();
 	field_Update();
-
 
 	Player3D_Update();
 	/*
@@ -96,22 +91,21 @@ void Game_Update()
 }
 
 //=========================================================================================================
-//æç”»å‡¦ç†
+//•`‰æˆ—
 //=========================================================================================================
 void Game_Draw()
 { 
-	//ï¼“Dæç”»
-	Light.SetEnable(TRUE);					//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ON
-	Shader_SetLight(Light.Light);		//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«ã‚»ãƒƒãƒˆ
+	//‚RD•`‰æ
+	Light.SetEnable(TRUE);					//ƒ‰ƒCƒeƒBƒ“ƒOON
+	Shader_SetLight(Light.Light);		//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÉƒZƒbƒg
 	SetDepthTest(TRUE);
 
-	Camera_Draw();		//æœ€åˆã«å‘¼ã¶ï¼
+	Camera_Draw();		//Å‰‚ÉŒÄ‚ÔI
 	field_Draw();
 
-	Player3D_Draw();
-	//ï¼’Dæç”»
-	Light.SetEnable(FALSE);					//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°OFF
-	Shader_SetLight(Light.Light);		//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«ã‚»ãƒƒãƒˆ
+	//‚QD•`‰æ
+	Light.SetEnable(FALSE);					//ƒ‰ƒCƒeƒBƒ“ƒOOFF
+	Shader_SetLight(Light.Light);		//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÉƒZƒbƒg
 	SetDepthTest(FALSE);
 
 	Player3D_Draw();
