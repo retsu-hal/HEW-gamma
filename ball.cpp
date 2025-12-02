@@ -1,4 +1,4 @@
-#include "player3D.h"
+#include "ball.h"
 #include "keyboard.h"
 #include "Camera.h"
 #include "shader.h"
@@ -6,12 +6,12 @@
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
-#define PLAYER3D_SPEEDMAX (2.0f)		//最大速度
+#define BALL_SPEEDMAX (2.0f)		//最大速度
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
-PLAYER3D g_player3D;
+BALL g_Ball;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 float g_StopTime=0.0f;
@@ -19,52 +19,52 @@ float g_StopTime=0.0f;
 //=========================================================================================================
 // 初期化処理
 //=========================================================================================================
-void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+void Ball_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_player3D.Model= ModelLoad("asset\\model\\test.fbx");
-	g_player3D.Position = XMFLOAT3(0.0f,1.2f,0.0f);
-	g_player3D.Rotation = XMFLOAT3(0.0f,0.0f,0.0f);
-	g_player3D.Scaling = XMFLOAT3(1.0f,1.0f,1.0f);
-	g_player3D.Velocity = XMFLOAT3(0.0f,0.0f,0.0f);
-	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_player3D.state = PLAYER3D_MOVE;
+	g_Ball.Model= ModelLoad("asset\\model\\test.fbx");
+	g_Ball.Position = XMFLOAT3(0.0f,1.2f,0.0f);
+	g_Ball.Rotation = XMFLOAT3(0.0f,0.0f,0.0f);
+	g_Ball.Scaling = XMFLOAT3(1.0f,1.0f,1.0f);
+	g_Ball.Velocity = XMFLOAT3(0.0f,0.0f,0.0f);
+	g_Ball.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	g_Ball.state = BALL_STATE_MOVE;
 	g_StopTime = 0.0f;
-	g_player3D.Quaternion = XMQuaternionIdentity();
-	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	g_Ball.Quaternion = XMQuaternionIdentity();
+	g_Ball.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 //=========================================================================================================
 // 終了処理
 //=========================================================================================================
-void Player3D_Finalize()
+void Ball_Finalize()
 {
-	ModelRelease(g_player3D.Model);
+	ModelRelease(g_Ball.Model);
 }
 
 //=========================================================================================================
 // 更新処理
 //=========================================================================================================
-void Player3D_Update()
+void Ball_Update()
 {
-	switch (g_player3D.state)
+	switch (g_Ball.state)
 	{
-	case PLAYER3D_IDLE:
-		Player3D_Idle();
+	case BALL_STATE::BALL_STATE_IDLE:
+		Ball_Idle();
 		break;
-	case PLAYER3D_MOVE:
-		Player3D_Move();
+	case BALL_STATE::BALL_STATE_MOVE:
+		Ball_Move();
 		break;
-	case PLAYER3D_DIRECTION:
-		Player3D_Direction();
+	case BALL_STATE::BALL_STATE_DIRECTION:
+		Ball_Direction();
 		break;
-	case PLAYER3D_POWER:
-		Player3D_Power();
+	case BALL_STATE::BALL_STATE_POWER:
+		Ball_Power();
 		break;
-	case PLAYER3D_RESPAWN:
-		Player3D_Respawn();
+	case BALL_STATE::BALL_STATE_RESPAWN:
+		Ball_Respawn();
 		Camera_Initialize();
 		break;
 	}
@@ -75,18 +75,18 @@ void Player3D_Update()
 //=========================================================================================================
 // 描画処理
 //=========================================================================================================
-void Player3D_Draw()
+void Ball_Draw()
 {
 	// ワールド行列の作成
 	//スケーリング行列の作成
-	XMMATRIX ScalingMatrix = XMMatrixScaling(g_player3D.Scaling.x, g_player3D.Scaling.y, g_player3D.Scaling.z);
+	XMMATRIX ScalingMatrix = XMMatrixScaling(g_Ball.Scaling.x, g_Ball.Scaling.y, g_Ball.Scaling.z);
 	//平行移動行列の作成
-	XMMATRIX TranslationMatrix = XMMatrixTranslation(g_player3D.Position.x, g_player3D.Position.y, g_player3D.Position.z);
+	XMMATRIX TranslationMatrix = XMMatrixTranslation(g_Ball.Position.x, g_Ball.Position.y, g_Ball.Position.z);
 	//回転行列の作成
-	//XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(g_player3D.Rotation.x), XMConvertToRadians(g_player3D.Rotation.y), XMConvertToRadians(g_player3D.Rotation.z));
-	XMVECTOR Quaternion = XMQuaternionRotationAxis(g_player3D.Axis, XMConvertToRadians(g_player3D.Speed));
-	g_player3D.Quaternion = XMQuaternionMultiply(g_player3D.Quaternion, Quaternion);
-	XMMATRIX RotationMatrix = XMMatrixRotationQuaternion(g_player3D.Quaternion);
+	//XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(g_Ball.Rotation.x), XMConvertToRadians(g_Ball.Rotation.y), XMConvertToRadians(g_Ball.Rotation.z));
+	XMVECTOR Quaternion = XMQuaternionRotationAxis(g_Ball.Axis, XMConvertToRadians(g_Ball.Speed));
+	g_Ball.Quaternion = XMQuaternionMultiply(g_Ball.Quaternion, Quaternion);
+	XMMATRIX RotationMatrix = XMMatrixRotationQuaternion(g_Ball.Quaternion);
 	//計算の順番「スケール*回転*平行移動」
 	XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
 
@@ -104,21 +104,21 @@ void Player3D_Draw()
 	Shader_SetMatrix(WVP);
 
 	//描画リクエスト
-	ModelDraw(g_player3D.Model);
+	ModelDraw(g_Ball.Model);
 }
 
 //=========================================================================================================
 // ゲッター
 //=========================================================================================================
-XMFLOAT3 GetPlayer3DPositon()
+XMFLOAT3 GetBallPositon()
 {
-	return g_player3D.Position;
+	return g_Ball.Position;
 }
 
 //=========================================================================================================
 // stateごとの処理（Idle状態）
 //=========================================================================================================
-void Player3D_Idle()
+void Ball_Idle()
 {
 
 }
@@ -126,74 +126,77 @@ void Player3D_Idle()
 //=========================================================================================================
 // stateごとの処理（Move状態）
 //=========================================================================================================
-void Player3D_Move()
+void Ball_Move()
 {
-	g_player3D.Velocity.x += g_player3D.Acceleration.x; //重力
-	g_player3D.Velocity.y += g_player3D.Acceleration.y; //重力
-	g_player3D.Velocity.z += g_player3D.Acceleration.z; //重力
+	g_Ball.Velocity.x += g_Ball.Acceleration.x; //重力
+	g_Ball.Velocity.y += g_Ball.Acceleration.y; //重力
+	g_Ball.Velocity.z += g_Ball.Acceleration.z; //重力
 
-	g_player3D.Position.x += g_player3D.Velocity.x;
-	g_player3D.Position.y += g_player3D.Velocity.y;
-	g_player3D.Position.z += g_player3D.Velocity.z;
+	g_Ball.Position.x += g_Ball.Velocity.x;
+	g_Ball.Position.y += g_Ball.Velocity.y;
+	g_Ball.Position.z += g_Ball.Velocity.z;
 
-	g_player3D.Velocity.x *= 0.98f;		//好みで減衰させる
-	//g_player3D.Velocity.y *= 0.98f;		//好みで減衰させる
-	g_player3D.Velocity.z *= 0.98f;		//好みで減衰させる
+	g_Ball.Velocity.x *= 0.98f;		//好みで減衰させる
+	//g_Ball.Velocity.y *= 0.98f;		//好みで減衰させる
+	g_Ball.Velocity.z *= 0.98f;		//好みで減衰させる
 
 	//落下チェック
-	if (g_player3D.Position.y < -10.0f)
+	if (g_Ball.Position.y < -10.0f)
 	{
-		g_player3D.state = PLAYER3D_RESPAWN;
+		g_Ball.state = BALL_STATE::BALL_STATE_RESPAWN;
 		return;
 	}
-	
-	//前移動
-	if (Keyboard_IsKeyDown(KK_W))
+	//静止チェック
+	float len = (g_Ball.Velocity.x * g_Ball.Velocity.x + g_Ball.Velocity.y * g_Ball.Velocity.y + g_Ball.Velocity.z * g_Ball.Velocity.z);
+	if (len <= 0.0002f)
 	{
-		g_player3D.Position.z += 0.1f;
+		g_StopTime++;
+		if (g_StopTime > (60.0f * 2))
+		{
+			g_Ball.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			g_Ball.state = BALL_STATE::BALL_STATE_DIRECTION;
+			g_StopTime = 0.0f;
+		}
 	}
 
-	//後ろ移動
-	if (Keyboard_IsKeyDown(KK_S))
+	float hit = BallField_Collision();
+
+	//回転軸と回転量を決定
+	g_Ball.Speed = sqrtf(g_Ball.Velocity.x * g_Ball.Velocity.x + g_Ball.Velocity.z * g_Ball.Velocity.z) * 110.0f;
+
+	if (g_Ball.Speed >= 0.0002f)
 	{
-		g_player3D.Position.z -= 0.1f;
+		XMVECTOR vec1, vec2;
+		vec1 = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		vec2 = XMLoadFloat3(&g_Ball.Velocity);
+		vec2 = XMVector3Normalize(vec2);
+		g_Ball.Axis = XMVector3Cross(vec1, vec2);
 	}
-
-	//右移動
-	if (Keyboard_IsKeyDown(KK_D))
+	else
 	{
-		g_player3D.Position.x += 0.1f;
+		g_Ball.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+		g_Ball.Speed = 0.0f;
 	}
-
-	//左移動
-	if (Keyboard_IsKeyDown(KK_A))
-	{
-		g_player3D.Position.x -= 0.1f;
-	}
-
-	float hit = Player3DField_Collision();
-
-	
 }
 
 //=========================================================================================================
 // stateごとの処理（Power状態）
 //=========================================================================================================
-void Player3D_Power()
+void Ball_Power()
 {
-	/*float power = PLAYER3D_SPEEDMAX * 0.12f;
+	float power = BALL_SPEEDMAX * 0.12f;
 
-	g_player3D.Velocity.x *= power;
-	g_player3D.Velocity.y *= power;
-	g_player3D.Velocity.z *= power;*/
+	g_Ball.Velocity.x *= power;
+	g_Ball.Velocity.y *= power;
+	g_Ball.Velocity.z *= power;
 
-	g_player3D.state = PLAYER3D_MOVE;
+	g_Ball.state = BALL_STATE::BALL_STATE_MOVE;
 }
 
 //=========================================================================================================
 // stateごとの処理（Direction状態）
 //=========================================================================================================
-void Player3D_Direction()
+void Ball_Direction()
 {
 	//キーを押したら転がる
 	if (Keyboard_IsKeyDownTrigger(KK_F))
@@ -212,28 +215,28 @@ void Player3D_Direction()
 		Direction.y /= len;
 		Direction.z /= len;
 
-		g_player3D.Velocity = Direction;
-		g_player3D.state =PLAYER3D_MOVE;
+		g_Ball.Velocity = Direction;
+		g_Ball.state = BALL_STATE::BALL_STATE_POWER;
 	}
 }
 
 //=========================================================================================================
 // stateごとの処理（Respawn状態）
 //=========================================================================================================
-void Player3D_Respawn()
+void Ball_Respawn()
 {
-	g_player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
-	g_player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_player3D.Scaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
-	g_player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_player3D.state =PLAYER3D_MOVE;
+	g_Ball.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
+	g_Ball.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_Ball.Scaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	g_Ball.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_Ball.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	g_Ball.state = BALL_STATE_MOVE;
 	g_StopTime = 0.0f;
-	g_player3D.Quaternion = XMQuaternionIdentity();
-	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	g_Ball.Quaternion = XMQuaternionIdentity();
+	g_Ball.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
-PLAYER3D* GetPlayer3D()
+BALL* GetBall()
 {
-	return &g_player3D;
+	return &g_Ball;
 }

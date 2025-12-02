@@ -11,7 +11,7 @@
 #include "field.h"
 #include "sprite.h"
 #include "keyboard.h"
-#include "Player3D.h"
+#include "player.h"
 #include "Effect.h"
 #include "score.h"
 #include "Manager.h"
@@ -206,12 +206,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Keyboard_ProcessMessage(uMsg, wParam, lParam);
 		break;
 
-	//case WM_KEYDOWN:	//キーが押された
-	//	if (wParam == VK_ESCAPE)//押されたのはESCキー
-	//	{
-	//		//ウィンドウを閉じたいリクエストをWindowsに送る
-	//		SendMessage(hWnd, WM_CLOSE, 0, 0);
-	//	}
+	case WM_KEYDOWN:	//キーが押された
+		if (wParam == VK_ESCAPE)//押されたのはESCキー
+		{
+			//ウィンドウを閉じたいリクエストをWindowsに送る
+			SendMessage(hWnd, WM_CLOSE, 0, 0);
+		}
 
 		Keyboard_ProcessMessage(uMsg, wParam, lParam);
 		break;

@@ -6,27 +6,27 @@
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
-#define PLAYER3D_RADIUS (0.2f)			//半径
+#define BALL_RADIUS (0.2f)			//半径
 
 //=========================================================================================================
 // 列挙
 //=========================================================================================================
-enum PLAYER3D_STATE
+enum BALL_STATE
 {
-	PLAYER3D_IDLE=0,
-	PLAYER3D_MOVE,					//移動
-	PLAYER3D_DIRECTION,			//方向指示
-	PLAYER3D_POWER,				//威力
-	PLAYER3D_RESPAWN,				//復活
+	BALL_STATE_IDLE=0,
+	BALL_STATE_MOVE,					//移動
+	BALL_STATE_DIRECTION,			//方向指示
+	BALL_STATE_POWER,				//威力
+	BALL_STATE_RESPAWN,				//復活
 
-	PLAYER3D_MAX,
+	BALL_STATE_MAX,
 
 };
 
 //=========================================================================================================
 // 構造体宣言
 //=========================================================================================================
-class PLAYER3D
+class BALL
 {
 public:
 	XMFLOAT3 Position;			//座標
@@ -34,7 +34,7 @@ public:
 	XMFLOAT3 Scaling;			//サイズ
 	XMFLOAT3 Velocity;			//方向
 	XMFLOAT3 Acceleration;	//
-	PLAYER3D_STATE state;			//状態
+	BALL_STATE state;			//状態
 	MODEL* Model;					//モデルデータ
 	XMVECTOR Quaternion;	//
 	XMVECTOR Axis;				//
@@ -44,14 +44,14 @@ public:
 //=========================================================================================================
 //プロトタイプ宣言
 //=========================================================================================================
-void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-void Player3D_Finalize();
-void Player3D_Update();
-void Player3D_Draw();
-XMFLOAT3 GetPlayer3DPositon();
-void Player3D_Idle();
-void Player3D_Move();
-void Player3D_Power();
-void Player3D_Direction();
-void Player3D_Respawn();
-PLAYER3D* GetPlayer3D();
+void Ball_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void Ball_Finalize();
+void Ball_Update();
+void Ball_Draw();
+XMFLOAT3 GetBallPositon();
+void Ball_Idle();
+void Ball_Move();
+void Ball_Power();
+void Ball_Direction();
+void Ball_Respawn();
+BALL* GetBall();
