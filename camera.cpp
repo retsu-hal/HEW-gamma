@@ -1,12 +1,14 @@
 #include "camera.h"
 #include"keyboard.h"
-#include"player3D.h"
+
+#include "Player3D.h"
+#include "Player2D.h"
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
 static CAMERA CameraObject;
-XMFLOAT3 g_BallPosOld;
+XMFLOAT3 g_Player3DPosOld;
 
 //=========================================================================================================
 // 初期化処理
@@ -24,7 +26,7 @@ void Camera_Initialize()
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 
-	g_BallPosOld = GetPlayer3DPositon();
+	g_Player3DPosOld = GetPlayer3DPositon();
 }
 
 //=========================================================================================================
@@ -40,35 +42,34 @@ void Camera_Finalize()
 //=========================================================================================================
 void Camera_Update()
 {
-	//ボールの座標を取得
-	XMFLOAT3 pos = g_BallPosOld;
-	g_BallPosOld = GetPlayer3DPositon();
+	//プレイヤーの座標を取得
+	XMFLOAT3 pos = g_Player3DPosOld;
+	g_Player3DPosOld = GetPlayer3DPositon();
 
 	//前回のボールと現在のボールの座標の差分
-	pos.x = g_BallPosOld.x - pos.x;
-	pos.y = g_BallPosOld.y - pos.y;
-	pos.z = g_BallPosOld.z - pos.z;
+	pos.x = g_Player3DPosOld.x - pos.x;
+	pos.y = g_Player3DPosOld.y - pos.y;
+	pos.z = g_Player3DPosOld.z - pos.z;
 	//カメラを移動
 	CameraObject.Position.x += pos.x;
 	CameraObject.Position.y += pos.y;
 	CameraObject.Position.z += pos.z;
 
 	//ボールの座標を注視点としてセット
-	CameraObject.AtPosition.x = g_BallPosOld.x;
-	CameraObject.AtPosition.y = g_BallPosOld.y;
-	CameraObject.AtPosition.z = g_BallPosOld.z;
+	CameraObject.AtPosition.x = g_Player3DPosOld.x;
+	CameraObject.AtPosition.y = g_Player3DPosOld.y;
+	CameraObject.AtPosition.z = g_Player3DPosOld.z;
 	
 	//注視点を中心にカメラの回転(Y軸回転)
 	float Rotation = 0.0f;
-	if (Keyboard_IsKeyDown(KK_A))
+	/*if (Keyboard_IsKeyDown(KK_A))
 	{
-		
 		Rotation = 1.0f;
 	}
 	if (Keyboard_IsKeyDown(KK_D))
 	{
 		Rotation = -1.0f;
-	}
+	}*/
 
 	//注視点を中心にカメラの回転
 	XMFLOAT2 vec;

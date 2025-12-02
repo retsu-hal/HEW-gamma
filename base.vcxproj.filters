@@ -39,7 +39,7 @@
     <ClCompile Include="mouse.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="player.cpp">
+    <ClCompile Include="Player3D.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="block.cpp">
@@ -78,9 +78,6 @@
     <ClCompile Include="model.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="ball.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Collision.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -88,12 +85,6 @@
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="direct3d.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="player3D.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="memo.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -122,7 +113,7 @@
     <ClInclude Include="mouse.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="player.h">
+    <ClInclude Include="Player3D.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="block.h">
@@ -161,16 +152,13 @@
     <ClInclude Include="model.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="ball.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="Collision.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="Trail.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="player3D.h">
+    <ClInclude Include="Player2D.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

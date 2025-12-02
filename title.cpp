@@ -29,7 +29,7 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Result.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
