@@ -102,13 +102,13 @@ void Game_Draw()
 
 	Camera_Draw();		//最初に呼ぶ！
 	field_Draw();
+	Player3D_Draw();
 
 	//２D描画
 	Light.SetEnable(FALSE);					//ライティングOFF
 	Shader_SetLight(Light.Light);		//ライト構造体をシェーダーにセット
 	SetDepthTest(FALSE);
 
-	Player3D_Draw();
 
 
 	/*

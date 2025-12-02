@@ -38,3 +38,6 @@ XMMATRIX GetViewMatrix();
 XMMATRIX GetProjectionMatrix();
 XMFLOAT3 GetCameraAtPosition();
 XMFLOAT3 GetCameraPosition();
+
+void Mose();
+void Keyb();

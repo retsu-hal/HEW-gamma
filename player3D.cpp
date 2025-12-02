@@ -4,6 +4,8 @@
 #include "shader.h"
 #include "Collision.h"
 
+#include "debug.h"
+
 //=========================================================================================================
 //グローバル変数
 //=========================================================================================================
@@ -41,6 +43,9 @@ static const auto ChangeKey = KK_F;		//影変身
 //その他
 static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//終了
+
+
+static bool debugMode = TRUE;
 
 //=========================================================================================================
 //初期化処理
@@ -114,6 +119,18 @@ void Player3D_Update()
 //=========================================================================================================
 void Player3D_Draw(void)
 {
+	if (debugMode)
+	{
+		ImGui::Begin("Player");
+		ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
+		ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
+		ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+		ImGui::End();
+	}
+
+
+	
+
 	// ワールド行列の作成
 	//スケーリング行列の作成
 	XMMATRIX ScalingMatrix = XMMatrixScaling(g_Player3D.Scaling.x, g_Player3D.Scaling.y, g_Player3D.Scaling.z);
