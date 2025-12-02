@@ -146,6 +146,7 @@
     <ClCompile Include="manager.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
+    <ClCompile Include="pause.cpp" />
     <ClCompile Include="Player3D.cpp" />
     <ClCompile Include="Polygon3D.cpp" />
     <ClCompile Include="Result.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="manager.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
+    <ClInclude Include="pause.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
     <ClInclude Include="Polygon3D.h" />

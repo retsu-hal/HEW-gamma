@@ -195,7 +195,7 @@ void Player3D_Move()
 {
 	if (Keyboard_IsKeyDown(UpKey))
 	{
-
+		
 	}
 	if (Keyboard_IsKeyDown(RightKey))
 	{
