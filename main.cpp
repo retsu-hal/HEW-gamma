@@ -11,7 +11,7 @@
 #include "field.h"
 #include "sprite.h"
 #include "keyboard.h"
-#include "Player3D.h"
+#include "player.h"
 #include "Effect.h"
 #include "score.h"
 #include "Manager.h"
