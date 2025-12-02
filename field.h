@@ -18,6 +18,10 @@ enum FIELD
 {
 	FIELD_BOX=0,
 	FIELD_OBT_0,
+
+	FIELD_FLOOR,
+	FIELD_WALL,
+
 	FIELD_MAX,
 };
 
