@@ -16,9 +16,9 @@
 
 #include "DirectXTex.h"/////////////0602
 #if _DEBUG
- #pragma comment(lib, "DirectXTex_Debug.lib")
+ #pragma comment(lib, "DirectXTex_Debug.lib");
 #else
- #pragma comment(lib, "DirectXTex_Release.lib")
+ #pragma comment(lib, "DirectXTex_Release.lib");
 #endif
 
 
@@ -80,6 +80,9 @@ struct Vertex3D
 	XMFLOAT3 normal;
 	XMFLOAT4 color;		//頂点カラー（R,G,B,A）
 	XMFLOAT2 texCoord;	//テクスチャ座標
+
+	UINT boneIndex[4] = { 0,0,0,0 };
+	float boneWeight[4] = { 0,0,0,0 };
 };
 
 class LIGHT

@@ -1,0 +1,123 @@
+﻿  compilation object save succeeded; see C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\shader_pixel_2d.cso
+  compilation object save succeeded; see C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\shader_vertex_2d.cso
+  Audio.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Audio.cpp' をコンパイルしています)
+  
+  ball.cpp
+  block.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'block.cpp' をコンパイルしています)
+  
+  camera.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'camera.cpp' をコンパイルしています)
+  
+  Collision.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Collision.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\Collision.cpp(22,3): warning C4065: switch 文に 'default' はありますが 'case' ラベルがありません。
+  debug_ostream.cpp
+  direct3d.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'direct3d.cpp' をコンパイルしています)
+  
+  effect.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'effect.cpp' をコンパイルしています)
+  
+  fade.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'fade.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\fade.cpp(82,19): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\fade.cpp(137,17): warning C4244: '=': 'int' から 'float' への変換です。データが失われる可能性があります。
+  field.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'field.cpp' をコンパイルしています)
+  
+  game.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'game.cpp' をコンパイルしています)
+  
+  keyboard.cpp
+  main.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'main.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\main.cpp(197,7): warning C4101: 'hdc': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\main.cpp(195,10): warning C4101: 'hbrWhite': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\main.cpp(198,14): warning C4101: 'ps': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\main.cpp(195,20): warning C4101: 'hbrGray': ローカル変数は 1 度も使われていません。
+  manager.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'manager.cpp' をコンパイルしています)
+  
+  model.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'model.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\model.cpp(96,19): warning C4018: '<': signed と unsigned の数値を比較しようとしました。
+  mouse.cpp
+  player.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'player.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\player.cpp(118,13): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\player.cpp(212,8): warning C4244: '初期化中': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\player.cpp(255,30): warning C4244: '=': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\player.cpp(257,28): warning C4244: '=': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\player.cpp(311,32): warning C4244: '=': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\player.cpp(313,27): warning C4244: '=': 'float' から 'int' への変換です。データが失われる可能性があります。
+  player3D.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'player3D.cpp' をコンパイルしています)
+  
+  Polygon3D.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Polygon3D.cpp' をコンパイルしています)
+  
+  Result.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Result.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\Result.cpp(32,10): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\Result.cpp(57,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+  コードを生成中...
+  コンパイル中...
+  score.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'score.cpp' をコンパイルしています)
+  
+  shader.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'shader.cpp' をコンパイルしています)
+  
+  sprite.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'sprite.cpp' をコンパイルしています)
+  
+  title.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'title.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\title.cpp(38,10): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\title.cpp(65,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\title.cpp(72,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+  Trail.cpp
+C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Trail.cpp' をコンパイルしています)
+  
+  コードを生成中...
+DirectXTex_Debug.lib(DirectXTexImage.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexImage.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexWIC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexWIC.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexD3D11.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexD3D11.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexUtil.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexUtil.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexConvert.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexCompress.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexCompress.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexMipMaps.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC4BC5.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC4BC5.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC6HBC7.obj)' で、または 'C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+  base.vcxproj -> C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\base.exe

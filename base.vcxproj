@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="ball.cpp" />
     <ClCompile Include="block.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />
@@ -146,7 +147,8 @@
     <ClCompile Include="manager.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
-    <ClCompile Include="Player3D.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="player3D.cpp" />
     <ClCompile Include="Polygon3D.cpp" />
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="score.cpp" />
@@ -157,6 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h" />
+    <ClInclude Include="ball.h" />
     <ClInclude Include="block.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="Collision.h" />
@@ -171,8 +174,8 @@
     <ClInclude Include="manager.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
-    <ClInclude Include="Player3D.h" />
-    <ClInclude Include="Player2D.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="player3D.h" />
     <ClInclude Include="Polygon3D.h" />
     <ClInclude Include="result.h" />
     <ClInclude Include="score.h" />
