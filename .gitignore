@@ -42,4 +42,4 @@
 *.vs
 
 #ビルド/デバッグ出力
-Debug*/
+/base/x64/Debug/

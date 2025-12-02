@@ -215,8 +215,6 @@ static UINT Box_idxdata[6 * 6] =
 	20,21,22,22,21,23	//底面
 };
 
-static int map_num = 0;
-
 //mapデータ配列
 MAPDATA map[]=
 {
@@ -315,20 +313,7 @@ MAPDATA map[]=
 
 	{XMFLOAT3(0.0f,0.0f,16.0f),FIELD_BOX},
 
-
-
-
 		{XMFLOAT3(0.0f,-1.0f,-3.0f),FIELD_MAX},	//データ終了
-};
-
-MAPDATA test[]=
-{
-	{XMFLOAT3(0.0f,0.0f,0.0f),FIELD_BOX},
-
-	{XMFLOAT3(0.0f,0.0f,1.0f),FIELD_FLOOR},
-	{XMFLOAT3(3.0f,1.0f,1.0f),FIELD_WALL},
-
-	{XMFLOAT3(0.0f,0.0f,0.0f),FIELD_MAX},
 };
 
 MODEL* Model[FIELD_MAX] = {NULL};
@@ -346,9 +331,6 @@ static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
 //=========================================================================================================
 void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	map_num = 0;
-
-
 	//Test = ModelLoad("asset\\model\\test.fbx");		//test
 	
 	g_pDevice = pDevice;
@@ -367,12 +349,6 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		switch (i)
 		{
 		case FIELD_BOX:
-			CreateBox();
-			break;
-		case FIELD_FLOOR:
-			CreateBox();
-			break;
-		case FIELD_WALL:
 			CreateBox();
 			break;
 		case FIELD_OBT_0:
@@ -422,125 +398,50 @@ void field_Draw(void)
 	int i = 0;
 	static float rot = 0.0f;
 	rot -= 0.3f;
-	if (map_num == 1)
+	while (map[i].no != FIELD_MAX)
 	{
-		while (map[i].no != FIELD_MAX)
+		// ワールド行列の作成
+		//スケーリング行列の作成
+		XMMATRIX ScalingMatrix = XMMatrixScaling(1.0f,1.0f,1.0f);
+		//平行移動行列の作成
+		XMMATRIX TranslationMatrix = XMMatrixTranslation(map[i].pos.x, map[i].pos.y, map[i].pos.z);
+		//回転行列の作成
+		XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(0.0f), XMConvertToRadians(0.0f));
+		//計算の順番「スケール*回転*平行移動」
+		XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
+		//最終的な変換行列を作成	順番に注意！！
+		XMMATRIX WVP = WorldMatrix * VP;
+		//DirectXへ行列をセット
+		Shader_SetWorldMatrix(WorldMatrix);
+		Shader_SetMatrix(WVP);
+		
+		
+		//テクスチャーセット
+		g_pContext->PSSetShaderResources(0, 1, &g_Texture);
+		
+		//頂点バッファをセット
+		UINT stride = sizeof(Vertex3D); //1頂点あたりのデータサイズ
+		UINT offset = 0;
+		g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+
+		//インデックスバッファをセット
+		g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+		//描画するポリゴンの種類をセット
+		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		if (map[i].no == FIELD_BOX)
 		{
-			// ワールド行列の作成
-			//スケーリング行列の作成
-			XMMATRIX ScalingMatrix = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-			//平行移動行列の作成
-			XMMATRIX TranslationMatrix = XMMatrixTranslation(map[i].pos.x, map[i].pos.y, map[i].pos.z);
-			//回転行列の作成
-			XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(0.0f), XMConvertToRadians(0.0f));
-			//計算の順番「スケール*回転*平行移動」
-			XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
-			//最終的な変換行列を作成	順番に注意！！
-			XMMATRIX WVP = WorldMatrix * VP;
-			//DirectXへ行列をセット
-			Shader_SetWorldMatrix(WorldMatrix);
-			Shader_SetMatrix(WVP);
+			//描画リクエスト
+			g_pContext->DrawIndexed(6 * 6, 0, 0);
 
-
-			//テクスチャーセット
-			g_pContext->PSSetShaderResources(0, 1, &g_Texture);
-
-			//頂点バッファをセット
-			UINT stride = sizeof(Vertex3D); //1頂点あたりのデータサイズ
-			UINT offset = 0;
-			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
-
-			//インデックスバッファをセット
-			g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			//描画するポリゴンの種類をセット
-			g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			if (map[i].no == FIELD_BOX)
-			{
-				//描画リクエスト
-				g_pContext->DrawIndexed(6 * 6, 0, 0);
-
-			}
-			else
-			{
-				//描画リクエスト
-				ModelDraw(Model[map[i].no]);
-			}
-			//ModelDraw(Test);
-			i++;
 		}
-
-	}
-	else
-	{
-		while (test[i].no != FIELD_MAX)
+		else
 		{
-			// ワールド行列の作成
-			//スケーリング行列の作成
-			XMMATRIX ScalingMatrix = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-			//平行移動行列の作成
-			XMMATRIX TranslationMatrix = XMMatrixTranslation(test[i].pos.x, test[i].pos.y, test[i].pos.z);
-			//回転行列の作成
-			XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(0.0f), XMConvertToRadians(0.0f), XMConvertToRadians(0.0f));
-
-			if (test[i].no == FIELD_FLOOR)
-			{
-				ScalingMatrix = XMMatrixScaling(50.0f, 1.0f, 50.0f);
-				RotationMatrix = XMMatrixRotationRollPitchYaw(
-					XMConvertToRadians(0.0f), 
-					XMConvertToRadians(0.0f), 
-					XMConvertToRadians(0.0f));
-			}
-			else if (test[i].no == FIELD_WALL)
-			{
-				ScalingMatrix = XMMatrixScaling(1.0f, 50.0f, 50.0f);
-				RotationMatrix = XMMatrixRotationRollPitchYaw(
-					XMConvertToRadians(0.0f),
-					XMConvertToRadians(0.0f),
-					XMConvertToRadians(0.0f));
-			}
-
-
-
-
-			//計算の順番「スケール*回転*平行移動」
-			XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
-			//最終的な変換行列を作成	順番に注意！！
-			XMMATRIX WVP = WorldMatrix * VP;
-			//DirectXへ行列をセット
-			Shader_SetWorldMatrix(WorldMatrix);
-			Shader_SetMatrix(WVP);
-
-
-			//テクスチャーセット
-			g_pContext->PSSetShaderResources(0, 1, &g_Texture);
-
-			//頂点バッファをセット
-			UINT stride = sizeof(Vertex3D); //1頂点あたりのデータサイズ
-			UINT offset = 0;
-			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
-
-			//インデックスバッファをセット
-			g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			//描画するポリゴンの種類をセット
-			g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			if (test[i].no == FIELD_BOX || test[i].no == FIELD_FLOOR || test[i].no == FIELD_WALL)
-			{
-				//描画リクエスト
-				g_pContext->DrawIndexed(6 * 6, 0, 0);
-
-			}
-			else
-			{
-				//描画リクエスト
-				ModelDraw(Model[test[i].no]);
-			}
-			//ModelDraw(Test);
-			i++;
+			//描画リクエスト
+			ModelDraw(Model[map[i].no]);
 		}
-
+		//ModelDraw(Test);
+		i++;
 	}
-
-
 }
 //=========================================================================================================
 // Box作成
@@ -590,14 +491,6 @@ void CreateBox()
 
 MAPDATA* GetFieldMap(void)
 {
-	if (map_num == 1)
-	{
-		return &map[0];
-
-	}
-	else
-	{
-		return &test[0];
-	}
+	return &map[0];
 }
 
