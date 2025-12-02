@@ -23,9 +23,9 @@ float			FirstStopTime;
 XMVECTOR		FirstQuaternion;
 
 //プレイヤーステータス
-float moveSpeed = 0.02f;				//移動速度
+float moveSpeed = 0.005f;				//移動速度
 float maxMoveSpeed = 1.0f;				//最大移動速度
-float maxGravity = -0.5f;				//最大落下速度
+float maxGravity = -0.25f;				//最大落下速度
 float jumpPower = 0.25f;				//ジャンプ力
 bool isGround = false;					//接地判定
 
@@ -88,7 +88,7 @@ void Player3D_Update()
 	Player3D_Gravity();	//重力処理
 	
 
-	/*switch (g_Player3D.state)
+	switch (g_Player3D.state)
 	{
 	case PLAYER3D_STATE_IDLE:
 
@@ -108,7 +108,7 @@ void Player3D_Update()
 
 	default:
 		break;
-	}*/
+	}
 }
 
 //=========================================================================================================
@@ -158,21 +158,26 @@ XMFLOAT3 GetPlayer3DPositon()
 void Player3D_Gravity()
 {
 	g_Player3D.Velocity.x += g_Player3D.Acceleration.x; //重力
-	g_Player3D.Velocity.y += g_Player3D.Acceleration.y; //重力
-	g_Player3D.Velocity.z += g_Player3D.Acceleration.z; //重力
-
-	g_Player3D.Position.x += g_Player3D.Velocity.x;
 	if (g_Player3D.Velocity.y < maxGravity)
 	{
 		g_Player3D.Velocity.y = maxGravity;
 	}
+	else
+	{
+		g_Player3D.Velocity.y += g_Player3D.Acceleration.y; //重力
+	}
+	g_Player3D.Velocity.z += g_Player3D.Acceleration.z; //重力
+
+
+	g_Player3D.Position.x += g_Player3D.Velocity.x;
+	g_Player3D.Position.y += g_Player3D.Velocity.y;
 	g_Player3D.Position.z += g_Player3D.Velocity.z;
 
 	g_Player3D.Velocity.x *= 0.98f;	//好みで減衰させる
 	g_Player3D.Velocity.y *= 0.98f;	//好みで減衰させる
 	g_Player3D.Velocity.z *= 0.98f;	//好みで減衰させる
 
-	//静止チェック
+	// 静止チェック
 	float len = (g_Player3D.Velocity.x * g_Player3D.Velocity.x + g_Player3D.Velocity.y * g_Player3D.Velocity.y + g_Player3D.Velocity.z * g_Player3D.Velocity.z);
 	if (len <= 0.0002f)
 	{
@@ -184,9 +189,7 @@ void Player3D_Gravity()
 			g_StopTime = 0.0f;
 		}
 	}
-
 	float hit = Player3DField_Collision();
-
 }
 
 void Player3D_Respown()
@@ -207,23 +210,23 @@ void Player3D_Move()
 {
 	if (Keyboard_IsKeyDown(UpKey))
 	{
-		g_Player3D.Position.z += 0.25f;
-		//g_Player3D.Velocity.z += +moveSpeed;
+		//g_Player3D.Position.z += moveSpeed;
+		g_Player3D.Velocity.z += +moveSpeed;
 	}
 	if (Keyboard_IsKeyDown(RightKey))
 	{
-		g_Player3D.Position.x += 0.25f;
-		//g_Player3D.Velocity.x += +moveSpeed;
+		//g_Player3D.Position.x += moveSpeed;
+		g_Player3D.Velocity.x += +moveSpeed;
 	}
 	if (Keyboard_IsKeyDown(DownKey))
 	{
-		g_Player3D.Position.z += -0.25f;
-		//g_Player3D.Velocity.z += -moveSpeed;
+		//g_Player3D.Position.z += -moveSpeed;
+		g_Player3D.Velocity.z += -moveSpeed;
 	}
 	if (Keyboard_IsKeyDown(LeftKey))
 	{
-		g_Player3D.Position.x += -0.25f;
-		//g_Player3D.Velocity.x += -moveSpeed;
+		//g_Player3D.Position.x += -moveSpeed;
+		g_Player3D.Velocity.x += -moveSpeed;
 	}
 }
 
