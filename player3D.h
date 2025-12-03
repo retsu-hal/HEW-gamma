@@ -54,4 +54,8 @@ void Player3D_Move();
 void Player3D_Power();
 void Player3D_Direction();
 void Player3D_Respawn();
+void Player3D_Jump();	
+void Player3D_Change();	
+void Player3D_Action();	
+void Player3D_Gravity();	
 PLAYER3D* GetPlayer3D();
