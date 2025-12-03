@@ -259,6 +259,7 @@ void Player3D_Jump()
 {
 	if (Keyboard_IsKeyDownTrigger(JumpKey))
 	{
+		g_Player3D.Velocity.y += jumpPower;// ƒeƒXƒg
 		if(isGround)
 		{
 			g_Player3D.Velocity.y += jumpPower;// ãŒü‚«‚É‰‘¬‚ğ—^‚¦‚é
