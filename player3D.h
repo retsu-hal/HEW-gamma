@@ -15,8 +15,6 @@ enum PLAYER3D_STATE
 {
 	PLAYER3D_IDLE=0,
 	PLAYER3D_MOVE,					//ˆÚ“®
-	PLAYER3D_DIRECTION,			//•ûŒüŽwŽ¦
-	PLAYER3D_POWER,				//ˆÐ—Í
 	PLAYER3D_RESPAWN,				//•œŠˆ
 
 	PLAYER3D_MAX,
@@ -51,11 +49,5 @@ void Player3D_Draw();
 XMFLOAT3 GetPlayer3DPositon();
 void Player3D_Idle();
 void Player3D_Move();
-void Player3D_Power();
-void Player3D_Direction();
 void Player3D_Respawn();
-void Player3D_Jump();	
-void Player3D_Change();	
-void Player3D_Action();	
-void Player3D_Gravity();	
 PLAYER3D* GetPlayer3D();

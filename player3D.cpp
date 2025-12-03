@@ -27,7 +27,7 @@ float			FirstStopTime;
 XMVECTOR		FirstQuaternion;
 
 //プレイヤーステータス
-float moveSpeed = 0.005f;				//移動速度
+float moveSpeed = 0.1f;				//移動速度
 float maxMoveSpeed = 1.0f;				//最大移動速度
 float maxGravity = -0.25f;				//最大落下速度
 float jumpPower = 0.25f;				//ジャンプ力
@@ -92,12 +92,6 @@ void Player3D_Update()
 	case PLAYER3D_MOVE:
 		Player3D_Move();
 		break;
-	case PLAYER3D_DIRECTION:
-		Player3D_Direction();
-		break;
-	case PLAYER3D_POWER:
-		Player3D_Power();
-		break;
 	case PLAYER3D_RESPAWN:
 		Player3D_Respawn();
 		Camera_Initialize();
@@ -112,6 +106,14 @@ void Player3D_Update()
 //=========================================================================================================
 void Player3D_Draw()
 {
+	if (debugMode)
+	{
+		ImGui::Begin("Player");
+		ImGui::Text("PosX: %.2f", g_player3D.Position.x);
+		ImGui::Text("PosY: %.2f", g_player3D.Position.y);
+		ImGui::Text("PosZ: %.2f", g_player3D.Position.z);
+		ImGui::End();
+	}
 	//ワールド行列作成
 	XMMATRIX scale = XMMatrixScaling
 	(
@@ -161,22 +163,7 @@ XMFLOAT3 GetPlayer3DPositon()
 //=========================================================================================================
 void Player3D_Idle()
 {
-
-	g_player3D.Velocity.x += g_player3D.Acceleration.x; //重力
-	if (g_player3D.Velocity.y < maxGravity)
-	{
-		g_player3D.Velocity.y = maxGravity;
-	}
-	else
-	{
-		g_player3D.Velocity.y += g_player3D.Acceleration.y; //重力
-	}
-	g_player3D.Velocity.z += g_player3D.Acceleration.z; //重力
-
-
-	g_player3D.Position.x += g_player3D.Velocity.x;
-	g_player3D.Position.y += g_player3D.Velocity.y;
-	g_player3D.Position.z += g_player3D.Velocity.z;
+	g_player3D.state = PLAYER3D_MOVE;
 }
 
 
@@ -185,51 +172,10 @@ void Player3D_Idle()
 //=========================================================================================================
 void Player3D_Move()
 {
-	if (Keyboard_IsKeyDown(UpKey))
-	{
-		//g_Player3D.Position.z += moveSpeed;
-		g_player3D.Velocity.z += +moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(RightKey))
-	{
-		//g_Player3D.Position.x += moveSpeed;
-		g_player3D.Velocity.x += +moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(DownKey))
-	{
-		//g_Player3D.Position.z += -moveSpeed;
-		g_player3D.Velocity.z += -moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(LeftKey))
-	{
-		//g_Player3D.Position.x += -moveSpeed;
-		g_player3D.Velocity.x += -moveSpeed;
+	g_player3D.Velocity.x += g_player3D.Acceleration.x; //重力
+	g_player3D.Velocity.y += g_player3D.Acceleration.y; //重力
+	g_player3D.Velocity.z += g_player3D.Acceleration.z; //重力
 
-		//後ろ移動
-		if (Keyboard_IsKeyDown(KK_S))
-		{
-			g_player3D.Position.z -= 0.1f;
-		}
-
-		//右移動
-		if (Keyboard_IsKeyDown(KK_D))
-		{
-			g_player3D.Position.x += 0.1f;
-
-		}
-
-		//左移動
-		if (Keyboard_IsKeyDown(KK_A))
-		{
-			g_player3D.Position.x -= 0.1f;
-		}
-
-		float hit = Player3DField_Collision();
-	}
-}
-
-void Player3D_Respown()
-{
 	g_player3D.Position.x += g_player3D.Velocity.x;
 	g_player3D.Position.y += g_player3D.Velocity.y;
 	g_player3D.Position.z += g_player3D.Velocity.z;
@@ -237,64 +183,46 @@ void Player3D_Respown()
 	g_player3D.Velocity.x *= 0.98f;		//好みで減衰させる
 	//g_player3D.Velocity.y *= 0.98f;		//好みで減衰させる
 	g_player3D.Velocity.z *= 0.98f;		//好みで減衰させる
+	
+	XMFLOAT3 camPos = GetCameraPosition();
+	XMFLOAT3 camAt = GetCameraAtPosition();
 
+	// カメラの前方向ベクトル（正規化）
+	XMFLOAT3 forward = { camAt.x - camPos.x,	0.0f, camAt.z - camPos.z };
+	float flen = sqrtf(forward.x * forward.x + forward.z * forward.z);
+	if (flen > 0.0001f) {
+		forward.x /= flen;
+		forward.z /= flen;
+	}
+	// カメラの右方向ベクトル
+	XMFLOAT3 right = { forward.z, 0.0f, -forward.x };
+	if (Keyboard_IsKeyDown(UpKey))
+	{
+		g_player3D.Position.x += forward.x * moveSpeed;
+		g_player3D.Position.z += forward.z * moveSpeed;
 
+	}
+	if (Keyboard_IsKeyDown(RightKey))
+	{
+		g_player3D.Position.x += right.x * moveSpeed;
+		g_player3D.Position.z += right.z * moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(DownKey))
+	{
+		g_player3D.Position.x -= forward.x * moveSpeed;
+		g_player3D.Position.z -= forward.z * moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(LeftKey))
+	{
+		g_player3D.Position.x -= right.x * moveSpeed;
+		g_player3D.Position.z -= right.z * moveSpeed;
+	}
+	float hit = Player3DField_Collision();
 	//落下チェック
 	if (g_player3D.Position.y < -10.0f)
 	{
 		g_player3D.state = PLAYER3D_RESPAWN;
 		return;
-	}
-
-	//前移動
-	if (Keyboard_IsKeyDown(KK_W))
-	{
-		g_player3D.Position.z += 0.1f;
-	}
-}
-
-
-
-//=========================================================================================================
-// stateごとの処理（Power状態）
-//=========================================================================================================
-void Player3D_Power()
-{
-	/*float power = PLAYER3D_SPEEDMAX * 0.12f;
-
-	g_player3D.Velocity.x *= power;
-	g_player3D.Velocity.y *= power;
-	g_player3D.Velocity.z *= power;*/
-
-
-
-	g_player3D.state = PLAYER3D_MOVE;
-}
-
-//=========================================================================================================
-// stateごとの処理（Direction状態）
-//=========================================================================================================
-void Player3D_Direction()
-{
-	//キーを押したら転がる
-	if (Keyboard_IsKeyDownTrigger(KK_F))
-	{
-		//カメラの向きを取得
-		XMFLOAT3 Cap = GetCameraAtPosition();
-		XMFLOAT3 Cp = GetCameraPosition();
-		XMFLOAT3 Direction;
-		Direction.x = Cap.x - Cp.x;
-		Direction.y = 0.0f;
-		Direction.z = Cap.z - Cp.z;
-
-		//正規化
-		float len = sqrtf(Direction.x * Direction.x + Direction.y * Direction.y + Direction.z * Direction.z);
-		Direction.x /= len;
-		Direction.y /= len;
-		Direction.z /= len;
-
-		g_player3D.Velocity = Direction;
-		g_player3D.state =PLAYER3D_MOVE;
 	}
 }
 

@@ -4,7 +4,6 @@
 #include	"keyboard.h"
 #include "Polygon3D.h"
 #include	"Player3D.h"
-#include	"Block.h"
 #include	"field.h"
 #include	"Effect.h"
 #include	"score.h"
