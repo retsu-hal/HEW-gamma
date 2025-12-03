@@ -12,6 +12,9 @@ ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 float g_StopTime = 0.0f;
 
+// 入力ベクトル
+XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+
 //リセット用
 XMFLOAT3		Firstposition;
 XMFLOAT3		FirstRotation;
@@ -23,11 +26,11 @@ float			FirstStopTime;
 XMVECTOR		FirstQuaternion;
 
 //プレイヤーステータス
-float moveSpeed = 0.005f;				//移動速度
-float maxMoveSpeed = 1.0f;				//最大移動速度
-float maxGravity = -0.25f;				//最大落下速度
-float jumpPower = 0.25f;				//ジャンプ力
-bool isGround = false;					//接地判定
+float moveSpeed =		 0.005f;			//移動速度
+float maxMoveSpeed =	 1.0f;				//最大移動速度
+float maxGravity =		-0.25f;				//最大落下速度
+float jumpPower =		 0.175f;			//ジャンプ力
+bool isGround = false;						//接地判定（明示的に初期化）
 
 //キーボード定義
 //移動
@@ -53,8 +56,9 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	g_Player3D.Model = ModelLoad("asset\\model\\Test_man_stand.fbx");
-	Firstposition		= g_Player3D.Position		= XMFLOAT3(0.0f, 1.25f, 0.0f);
-	FirstRotation		= g_Player3D.Rotation		= XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	Firstposition		= g_Player3D.Position		= XMFLOAT3(0.0f, 1.2f, 0.0f);
+	FirstRotation		= g_Player3D.Rotation		= XMFLOAT3(-90.0f, 180.0f, 0.0f);
 	FirstScaling		= g_Player3D.Scaling		= XMFLOAT3(0.01f, 0.01f, 0.01f);
 	FirstVelocity		= g_Player3D.Velocity		= XMFLOAT3(0.0f, 0.0f, 0.0f);
 	FirstAcceleration	= g_Player3D.Acceleration	= XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
@@ -122,7 +126,7 @@ void Player3D_Draw(void)
 	//平行移動行列の作成
 	XMMATRIX TranslationMatrix = XMMatrixTranslation(g_Player3D.Position.x, g_Player3D.Position.y, g_Player3D.Position.z);
 	//回転行列の作成
-	XMMATRIX RotationMatrix = XMMatrixRotationQuaternion(g_Player3D.Quaternion);
+	XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(g_Player3D.Rotation.x), XMConvertToRadians(g_Player3D.Rotation.y), XMConvertToRadians(g_Player3D.Rotation.z));
 	//計算の順番「スケール*回転*平行移動」
 	XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
 
@@ -157,25 +161,45 @@ XMFLOAT3 GetPlayer3DPositon()
 
 void Player3D_Gravity()
 {
-	g_Player3D.Velocity.x += g_Player3D.Acceleration.x; //重力
+	// 横・縦・奥行きの加算（既存ロジック保持）
+	if (g_Player3D.Velocity.x >= maxMoveSpeed)
+	{
+		g_Player3D.Velocity.x = maxMoveSpeed;
+	}
+	else
+	{
+		g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
+	}
+
 	if (g_Player3D.Velocity.y < maxGravity)
 	{
 		g_Player3D.Velocity.y = maxGravity;
 	}
 	else
 	{
-		g_Player3D.Velocity.y += g_Player3D.Acceleration.y; //重力
+		g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
 	}
-	g_Player3D.Velocity.z += g_Player3D.Acceleration.z; //重力
 
+	if (g_Player3D.Velocity.z >= maxMoveSpeed)
+	{
+		g_Player3D.Velocity.z = maxMoveSpeed;
+	}
+	else
+	{
+		g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
+	}
 
+	//摩擦による減速
+	g_Player3D.Velocity.x *= 0.925f;
+	g_Player3D.Velocity.y *= 0.98f;
+	g_Player3D.Velocity.z *= 0.925f;
+
+	// 座標に速度を加算
 	g_Player3D.Position.x += g_Player3D.Velocity.x;
 	g_Player3D.Position.y += g_Player3D.Velocity.y;
 	g_Player3D.Position.z += g_Player3D.Velocity.z;
 
-	g_Player3D.Velocity.x *= 0.98f;	//好みで減衰させる
-	g_Player3D.Velocity.y *= 0.98f;	//好みで減衰させる
-	g_Player3D.Velocity.z *= 0.98f;	//好みで減衰させる
+
 
 	// 静止チェック
 	float len = (g_Player3D.Velocity.x * g_Player3D.Velocity.x + g_Player3D.Velocity.y * g_Player3D.Velocity.y + g_Player3D.Velocity.z * g_Player3D.Velocity.z);
@@ -189,7 +213,8 @@ void Player3D_Gravity()
 			g_StopTime = 0.0f;
 		}
 	}
-	float hit = Player3DField_Collision();
+
+	int hit = Player3DField_Collision();
 }
 
 void Player3D_Respown()
@@ -208,41 +233,37 @@ void Player3D_Respown()
 
 void Player3D_Move()
 {
-	if (Keyboard_IsKeyDown(UpKey))
+	// 前フレームの入力をリセット（キーを離したときに以前の入力が残らないようにする）
+	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+	if (Keyboard_IsKeyDown(UpKey))    inputDir.z += +1.0f;
+	if (Keyboard_IsKeyDown(DownKey))  inputDir.z += -1.0f;
+	if (Keyboard_IsKeyDown(RightKey)) inputDir.x += +1.0f;
+	if (Keyboard_IsKeyDown(LeftKey))  inputDir.x += -1.0f;
+	
+
+	// 長さ計算
+	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
+	if (len > 0.0001f)
 	{
-		//g_Player3D.Position.z += moveSpeed;
-		g_Player3D.Velocity.z += +moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(RightKey))
-	{
-		//g_Player3D.Position.x += moveSpeed;
-		g_Player3D.Velocity.x += +moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(DownKey))
-	{
-		//g_Player3D.Position.z += -moveSpeed;
-		g_Player3D.Velocity.z += -moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(LeftKey))
-	{
-		//g_Player3D.Position.x += -moveSpeed;
-		g_Player3D.Velocity.x += -moveSpeed;
+		inputDir.x /= len;
+		inputDir.z /= len;
+
+		// 正規化ベクトル × 加速
+		g_Player3D.Velocity.x += inputDir.x * moveSpeed;
+		g_Player3D.Velocity.z += inputDir.z * moveSpeed;
 	}
 }
 
 void Player3D_Jump()
 {
-	if (Keyboard_IsKeyDown(JumpKey))
+	if (Keyboard_IsKeyDownTrigger(JumpKey))
 	{
-		// 地面にいるかどうかを判定
-		if (g_Player3D.state != PLAYER3D_STATE_FALL)
+		if(isGround)
 		{
-			// 上向きに初速を与える（値は調整してください）
-			g_Player3D.Velocity.y += jumpPower;
+			g_Player3D.Velocity.y += jumpPower;// 上向きに初速を与える
 			// 空中にいる状態へ
-			g_Player3D.state = PLAYER3D_STATE_FALL;
-			// 着地タイマーリセット
-			g_StopTime = 0.0f;
+			//g_Player3D.state = PLAYER3D_STATE_FALL;
 		}
 	}
 }

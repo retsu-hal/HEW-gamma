@@ -3,12 +3,12 @@
 
 
 //=========================================================================================================
-// ボールとフィールドの当たり判定
+// プレイヤーとフィールドの当たり判定
 //=========================================================================================================
 
-float Player3DField_Collision()
+int Player3DField_Collision()
 {
-	float hit = false;
+	int hit = HIT_NONE;
 	PLAYER3D* player3D = GetPlayer3D();
 	MAPDATA* Map = GetFieldMap();
 	int i = 0;
@@ -31,13 +31,13 @@ float Player3DField_Collision()
 				{//BOXの-X面にぶつかった
 					player3D->Position.x += (Map[i].pos.x - BOX_RADIUS) - (player3D->Position.x + PLAYER3D_RADIUS);
 					player3D->Velocity.x *= -COE;//反発させる
-					hit = COLLISION_HIT::HIT_WALL_NegX;
+					hit = HIT_WALL_NegX;
 				}
 				else if (Map[i].pos.x + BOX_RADIUS > player3D->Position.x - PLAYER3D_RADIUS && player3D->Position.x > Map[i].pos.x + BOX_RADIUS)
 				{//BOXの+X面にぶつかった
 					player3D->Position.x += (Map[i].pos.x + BOX_RADIUS) - (player3D->Position.x - PLAYER3D_RADIUS);
 					player3D->Velocity.x *= -COE;//反発させる
-					hit = COLLISION_HIT::HIT_WALL_PlusX;
+					hit = HIT_WALL_PlusX;
 
 				}
 			}
@@ -47,13 +47,13 @@ float Player3DField_Collision()
 				{//BOXの-Z面にぶつかった
 					player3D->Position.z += (Map[i].pos.z - BOX_RADIUS) - (player3D->Position.z + PLAYER3D_RADIUS);
 					player3D->Velocity.z *= -COE;//反発させる
-					hit = COLLISION_HIT::HIT_WALL_NegZ;
+					hit = HIT_WALL_NegZ;
 				}
 				else if (Map[i].pos.z + BOX_RADIUS > player3D->Position.z - PLAYER3D_RADIUS && player3D->Position.z > Map[i].pos.z + BOX_RADIUS)
 				{//BOXの+Z面にぶつかった
 					player3D->Position.z += (Map[i].pos.z + BOX_RADIUS) - (player3D->Position.z - PLAYER3D_RADIUS);
 					player3D->Velocity.z *= -COE;//反発させる
-					hit = COLLISION_HIT::HIT_WALL_PlusZ;
+					hit = HIT_WALL_PlusZ;
 
 				}
 			}
@@ -69,12 +69,13 @@ float Player3DField_Collision()
 					{
 						player3D->Position.y += (Map[i].pos.y - BOX_RADIUS) - (player3D->Position.y + PLAYER3D_RADIUS);
 						player3D->Velocity.y *= -COE;
+						hit = HIT_GROUND;
 					}
 					else if (BoxTop > (player3D->Position.y - PLAYER3D_RADIUS) && player3D->Position.y > BoxTop)
 					{
 						player3D->Position.y += (BoxTop)-(player3D->Position.y - PLAYER3D_RADIUS);
 						player3D->Velocity.y = player3D->Velocity.y * (-COE * 1.0f);
-						hit = COLLISION_HIT::HIT_WALL_NegX;
+						hit = HIT_WALL_NegX;
 					}
 				}
 			}

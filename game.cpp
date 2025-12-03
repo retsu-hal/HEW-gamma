@@ -101,6 +101,9 @@ void Game_Draw()
 	SetDepthTest(TRUE);
 
 	Camera_Draw();		//最初に呼ぶ！
+
+
+	Player3D_Draw();
 	field_Draw();
 
 	//２D描画
@@ -108,7 +111,7 @@ void Game_Draw()
 	Shader_SetLight(Light.Light);		//ライト構造体をシェーダーにセット
 	SetDepthTest(FALSE);
 
-	Player3D_Draw();
+	
 
 
 	/*
