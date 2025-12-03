@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
+#include "debug.h"
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
@@ -14,8 +15,6 @@
 PLAYER3D g_player3D;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
-
-float g_StopTime = 0.0f;
 
 //リセット用
 XMFLOAT3		Firstposition;
@@ -47,9 +46,9 @@ static const auto ChangeKey = KK_F;		//影変身
 //その他
 static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//終了
-=======
-float g_StopTime=0.0f;
 
+float g_StopTime=0.0f;
+static bool debugMode = TRUE;
 
 //=========================================================================================================
 // 初期化処理
@@ -83,17 +82,7 @@ void Player3D_Finalize()
 // 更新処理
 //=========================================================================================================
 void Player3D_Update()
-{
-	Player3D_Respown();	//リスポーン
-
-	//プレイヤー操作
-	Player3D_Move();	//移動
-	Player3D_Jump();	//ジャンプ
-	Player3D_Change();	//影変身
-	Player3D_Action();	//アクション
-
-	Player3D_Gravity();	//重力処理
-	
+{	
 	switch (g_player3D.state)
 
 	{
@@ -173,23 +162,21 @@ XMFLOAT3 GetPlayer3DPositon()
 void Player3D_Idle()
 {
 
-	g_Player3D.Velocity.x += g_Player3D.Acceleration.x; //重力
-	if (g_Player3D.Velocity.y < maxGravity)
+	g_player3D.Velocity.x += g_player3D.Acceleration.x; //重力
+	if (g_player3D.Velocity.y < maxGravity)
 	{
-		g_Player3D.Velocity.y = maxGravity;
+		g_player3D.Velocity.y = maxGravity;
 	}
 	else
 	{
-		g_Player3D.Velocity.y += g_Player3D.Acceleration.y; //重力
+		g_player3D.Velocity.y += g_player3D.Acceleration.y; //重力
 	}
-	g_Player3D.Velocity.z += g_Player3D.Acceleration.z; //重力
+	g_player3D.Velocity.z += g_player3D.Acceleration.z; //重力
 
 
-	g_Player3D.Position.x += g_Player3D.Velocity.x;
-	g_Player3D.Position.y += g_Player3D.Velocity.y;
-	g_Player3D.Position.z += g_Player3D.Velocity.z;
-=======
-
+	g_player3D.Position.x += g_player3D.Velocity.x;
+	g_player3D.Position.y += g_player3D.Velocity.y;
+	g_player3D.Position.z += g_player3D.Velocity.z;
 }
 
 
@@ -198,29 +185,51 @@ void Player3D_Idle()
 //=========================================================================================================
 void Player3D_Move()
 {
-	g_player3D.Velocity.x += g_player3D.Acceleration.x; //重力
-	g_player3D.Velocity.y += g_player3D.Acceleration.y; //重力
-	g_player3D.Velocity.z += g_player3D.Acceleration.z; //重力
-
-
-	// 静止チェック
-	float len = (g_Player3D.Velocity.x * g_Player3D.Velocity.x + g_Player3D.Velocity.y * g_Player3D.Velocity.y + g_Player3D.Velocity.z * g_Player3D.Velocity.z);
-	if (len <= 0.0002f)
+	if (Keyboard_IsKeyDown(UpKey))
 	{
-		g_StopTime++;
-		if (g_StopTime > (60.0f * 2))
-		{
-			g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			g_Player3D.state = PLAYER3D_STATE_IDLE;
-			g_StopTime = 0.0f;
-		}
+		//g_Player3D.Position.z += moveSpeed;
+		g_player3D.Velocity.z += +moveSpeed;
 	}
-	float hit = Player3DField_Collision();
+	if (Keyboard_IsKeyDown(RightKey))
+	{
+		//g_Player3D.Position.x += moveSpeed;
+		g_player3D.Velocity.x += +moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(DownKey))
+	{
+		//g_Player3D.Position.z += -moveSpeed;
+		g_player3D.Velocity.z += -moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(LeftKey))
+	{
+		//g_Player3D.Position.x += -moveSpeed;
+		g_player3D.Velocity.x += -moveSpeed;
+
+		//後ろ移動
+		if (Keyboard_IsKeyDown(KK_S))
+		{
+			g_player3D.Position.z -= 0.1f;
+		}
+
+		//右移動
+		if (Keyboard_IsKeyDown(KK_D))
+		{
+			g_player3D.Position.x += 0.1f;
+
+		}
+
+		//左移動
+		if (Keyboard_IsKeyDown(KK_A))
+		{
+			g_player3D.Position.x -= 0.1f;
+		}
+
+		float hit = Player3DField_Collision();
+	}
 }
 
 void Player3D_Respown()
 {
-=======
 	g_player3D.Position.x += g_player3D.Velocity.x;
 	g_player3D.Position.y += g_player3D.Velocity.y;
 	g_player3D.Position.z += g_player3D.Velocity.z;
@@ -236,58 +245,15 @@ void Player3D_Respown()
 		g_player3D.state = PLAYER3D_RESPAWN;
 		return;
 	}
-	
+
 	//前移動
 	if (Keyboard_IsKeyDown(KK_W))
 	{
 		g_player3D.Position.z += 0.1f;
 	}
-
-void Player3D_Move()
-{
-	if (Keyboard_IsKeyDown(UpKey))
-	{
-		//g_Player3D.Position.z += moveSpeed;
-		g_Player3D.Velocity.z += +moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(RightKey))
-	{
-		//g_Player3D.Position.x += moveSpeed;
-		g_Player3D.Velocity.x += +moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(DownKey))
-	{
-		//g_Player3D.Position.z += -moveSpeed;
-		g_Player3D.Velocity.z += -moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(LeftKey))
-	{
-		//g_Player3D.Position.x += -moveSpeed;
-		g_Player3D.Velocity.x += -moveSpeed;
-
-	//後ろ移動
-	if (Keyboard_IsKeyDown(KK_S))
-	{
-		g_player3D.Position.z -= 0.1f;
-	}
-
-	//右移動
-	if (Keyboard_IsKeyDown(KK_D))
-	{
-		g_player3D.Position.x += 0.1f;
-
-	}
-
-	//左移動
-	if (Keyboard_IsKeyDown(KK_A))
-	{
-		g_player3D.Position.x -= 0.1f;
-	}
-
-	float hit = Player3DField_Collision();
-
-	
 }
+
+
 
 //=========================================================================================================
 // stateごとの処理（Power状態）

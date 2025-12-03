@@ -2,15 +2,15 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\x64\Debug\base.exe</FullPath>
+      <FullPath>C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
-      <FullPath>C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\shader_pixel_2d.cso</FullPath>
+      <FullPath>C:\Users\retsu\Documents\2025_hal\HEW-gamma\shader_pixel_2d.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>C:\Users\retsu\Desktop\HEW-gammaTanakaVersion\HEW-gamma\shader_vertex_2d.cso</FullPath>
+      <FullPath>C:\Users\retsu\Documents\2025_hal\HEW-gamma\shader_vertex_2d.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />
