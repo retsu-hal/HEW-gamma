@@ -58,3 +58,12 @@ void Player3D_Reset();
 void Player3D_Respown();
 
 PLAYER3D* GetPlayer3D();
+
+
+
+#define PLAYER3D_DETECT_HALF_X (1.5f)
+#define PLAYER3D_DETECT_HALF_Y (1.0f)
+#define PLAYER3D_DETECT_HALF_Z (1.5f)
+
+bool     Player3D_IsNearPoint(const XMFLOAT3& point);
+XMFLOAT3 Player3D_GetDetectHalfSize();
