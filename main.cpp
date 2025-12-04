@@ -187,6 +187,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				SetWindowText(hWnd, g_DebugStr);
 #endif
 
+				ImGui_ImplWin32_NewFrame();
+				ImGui_ImplDX11_NewFrame();
+				ImGui::NewFrame();
+
 				//XVˆ—
 				Manager_Update();
 
@@ -196,6 +200,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				//•`‰æˆ—
 				Direct3D_Clear();
 				Manager_Draw();
+
+				ImGui::Render();
+				ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 				{
 					ImGuiIO& io = ImGui::GetIO();

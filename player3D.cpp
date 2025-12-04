@@ -57,7 +57,6 @@ static ImVec2 WorldToScreen(const XMFLOAT3& p)
 {
 	using namespace DirectX;
 
-	// 1) 先用真正的 backbuffer 尺寸（和摄像机一致）
 	float bbWidth = (float)Direct3D_GetBackBufferWidth();
 	float bbHeight = (float)Direct3D_GetBackBufferHeight();
 

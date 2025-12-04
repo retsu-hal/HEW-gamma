@@ -55,7 +55,7 @@ void Camera_Update()
 {
 	static bool CamMode = false;
 
-	if (Keyboard_IsKeyDown(KK_C)) {
+	if (Keyboard_IsKeyDownTrigger(KK_C)) {
 		CamMode = !CamMode;
 	}
 
@@ -66,6 +66,15 @@ void Camera_Update()
 	else
 	{
 		Keyb();
+	}
+
+
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - CHEN");
+		if (CamMode) ImGui::Text("is Camera");
+		else ImGui::Text("is Player");
+		ImGui::End();
 	}
 }
 
