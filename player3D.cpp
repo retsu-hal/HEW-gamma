@@ -93,7 +93,7 @@ static void DebugDrawDetectBox()
 	using namespace DirectX;
 
 	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-	const XMFLOAT3& c = g_Player3D.Position;
+	const XMFLOAT3& c = g_player3D.Position;
 	const XMFLOAT3& h = g_DetectHalfSize;
 
 
@@ -193,9 +193,9 @@ void Player3D_Draw()
 		ImGui::Begin("Debug - CHEN");
 		if (ImGui::TreeNode("Player3D.cpp"))
 		{
-			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
-			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
-			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+			ImGui::Text("PosX: %.2f", g_player3D.Position.x);
+			ImGui::Text("PosY: %.2f", g_player3D.Position.y);
+			ImGui::Text("PosZ: %.2f", g_player3D.Position.z);
 			ImGui::TreePop();
 		}
 		ImGui::End();
@@ -342,7 +342,7 @@ XMFLOAT3 Player3D_GetDetectHalfSize()
 
 bool Player3D_IsNearPoint(const XMFLOAT3& point)
 {
-	const XMFLOAT3& c = g_Player3D.Position;
+	const XMFLOAT3& c = g_player3D.Position;
 
 	if (fabsf(point.x - c.x) > g_DetectHalfSize.x) return false;
 	if (fabsf(point.y - c.y) > g_DetectHalfSize.y) return false;
