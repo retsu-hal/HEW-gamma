@@ -1,31 +1,31 @@
-ï»¿#pragma once
+#pragma once
 #include <Windows.h>
 #include <Xinput.h>
 #pragma comment(lib, "xinput.lib")
 
 //----------------------------------------------
-// Controller ã‚¯ãƒ©ã‚¹
-// XInput ã‚’ä½¿ã£ã¦ã‚²ãƒ¼ãƒ ãƒ‘ãƒƒãƒ‰å…¥åŠ›ã‚’ç®¡ç†ã«ã‚‡
+// Controller ƒNƒ‰ƒX
+// XInput ‚ğg‚Á‚ÄƒQ[ƒ€ƒpƒbƒh“ü—Í‚ğŠÇ—‚É‚å
 //----------------------------------------------
 class Controller
 {
 public:
-    Controller(int index = 0);  // ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ç•ªå· (0ã€œ3)
-    void Update();              // å…¥åŠ›çŠ¶æ…‹ã®æ›´æ–°
+    Controller(int index = 0);  // ƒRƒ“ƒgƒ[ƒ‰[”Ô† (0?3)
+    void Update();              // “ü—Íó‘Ô‚ÌXV
 
-    // æ¥ç¶šçŠ¶æ…‹
+    // Ú‘±ó‘Ô
     bool IsConnected() const;
 
-    // ãƒœã‚¿ãƒ³
+    // ƒ{ƒ^ƒ“
     bool IsButtonPressed(WORD button) const;
 
-    // ã‚¹ãƒ†ã‚£ãƒƒã‚¯å…¥åŠ›ï¼ˆ-1.0ã€œ1.0ï¼‰
+    // ƒXƒeƒBƒbƒN“ü—Íi-1.0?1.0j
     float GetLeftStickX() const;
     float GetLeftStickY() const;
     float GetRightStickX() const;
     float GetRightStickY() const;
 
-    // ãƒˆãƒªã‚¬ãƒ¼å…¥åŠ›ï¼ˆ0.0ã€œ1.0ï¼‰
+    // ƒgƒŠƒK[“ü—Íi0.0?1.0j
     float GetLeftTrigger() const;
     float GetRightTrigger() const;
 
@@ -34,6 +34,6 @@ private:
     XINPUT_STATE m_state;
     bool m_connected;
 
-    // â† ã“ã“ã‚’ const ã«å¤‰æ›´
+    // © ‚±‚±‚ğ const ‚É•ÏX
     float ApplyDeadZone(SHORT value, SHORT deadZone) const;
 };

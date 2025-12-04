@@ -6,7 +6,7 @@
 
 
 //=========================================================================================================
-// グローバル変数
+// ?O???[?o?????
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
@@ -23,7 +23,7 @@ static const float kPitchMin = -85.0f;
 static const float kPitchMax = 85.0f;
 
 //=========================================================================================================
-// 初期化処理
+// ??????????
 //=========================================================================================================
 void Camera_Initialize()
 {
@@ -42,7 +42,7 @@ void Camera_Initialize()
 }
 
 //=========================================================================================================
-// 終了処理
+// ?I??????
 //=========================================================================================================
 void Camera_Finalize()
 {
@@ -50,7 +50,7 @@ void Camera_Finalize()
 }
 
 //=========================================================================================================
-// 更新処理
+// ?X?V????
 //=========================================================================================================
 void Camera_Update()
 {
@@ -58,7 +58,7 @@ void Camera_Update()
 }
 
 //=========================================================================================================
-// 描画処理
+// ?`????
 //=========================================================================================================
 void Camera_Draw()
 {
@@ -75,10 +75,10 @@ void Camera_Draw()
 		ImGui::End();
 	}
 
-	//プロジェクション行列作成
+	//?v???W?F?N?V?????s???
 	CameraObject.Projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(CameraObject.Fov),CameraObject.Aspect,CameraObject.NearClip,CameraObject.FarClip);
 
-	//ビュー行列作成
+	//?r???[?s???
 	XMVECTOR vPos = XMVectorSet(CameraObject.Position.x,CameraObject.Position.y,CameraObject.Position.z,0.0f);
 	XMVECTOR vAt = XMVectorSet(CameraObject.AtPosition.x, CameraObject.AtPosition.y, CameraObject.AtPosition.z, 0.0f);
 	XMVECTOR vUp = XMVectorSet(CameraObject.UpVector.x, CameraObject.UpVector.y, CameraObject.UpVector.z, 0.0f);
@@ -88,7 +88,7 @@ void Camera_Draw()
 }
 
 //=========================================================================================================
-// 視野角の設定
+// ????p????
 //=========================================================================================================
 void SetCameraFov(float fov)
 {
@@ -96,7 +96,7 @@ void SetCameraFov(float fov)
 }
 
 //=========================================================================================================
-// アスペクト比の設定
+// ?A?X?y?N?g?????
 //=========================================================================================================
 void SetCameraAspect(float asp)
 {
@@ -104,7 +104,7 @@ void SetCameraAspect(float asp)
 }
 
 //=========================================================================================================
-// クリップ距離の設定
+// ?N???b?v????????
 //=========================================================================================================
 void SetCameraClip(float n, float f)
 {
@@ -113,7 +113,7 @@ void SetCameraClip(float n, float f)
 }
 
 //=========================================================================================================
-// 位置の設定
+// ??u????
 //=========================================================================================================
 void SetCameraPosition(XMFLOAT3 pos)
 {
@@ -121,7 +121,7 @@ void SetCameraPosition(XMFLOAT3 pos)
 }
 
 //=========================================================================================================
-// 注視点の設定
+// ?????_????
 //=========================================================================================================
 void SetCameraAtPosition(XMFLOAT3 atpos )
 {
@@ -129,7 +129,7 @@ void SetCameraAtPosition(XMFLOAT3 atpos )
 }
 
 //=========================================================================================================
-// 上方向ベクトルの設定
+// ??????x?N?g??????
 //=========================================================================================================
 void SetCameraUpVector(XMFLOAT3 up)
 {
@@ -137,7 +137,7 @@ void SetCameraUpVector(XMFLOAT3 up)
 }
 
 //=========================================================================================================
-// ビュー行列取得
+// ?r???[?s??擾
 //=========================================================================================================
 XMMATRIX GetViewMatrix()
 {
@@ -145,7 +145,7 @@ XMMATRIX GetViewMatrix()
 }
 
 //=========================================================================================================
-// プロジェクション行列の取得
+// ?v???W?F?N?V?????s???擾
 //=========================================================================================================
 XMMATRIX GetProjectionMatrix()
 {
@@ -153,7 +153,7 @@ XMMATRIX GetProjectionMatrix()
 }
 
 //=========================================================================================================
-// カメラの注視点を取得
+// ?J??????????_???擾
 //=========================================================================================================
 XMFLOAT3 GetCameraAtPosition()
 {
@@ -161,7 +161,7 @@ XMFLOAT3 GetCameraAtPosition()
 }
 
 //=========================================================================================================
-// カメラの位置を取得
+// ?J???????u???擾
 //=========================================================================================================
 XMFLOAT3 GetCameraPosition()
 {
@@ -172,14 +172,14 @@ void Mose()
 {
         Mouse_GetState(&ms);
 
-        const float sensitivityYaw = 0.5f;   // x  マウス感度調整用
-        const float sensitivityPitch = 0.5f; // y  マウス感度調整用
+        const float sensitivityYaw = 0.5f;   // x  ?}?E?X???x?????p
+        const float sensitivityPitch = 0.5f; // y  ?}?E?X???x?????p
         const float moveSpeedBase = 0.1f;
 
-        // 常に相対モードにする
+        // ????????[?h?????
         Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
        
-        // FOV調整
+        // FOV????
         if (Keyboard_IsKeyDown(KK_Q)) {
             CameraObject.Fov += 0.5f;
             if (CameraObject.Fov > 160.0f) CameraObject.Fov = 160.0f;
@@ -189,7 +189,7 @@ void Mose()
             if (CameraObject.Fov < 5.0f) CameraObject.Fov = 5.0f;
         }
 
-        // プレイヤーの移動量取得
+        // ?v???C???[??????擾
         XMFLOAT3 playerDelta = g_PlayerPosOld;
         g_PlayerPosOld = GetPlayer3DPositon();
         playerDelta.x = g_PlayerPosOld.x - playerDelta.x;
@@ -199,7 +199,7 @@ void Mose()
         XMFLOAT3 pos = CameraObject.Position;
         XMFLOAT3 at = CameraObject.AtPosition;
 
-        // 初期角度計算
+        // ?????p?x?v?Z
         if (!gCamAnglesInit) {
             float rx = pos.x - at.x;
             float ry = pos.y - at.y;
@@ -218,7 +218,7 @@ void Mose()
             gCamAnglesInit = true;
         }
 
-        // マウスによる回転
+        // ?}?E?X?????]
         if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE) {
             gYawDeg -= ms.x * sensitivityYaw;
             gPitchDeg += ms.y * sensitivityPitch;
@@ -229,7 +229,7 @@ void Mose()
             gPitchDeg = XMVectorGetX(v);
         }
 
-        // カメラ半径と位置計算
+        // ?J???????a???u?v?Z
         float relX = pos.x - at.x;
         float relY = pos.y - at.y;
         float relZ = pos.z - at.z;
@@ -252,7 +252,7 @@ void Mose()
         pos.y = at.y + ry;
         pos.z = at.z + rz;
 
-        // 正規化された方向ベクトル
+        // ???K???????????x?N?g??
         XMFLOAT3 fwd = { at.x - pos.x, at.y - pos.y, at.z - pos.z };
         float flen = sqrtf(fwd.x * fwd.x + fwd.z * fwd.z);
         if (flen > 1e-6f) {
@@ -266,7 +266,7 @@ void Mose()
         XMFLOAT3 right = { fwd.z, 0.0f, -fwd.x };
         const XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
 
-        // プレイヤー移動分をカメラに反映
+        // ?v???C???[????????J????????f
         pos.x += playerDelta.x;
         pos.y += playerDelta.y;
         pos.z += playerDelta.z;
@@ -280,32 +280,32 @@ void Mose()
 
 void Keyb()
 {
-	//プレイヤーの座標を取得
+	//?v???C???[????W???擾
 	XMFLOAT3 pos = g_PlayerPosOld;
 	g_PlayerPosOld = GetPlayer3DPositon();
 
-	//前回のプレイヤーと現在のプレイヤーの座標の差分
+	//?O???v???C???[??????v???C???[????W?????
 	pos.x = g_PlayerPosOld.x - pos.x;
 	pos.y = g_PlayerPosOld.y - pos.y;
 	pos.z = g_PlayerPosOld.z - pos.z;
-	//カメラを移動
+	//?J?????????
 	CameraObject.Position.x += pos.x;
 	CameraObject.Position.y += pos.y;
 	CameraObject.Position.z += pos.z;
 
-	//ボールの座標を注視点としてセット
+	//?{?[??????W????_?????Z?b?g
 	CameraObject.AtPosition.x = g_PlayerPosOld.x;
 	CameraObject.AtPosition.y = g_PlayerPosOld.y;
 	CameraObject.AtPosition.z = g_PlayerPosOld.z;
 
-	//注視点を中心にカメラの回転(Y軸回転)
+	//?????_??S??J???????](Y????])
 	float Rotation = 0.0f;
 
-	//注視点を中心にカメラの回転
+	//?????_??S??J???????]
 	XMFLOAT2 vec;
 	vec.x = CameraObject.Position.x - CameraObject.AtPosition.x;
 	vec.y = CameraObject.Position.z - CameraObject.AtPosition.z;
-	//注視点からカメラへのベクトル
+	//?????_????J???????x?N?g??
 	float co = cosf(XMConvertToRadians(Rotation));
 	float si = sinf(XMConvertToRadians(Rotation));
 	CameraObject.Position.x = (vec.x * co - vec.y * si);

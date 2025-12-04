@@ -1,8 +1,8 @@
-ï»¿#include "Controller.h"
+#include "Controller.h"
 #include <cmath>
 
 //----------------------------------------------
-// ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+// ƒRƒ“ƒXƒgƒ‰ƒNƒ^
 //----------------------------------------------
 Controller::Controller(int index)
     : m_index(index), m_connected(false)
@@ -11,7 +11,7 @@ Controller::Controller(int index)
 }
 
 //----------------------------------------------
-// å…¥åŠ›çŠ¶æ…‹ã®æ›´æ–°
+// “ü—Íó‘Ô‚ÌXV
 //----------------------------------------------
 void Controller::Update()
 {
@@ -21,7 +21,7 @@ void Controller::Update()
 }
 
 //----------------------------------------------
-// æ¥ç¶šãƒã‚§ãƒƒã‚¯
+// Ú‘±ƒ`ƒFƒbƒN
 //----------------------------------------------
 bool Controller::IsConnected() const
 {
@@ -29,7 +29,7 @@ bool Controller::IsConnected() const
 }
 
 //----------------------------------------------
-// ãƒœã‚¿ãƒ³åˆ¤å®š
+// ƒ{ƒ^ƒ“”»’è
 //----------------------------------------------
 bool Controller::IsButtonPressed(WORD button) const
 {
@@ -38,7 +38,7 @@ bool Controller::IsButtonPressed(WORD button) const
 }
 
 //----------------------------------------------
-// ã‚¹ãƒ†ã‚£ãƒƒã‚¯å€¤ã‚’æ­£è¦åŒ–ï¼ˆ-1.0ï½1.0ï¼‰
+// ƒXƒeƒBƒbƒN’l‚ğ³‹K‰»i-1.0`1.0j
 //----------------------------------------------
 float Controller::ApplyDeadZone(SHORT value, SHORT deadZone) const
 {
@@ -70,7 +70,7 @@ float Controller::GetRightStickY() const
 }
 
 //----------------------------------------------
-// ãƒˆãƒªã‚¬ãƒ¼å…¥åŠ›ï¼ˆ0.0ã€œ1.0ï¼‰
+// ƒgƒŠƒK[“ü—Íi0.0?1.0j
 //----------------------------------------------
 float Controller::GetLeftTrigger() const
 {
