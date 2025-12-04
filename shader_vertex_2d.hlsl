@@ -30,6 +30,12 @@ cbuffer Buffer2 : register(b2)
     LIGHT Light; //C言語から渡されたデータが入っている
 }
 
+// 最大ボーン数は仮で64
+cbuffer BoneBuffer : register(b3)
+{
+    float4x4 BoneMatrix[64];
+}
+
 //入力用頂点構造体
 struct VS_INPUT
 {//              V コロン！
@@ -37,6 +43,9 @@ struct VS_INPUT
     float4 normal : NORMAL0;    //法線
     float4  color : COLOR0;   //頂点カラー（R,G,B,A）
     float2 texcoord : TEXCOORD0;
+    
+    uint4 boneIndex : BONEINDEX0;
+    float4 boneWeight : BONEWEIGHT0;
 };
 
 //出力用頂点構造体
@@ -46,6 +55,32 @@ struct VS_OUTPUT
     float4  color : COLOR0;         //頂点カラー
     float2 texcoord : TEXCOORD0;
 };
+
+// スキニング処理
+float4 SkinPosition(VS_INPUT input)
+{
+    float4 pos = float4(0, 0, 0, 0);
+
+    for (int i = 0; i < 4; i++)
+    {
+        pos += mul(input.posL, BoneMatrix[input.boneIndex[i]]) * input.boneWeight[i];
+    }
+
+    return pos;
+}
+
+float4 SkinNormal(VS_INPUT input)
+{
+    float4 nor = float4(0, 0, 0, 0);
+
+    for (int i = 0; i < 4; i++)
+    {
+        nor += mul(float4(input.normal.xyz, 0), BoneMatrix[input.boneIndex[i]]) * input.boneWeight[i];
+    }
+
+    return normalize(nor);
+}
+
 
 VS_OUTPUT main(VS_INPUT vs_in)
 {

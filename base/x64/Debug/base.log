@@ -1,0 +1,5 @@
+﻿  camera.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'camera.cpp' をコンパイルしています)
+  
+  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe

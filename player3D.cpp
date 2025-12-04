@@ -1,20 +1,22 @@
-#include "Player3D.h"
+#include "player3D.h"
 #include "keyboard.h"
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
-
 #include "debug.h"
+//=========================================================================================================
+// ãƒã‚¯ãƒ­å®šç¾©
+//=========================================================================================================
+#define PLAYER3D_SPEEDMAX (2.0f)		//æœ€å¤§é€Ÿåº¦
 
 //=========================================================================================================
-//ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
-PLAYER3D g_Player3D;
+PLAYER3D g_player3D;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
-float g_StopTime = 0.0f;
 
-//ƒŠƒZƒbƒg—p
+//ãƒªã‚»ãƒƒãƒˆç”¨
 XMFLOAT3		Firstposition;
 XMFLOAT3		FirstRotation;
 XMFLOAT3		FirstScaling;
@@ -24,27 +26,28 @@ PLAYER3D_STATE	FirstState;
 float			FirstStopTime;
 XMVECTOR		FirstQuaternion;
 
-//ƒvƒŒƒCƒ„[ƒXƒe[ƒ^ƒX
-float moveSpeed = 0.02f;				//ˆÚ“®‘¬“x
-float maxMoveSpeed = 0.1f;				//Å‘åˆÚ“®‘¬“x
-float jumpPower = 0.15f;				//ƒWƒƒƒ“ƒv—Í
-bool isGround = false;					//Ú’n”»’è
+//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹
+float moveSpeed = 0.1f;				//ç§»å‹•é€Ÿåº¦
+float maxMoveSpeed = 1.0f;				//æœ€å¤§ç§»å‹•é€Ÿåº¦
+float maxGravity = -0.25f;				//æœ€å¤§è½ä¸‹é€Ÿåº¦
+float jumpPower = 0.25f;				//ã‚¸ãƒ£ãƒ³ãƒ—åŠ›
+bool isGround = false;					//æ¥åœ°åˆ¤å®š
 
-//ƒL[ƒ{[ƒh’è‹`
-//ˆÚ“®
-static const auto UpKey = KK_W;			//‘Oi
-static const auto RightKey = KK_D;		//‰EˆÚ“®
-static const auto DownKey = KK_S;		//Œã‘Ş
-static const auto LeftKey = KK_A;		//¶ˆÚ“®
-//s“®
-static const auto JumpKey = KK_SPACE;	//ƒWƒƒƒ“ƒv
-static const auto ActionKey = KK_F;		//ƒAƒNƒVƒ‡ƒ“
-static const auto ChangeKey = KK_F;		//‰e•Ïg
-//‚»‚Ì‘¼
-static const auto ResetKey = KK_R;		//ƒŠƒZƒbƒg
-static const auto MenuKey = KK_ESCAPE;	//I—¹
+//ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰å®šç¾©
+//ç§»å‹•
+static const auto UpKey = KK_W;			//å‰é€²
+static const auto RightKey = KK_D;		//å³ç§»å‹•
+static const auto DownKey = KK_S;		//å¾Œé€€
+static const auto LeftKey = KK_A;		//å·¦ç§»å‹•
+//è¡Œå‹•
+static const auto JumpKey = KK_SPACE;	//ã‚¸ãƒ£ãƒ³ãƒ—
+static const auto ActionKey = KK_F;		//ã‚¢ã‚¯ã‚·ãƒ§ãƒ³
+static const auto ChangeKey = KK_F;		//å½±å¤‰èº«
+//ãã®ä»–
+static const auto ResetKey = KK_R;		//ãƒªã‚»ãƒƒãƒˆ
+static const auto MenuKey = KK_ESCAPE;	//çµ‚äº†
 
-
+float g_StopTime=0.0f;
 static bool debugMode = TRUE;
 static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
 	PLAYER3D_DETECT_HALF_X,
@@ -57,6 +60,10 @@ static ImVec2 WorldToScreen(const XMFLOAT3& p)
 {
 	using namespace DirectX;
 
+<<<<<<< HEAD
+=======
+	// 1) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ backbuffer ï¿½ß´ç£¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Â£ï¿½
+>>>>>>> e5c42e52dadd8f7ac1b98dbd526d411a4a6f1297
 	float bbWidth = (float)Direct3D_GetBackBufferWidth();
 	float bbHeight = (float)Direct3D_GetBackBufferHeight();
 
@@ -127,79 +134,64 @@ static void DebugDrawDetectBox()
 
 
 //=========================================================================================================
-//‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// ƒfƒoƒCƒX‚ÆƒfƒoƒCƒXƒRƒ“ƒeƒLƒXƒg‚Ì•Û‘¶
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player3D.Model = ModelLoad("asset\\model\\Test_man_stand.fbx");
-	Firstposition		= g_Player3D.Position		= XMFLOAT3(0.0f, 1.6f, 0.0f);
-	FirstRotation		= g_Player3D.Rotation		= XMFLOAT3(0.0f, 0.0f, 0.0f);
-	FirstScaling		= g_Player3D.Scaling		= XMFLOAT3(0.01f, 0.01f, 0.01f);
-	FirstVelocity		= g_Player3D.Velocity		= XMFLOAT3(0.0f, 0.0f, 0.0f);
-	FirstAcceleration	= g_Player3D.Acceleration	= XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	FirstState			= g_Player3D.state			= PLAYER3D_STATE_MOVE;
-	FirstStopTime		= g_StopTime				= 0.0f;
-	FirstQuaternion		= g_Player3D.Quaternion		= XMQuaternionIdentity();
-	
+	g_player3D.Model= ModelLoad("asset\\model\\Test_man_stand.fbx");
+	g_player3D.Position = XMFLOAT3(0.0f,1.2f,0.0f);
+	g_player3D.Rotation = XMFLOAT3(-90.0f,0.0f,0.0f);
+	g_player3D.Scaling = XMFLOAT3(0.01f,0.01f,0.01f);
+	g_player3D.Velocity = XMFLOAT3(0.0f,0.0f,0.0f);
+	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	g_player3D.state = PLAYER3D_MOVE;
+	g_StopTime = 0.0f;
+	g_player3D.Quaternion = XMQuaternionIdentity();
+	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 //=========================================================================================================
-//I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 //=========================================================================================================
-void Player3D_Finalize(void)
+void Player3D_Finalize()
 {
-	ModelRelease(g_Player3D.Model);
+	ModelRelease(g_player3D.Model);
 }
 
 //=========================================================================================================
-//XVˆ—
+// æ›´æ–°å‡¦ç†
 //=========================================================================================================
 void Player3D_Update()
-{
-	Player3D_Gravity();
+{	
+	switch (g_player3D.state)
 
-	//ƒvƒŒƒCƒ„[‘€ì
-	Player3D_Move();	//ˆÚ“®
-	Player3D_Jump();	//ƒWƒƒƒ“ƒv
-	Player3D_Change();	//‰e•Ïg
-	Player3D_Action();	//ƒAƒNƒVƒ‡ƒ“
-	Player3D_Reset();	//ƒŠƒZƒbƒg
-	Player3D_Respown();	//ƒŠƒXƒ|[ƒ“
-
-	switch (g_Player3D.state)
 	{
-	case PLAYER3D_STATE_IDLE:
-
+	case PLAYER3D_IDLE:
+		Player3D_Idle();
 		break;
-
-	case PLAYER3D_STATE_MOVE:
-		
+	case PLAYER3D_MOVE:
+		Player3D_Move();
 		break;
-
-	case PLAYER3D_STATE_FALL:
-
-		break;
-
-	case PLAYER3D_STATE_ACTION:
-
-		break;
-
-	default:
+	case PLAYER3D_RESPAWN:
+		Player3D_Respawn();
+		Camera_Initialize();
 		break;
 	}
+
 }
 
+
 //=========================================================================================================
-//•`‰æˆ—
+// æç”»å‡¦ç†
 //=========================================================================================================
-void Player3D_Draw(void)
+void Player3D_Draw()
 {
 	if (debugMode)
 	{
+
 
 		ImGui::Begin("Debug - CHEN");
 		if (ImGui::TreeNode("Player3D.cpp"))
@@ -213,149 +205,137 @@ void Player3D_Draw(void)
 
 		DebugDrawDetectBox();
 	}
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰è¡Œåˆ—ä½œæˆ
+	XMMATRIX scale = XMMatrixScaling
+	(
+		g_player3D.Scaling.x,
+		g_player3D.Scaling.y,
+		g_player3D.Scaling.z);
 
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
+	(
+		XMConvertToRadians(g_player3D.Rotation.x),
+		XMConvertToRadians(g_player3D.Rotation.y),
+		XMConvertToRadians(g_player3D.Rotation.z)
+	);
 
-	
+	XMMATRIX translation = XMMatrixTranslation
+	(
+		g_player3D.Position.x,
+		g_player3D.Position.y,
+		g_player3D.Position.z
+	);
 
-	// ƒ[ƒ‹ƒhs—ñ‚Ìì¬
-	//ƒXƒP[ƒŠƒ“ƒOs—ñ‚Ìì¬
-	XMMATRIX ScalingMatrix = XMMatrixScaling(g_Player3D.Scaling.x, g_Player3D.Scaling.y, g_Player3D.Scaling.z);
-	//•½sˆÚ“®s—ñ‚Ìì¬
-	XMMATRIX TranslationMatrix = XMMatrixTranslation(g_Player3D.Position.x, g_Player3D.Position.y, g_Player3D.Position.z);
-	//‰ñ“]s—ñ‚Ìì¬
-	XMMATRIX RotationMatrix = XMMatrixRotationQuaternion(g_Player3D.Quaternion);
-	//ŒvZ‚Ì‡”ÔuƒXƒP[ƒ‹*‰ñ“]*•½sˆÚ“®v
-	XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
+	XMMATRIX world = scale * rotation * translation;
 
-	//ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñì¬
-	XMMATRIX Projection = GetProjectionMatrix();
+	//å¤‰æ›è¡Œåˆ—ä½œæˆ
+	XMMATRIX view = GetViewMatrix();
+	XMMATRIX projection = GetProjectionMatrix();
+	XMMATRIX wvp = world * view * projection;
 
-	//ƒrƒ…[s—ñì¬
-	XMMATRIX View = GetViewMatrix();
+	//ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã¸è¡Œåˆ—ã‚’ã‚»ãƒƒãƒˆ
+	Shader_SetWorldMatrix(world);
+	Shader_SetMatrix(wvp);
 
-	//ÅI“I‚È•ÏŠ·s—ñ‚ğì¬	‡”Ô‚É’ˆÓII
-	XMMATRIX WVP = WorldMatrix * View * Projection;
-
-	//•ÏŠ·s—ñ‚ğ’¸“_ƒVƒF[ƒ_‚ÖƒZƒbƒg
-	Shader_SetWorldMatrix(WorldMatrix);
-	Shader_SetMatrix(WVP);
-
-	//•`‰æƒŠƒNƒGƒXƒg
-	ModelDraw(g_Player3D.Model);
-	
+	//ãƒ¢ãƒ‡ãƒ«ã®æç”»ãƒªã‚¯ã‚¨ã‚¹ãƒˆ
+	ModelDraw(g_player3D.Model);
 }
+
 //=========================================================================================================
-// ƒQƒbƒ^[
+// ã‚²ãƒƒã‚¿ãƒ¼
 //=========================================================================================================
 XMFLOAT3 GetPlayer3DPositon()
 {
-	return g_Player3D.Position;
+	return g_player3D.Position;
 }
 
 //=========================================================================================================
-//ˆ—
+// stateã”ã¨ã®å‡¦ç†ï¼ˆIdleçŠ¶æ…‹ï¼‰
 //=========================================================================================================
-
-void Player3D_Gravity()
+void Player3D_Idle()
 {
-	g_Player3D.Velocity.x += g_Player3D.Acceleration.x; //d—Í
-	g_Player3D.Velocity.y += g_Player3D.Acceleration.y; //d—Í
-	g_Player3D.Velocity.z += g_Player3D.Acceleration.z; //d—Í
-
-	g_Player3D.Position.x += g_Player3D.Velocity.x;
-	g_Player3D.Position.y += g_Player3D.Velocity.y;
-	g_Player3D.Position.z += g_Player3D.Velocity.z;
-
-	g_Player3D.Velocity.x *= 0.98f;		//D‚İ‚ÅŒ¸Š‚³‚¹‚é
-	//g_Player3D.Velocity.y *= 0.98f;	//D‚İ‚ÅŒ¸Š‚³‚¹‚é
-	g_Player3D.Velocity.z *= 0.98f;		//D‚İ‚ÅŒ¸Š‚³‚¹‚é
-
-	//Ã~ƒ`ƒFƒbƒN
-	float len = (g_Player3D.Velocity.x * g_Player3D.Velocity.x + g_Player3D.Velocity.y * g_Player3D.Velocity.y + g_Player3D.Velocity.z * g_Player3D.Velocity.z);
-	if (len <= 0.0002f)
-	{
-		g_StopTime++;
-		if (g_StopTime > (60.0f * 2))
-		{
-			g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			g_Player3D.state = PLAYER3D_STATE_IDLE;
-			g_StopTime = 0.0f;
-		}
-	}
+	g_player3D.state = PLAYER3D_MOVE;
 }
 
-void Player3D_Respown()
-{
-	//—‰ºƒ`ƒFƒbƒN
-	if (g_Player3D.Position.y < -10.0f)
-	{
-		Player3D_Reset();
-		return;
-	}
-}
 
+//=========================================================================================================
+// stateã”ã¨ã®å‡¦ç†ï¼ˆMoveçŠ¶æ…‹ï¼‰
+//=========================================================================================================
 void Player3D_Move()
 {
+	g_player3D.Velocity.x += g_player3D.Acceleration.x; //é‡åŠ›
+	g_player3D.Velocity.y += g_player3D.Acceleration.y; //é‡åŠ›
+	g_player3D.Velocity.z += g_player3D.Acceleration.z; //é‡åŠ›
+
+	g_player3D.Position.x += g_player3D.Velocity.x;
+	g_player3D.Position.y += g_player3D.Velocity.y;
+	g_player3D.Position.z += g_player3D.Velocity.z;
+
+	g_player3D.Velocity.x *= 0.98f;		//å¥½ã¿ã§æ¸›è¡°ã•ã›ã‚‹
+	//g_player3D.Velocity.y *= 0.98f;		//å¥½ã¿ã§æ¸›è¡°ã•ã›ã‚‹
+	g_player3D.Velocity.z *= 0.98f;		//å¥½ã¿ã§æ¸›è¡°ã•ã›ã‚‹
+	
+	XMFLOAT3 camPos = GetCameraPosition();
+	XMFLOAT3 camAt = GetCameraAtPosition();
+
+	// ã‚«ãƒ¡ãƒ©ã®å‰æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ï¼ˆæ­£è¦åŒ–ï¼‰
+	XMFLOAT3 forward = { camAt.x - camPos.x,	0.0f, camAt.z - camPos.z };
+	float flen = sqrtf(forward.x * forward.x + forward.z * forward.z);
+	if (flen > 0.0001f) {
+		forward.x /= flen;
+		forward.z /= flen;
+	}
+	// ã‚«ãƒ¡ãƒ©ã®å³æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
+	XMFLOAT3 right = { forward.z, 0.0f, -forward.x };
 	if (Keyboard_IsKeyDown(UpKey))
 	{
+		g_player3D.Position.x += forward.x * moveSpeed;
+		g_player3D.Position.z += forward.z * moveSpeed;
 
 	}
 	if (Keyboard_IsKeyDown(RightKey))
 	{
-
+		g_player3D.Position.x += right.x * moveSpeed;
+		g_player3D.Position.z += right.z * moveSpeed;
 	}
 	if (Keyboard_IsKeyDown(DownKey))
 	{
-
+		g_player3D.Position.x -= forward.x * moveSpeed;
+		g_player3D.Position.z -= forward.z * moveSpeed;
 	}
 	if (Keyboard_IsKeyDown(LeftKey))
 	{
-
+		g_player3D.Position.x -= right.x * moveSpeed;
+		g_player3D.Position.z -= right.z * moveSpeed;
 	}
-}
-
-void Player3D_Jump()
-{
-	if (Keyboard_IsKeyDown(JumpKey))
+	float hit = Player3DField_Collision();
+	//è½ä¸‹ãƒã‚§ãƒƒã‚¯
+	if (g_player3D.Position.y < -10.0f)
 	{
-		// ’n–Ê‚É‚¢‚é‚©‚Ç‚¤‚©‚ğ”»’è
-		if (!PLAYER3D_STATE_FALL)
-		{
-			// ãŒü‚«‚É‰‘¬‚ğ—^‚¦‚éi’l‚Í’²®‚µ‚Ä‚­‚¾‚³‚¢j
-			g_Player3D.Velocity.y += jumpPower;
-			// ‹ó’†‚É‚¢‚éó‘Ô‚Ö
-			g_Player3D.state = PLAYER3D_STATE_FALL;
-			// ’…’nƒ^ƒCƒ}[ƒŠƒZƒbƒg
-			g_StopTime = 0.0f;
-		}
+		g_player3D.state = PLAYER3D_RESPAWN;
+		return;
 	}
 }
 
-void Player3D_Change()
+//=========================================================================================================
+// stateã”ã¨ã®å‡¦ç†ï¼ˆRespawnçŠ¶æ…‹ï¼‰
+//=========================================================================================================
+void Player3D_Respawn()
 {
-
-}
-
-void Player3D_Action()
-{
-
-}
-
-void Player3D_Reset()
-{
-	g_Player3D.Position		= Firstposition;
-	g_Player3D.Rotation		= FirstRotation;
-	g_Player3D.Scaling		= FirstScaling; 
-	g_Player3D.Velocity		= FirstVelocity;
-	g_Player3D.Acceleration = FirstAcceleration;
-	g_Player3D.state		= FirstState;
-	g_StopTime				= FirstStopTime;
-	g_Player3D.Quaternion	= FirstQuaternion;
+	g_player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
+	g_player3D.Rotation = XMFLOAT3(-90.0f, 0.0f, 0.0f);
+	g_player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
+	g_player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	g_player3D.state =PLAYER3D_MOVE;
+	g_StopTime = 0.0f;
+	g_player3D.Quaternion = XMQuaternionIdentity();
+	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 PLAYER3D* GetPlayer3D()
 {
-	return &g_Player3D;
+	return &g_player3D;
 }
 
 XMFLOAT3 Player3D_GetDetectHalfSize()

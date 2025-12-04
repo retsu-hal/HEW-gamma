@@ -1,83 +1,86 @@
 #include "Collision.h"
+#include "player3D.h"
+
 
 //=========================================================================================================
-// É{Å[ÉãÇ∆ÉtÉBÅ[ÉãÉhÇÃìñÇΩÇËîªíË
+// „Éú„Éº„É´„Å®„Éï„Ç£„Éº„É´„Éâ„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö
 //=========================================================================================================
-//float BallField_Collision()
-//{
-//	float hit = false;
-//	BALL* Ball = GetBall();
-//	MAPDATA* Map = GetFieldMap();
-//	int i = 0;
-//
-//	while (Map[i].no != FIELD_MAX)
-//	{
-//		float BoxTop;
-//		switch (Map[i].no)
-//		{
-//		default:
-//			BoxTop = Map[i].pos.y + BOX_RADIUS; // ïÅí ÇÃBOX
-//			break;
-//		}
-//		//ï«Ç∆ÇÃìñÇΩÇËîªíË
-//		if (Map[i].pos.y - BOX_RADIUS < Ball->Position.y && Ball->Position.y < BoxTop - 0.1f)
-//		{
-//			if (Map[i].pos.z - BOX_RADIUS < Ball->Position.z && Ball->Position.z < Map[i].pos.z + BOX_RADIUS)
-//			{
-//				if (Map[i].pos.x - BOX_RADIUS < Ball->Position.x + BALL_RADIUS && Ball->Position.x < Map[i].pos.x + BOX_RADIUS)
-//				{//BOXÇÃ-Xñ Ç…Ç‘Ç¬Ç©Ç¡ÇΩ
-//					Ball->Position.x += (Map[i].pos.x - BOX_RADIUS) - (Ball->Position.x + BALL_RADIUS);
-//					Ball->Velocity.x *= -COE;//îΩî≠Ç≥ÇπÇÈ
-//					hit = COLLISION_HIT::HIT_WALL_NegX;
-//				}
-//				else if (Map[i].pos.x + BOX_RADIUS > Ball->Position.x - BALL_RADIUS && Ball->Position.x > Map[i].pos.x + BOX_RADIUS)
-//				{//BOXÇÃ+Xñ Ç…Ç‘Ç¬Ç©Ç¡ÇΩ
-//					Ball->Position.x += (Map[i].pos.x + BOX_RADIUS) - (Ball->Position.x - BALL_RADIUS);
-//					Ball->Velocity.x *= -COE;//îΩî≠Ç≥ÇπÇÈ
-//					hit = COLLISION_HIT::HIT_WALL_PlusX;
-//
-//				}
-//			}
-//			else if (Map[i].pos.x - BOX_RADIUS < Ball->Position.x && Ball->Position.x < Map[i].pos.x + BOX_RADIUS)
-//			{
-//				if (Map[i].pos.z - BOX_RADIUS < Ball->Position.z + BALL_RADIUS && Ball->Position.z < Map[i].pos.z + BOX_RADIUS)
-//				{//BOXÇÃ-Zñ Ç…Ç‘Ç¬Ç©Ç¡ÇΩ
-//					Ball->Position.z += (Map[i].pos.z - BOX_RADIUS) - (Ball->Position.z + BALL_RADIUS);
-//					Ball->Velocity.z *= -COE;//îΩî≠Ç≥ÇπÇÈ
-//					hit = COLLISION_HIT::HIT_WALL_NegZ;
-//				}
-//				else if (Map[i].pos.z + BOX_RADIUS > Ball->Position.z - BALL_RADIUS && Ball->Position.z > Map[i].pos.z + BOX_RADIUS)
-//				{//BOXÇÃ+Zñ Ç…Ç‘Ç¬Ç©Ç¡ÇΩ
-//					Ball->Position.z += (Map[i].pos.z + BOX_RADIUS) - (Ball->Position.z - BALL_RADIUS);
-//					Ball->Velocity.z *= -COE;//îΩî≠Ç≥ÇπÇÈ
-//					hit = COLLISION_HIT::HIT_WALL_PlusZ;
-//
-//				}
-//			}
-//		}
-//		//è∞Ç∆ÇÃìñÇΩÇËîªíË
-//		else
-//		{
-//			if ((Map[i].pos.z - BOX_RADIUS) < Ball->Position.z && Ball->Position.z < (Map[i].pos.z + BOX_RADIUS))
-//			{
-//				if ((Map[i].pos.x - BOX_RADIUS) < Ball->Position.x && Ball->Position.x < (Map[i].pos.x + BOX_RADIUS))
-//				{
-//					if ((Map[i].pos.y - BOX_RADIUS) < (Ball->Position.y + BALL_RADIUS) && Ball->Position.y < (Map[i].pos.y - BOX_RADIUS))
-//					{
-//						Ball->Position.y += (Map[i].pos.y - BOX_RADIUS) - (Ball->Position.y + BALL_RADIUS);
-//						Ball->Velocity.y *= -COE;
-//					}
-//					else if (BoxTop > (Ball->Position.y - BALL_RADIUS) && Ball->Position.y > BoxTop)
-//					{
-//						Ball->Position.y += (BoxTop)-(Ball->Position.y - BALL_RADIUS);
-//						Ball->Velocity.y = Ball->Velocity.y * (-COE * 1.0f);
-//						hit = COLLISION_HIT::HIT_WALL_NegX;
-//					}
-//				}
-//			}
-//		}
-//		i++;
-//		
-//	}
-//	return hit;
-//}
+
+float Player3DField_Collision()
+{
+	float hit = false;
+	PLAYER3D* player3D = GetPlayer3D();
+	MAPDATA* Map = GetFieldMap();
+	int i = 0;
+
+	while (Map[i].no != FIELD_MAX)
+	{
+		float BoxTop;
+		switch (Map[i].no)
+		{
+		default:
+			BoxTop = Map[i].pos.y + BOX_RADIUS; // ÊôÆÈÄö„ÅÆBOX
+			break;
+		}
+		//Â£Å„Å®„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö
+		if (Map[i].pos.y - BOX_RADIUS < player3D->Position.y && player3D->Position.y < BoxTop - 0.1f)
+		{
+			if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
+			{
+				if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x + PLAYER3D_RADIUS && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
+				{//BOX„ÅÆ-XÈù¢„Å´„Å∂„Å§„Åã„Å£„Åü
+					player3D->Position.x += (Map[i].pos.x - BOX_RADIUS) - (player3D->Position.x + PLAYER3D_RADIUS);
+					player3D->Velocity.x *= -COE;//ÂèçÁô∫„Åï„Åõ„Çã
+					hit = COLLISION_HIT::HIT_WALL_NegX;
+				}
+				else if (Map[i].pos.x + BOX_RADIUS > player3D->Position.x - PLAYER3D_RADIUS && player3D->Position.x > Map[i].pos.x + BOX_RADIUS)
+				{//BOX„ÅÆ+XÈù¢„Å´„Å∂„Å§„Åã„Å£„Åü
+					player3D->Position.x += (Map[i].pos.x + BOX_RADIUS) - (player3D->Position.x - PLAYER3D_RADIUS);
+					player3D->Velocity.x *= -COE;//ÂèçÁô∫„Åï„Åõ„Çã
+					hit = COLLISION_HIT::HIT_WALL_PlusX;
+
+				}
+			}
+			else if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
+			{
+				if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z + PLAYER3D_RADIUS && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
+				{//BOX„ÅÆ-ZÈù¢„Å´„Å∂„Å§„Åã„Å£„Åü
+					player3D->Position.z += (Map[i].pos.z - BOX_RADIUS) - (player3D->Position.z + PLAYER3D_RADIUS);
+					player3D->Velocity.z *= -COE;//ÂèçÁô∫„Åï„Åõ„Çã
+					hit = COLLISION_HIT::HIT_WALL_NegZ;
+				}
+				else if (Map[i].pos.z + BOX_RADIUS > player3D->Position.z - PLAYER3D_RADIUS && player3D->Position.z > Map[i].pos.z + BOX_RADIUS)
+				{//BOX„ÅÆ+ZÈù¢„Å´„Å∂„Å§„Åã„Å£„Åü
+					player3D->Position.z += (Map[i].pos.z + BOX_RADIUS) - (player3D->Position.z - PLAYER3D_RADIUS);
+					player3D->Velocity.z *= -COE;//ÂèçÁô∫„Åï„Åõ„Çã
+					hit = COLLISION_HIT::HIT_WALL_PlusZ;
+
+				}
+			}
+		}
+		//Â∫ä„Å®„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö
+		else
+		{
+			if ((Map[i].pos.z - BOX_RADIUS) < player3D->Position.z && player3D->Position.z < (Map[i].pos.z + BOX_RADIUS))
+			{
+				if ((Map[i].pos.x - BOX_RADIUS) < player3D->Position.x && player3D->Position.x < (Map[i].pos.x + BOX_RADIUS))
+				{
+					if ((Map[i].pos.y - BOX_RADIUS) < (player3D->Position.y + PLAYER3D_RADIUS) && player3D->Position.y < (Map[i].pos.y - BOX_RADIUS))
+					{
+						player3D->Position.y += (Map[i].pos.y - BOX_RADIUS) - (player3D->Position.y + PLAYER3D_RADIUS);
+						player3D->Velocity.y *= -COE;
+					}
+					else if (BoxTop > (player3D->Position.y - PLAYER3D_RADIUS) && player3D->Position.y > BoxTop)
+					{
+						player3D->Position.y += (BoxTop)-(player3D->Position.y - PLAYER3D_RADIUS);
+						player3D->Velocity.y = player3D->Velocity.y * (-COE * 1.0f);
+						hit = COLLISION_HIT::HIT_WALL_NegX;
+					}
+				}
+			}
+		}
+		i++;
+		
+	}
+	return hit;
+}
