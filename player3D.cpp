@@ -34,17 +34,17 @@ bool isGround = false;						//接地判定（明示的に初期化）
 
 //キーボード定義
 //移動
-static const auto UpKey = KK_W;			//前進
-static const auto RightKey = KK_D;		//右移動
-static const auto DownKey = KK_S;		//後退
-static const auto LeftKey = KK_A;		//左移動
+static const auto UpKey =		KK_W;		//前進
+static const auto RightKey =	KK_D;		//右移動
+static const auto DownKey =		KK_S;		//後退
+static const auto LeftKey =		KK_A;		//左移動
 //行動
-static const auto JumpKey = KK_SPACE;	//ジャンプ
-static const auto ActionKey = KK_F;		//アクション
-static const auto ChangeKey = KK_F;		//影変身
+static const auto JumpKey =		KK_SPACE;	//ジャンプ
+static const auto ActionKey =	KK_F;		//アクション
+static const auto ChangeKey =	KK_F;		//影変身
 //その他
-static const auto ResetKey = KK_R;		//リセット
-static const auto MenuKey = KK_ESCAPE;	//終了
+static const auto ResetKey =	KK_R;		//リセット
+static const auto MenuKey =		KK_ESCAPE;	//終了
 
 //=========================================================================================================
 //初期化処理
