@@ -246,13 +246,30 @@ void Player3D_Move()
 	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
 	if (len > 0.0001f)
 	{
+		// 正規化ベクトル × 加速
 		inputDir.x /= len;
 		inputDir.z /= len;
-
-		// 正規化ベクトル × 加速
 		g_Player3D.Velocity.x += inputDir.x * moveSpeed;
 		g_Player3D.Velocity.z += inputDir.z * moveSpeed;
+
+		// --- 入力がある場合にのみ向きを更新 ---
+		float targetYawRad = atan2f(inputDir.x, inputDir.z); // (x,z) -> 前方を Z とした角度
+		float targetYawDeg = XMConvertToDegrees(targetYawRad);
+
+		// モデルの初期向きに合わせるオフセット（必要なら調整）
+		const float yawOffset = FirstRotation.y;
+		targetYawDeg += yawOffset;
+
+		// スムーズ回転（角度差を最短経路で求めて補間）
+		float currentYaw = g_Player3D.Rotation.y;
+		float delta = targetYawDeg - currentYaw;
+		while (delta > 180.0f) delta -= 360.0f;
+		while (delta < -180.0f) delta += 360.0f;
+
+		const float rotateLerp = 0.2f; // 0..1（1で即時回転）
+		g_Player3D.Rotation.y = currentYaw + delta * rotateLerp;
 	}
+	// 入力無しのときは回転を変更しない（最後に向いていた方向を保持）
 }
 
 void Player3D_Jump()
