@@ -194,9 +194,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				//XVˆ—
 				Manager_Update();
 
-				
-
-
 				//•`‰æˆ—
 				Direct3D_Clear();
 				Manager_Draw();

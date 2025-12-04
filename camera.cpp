@@ -39,6 +39,7 @@ void Camera_Initialize()
 	CameraObject.FarClip = 1000.0f;
 
 	g_PlayerPosOld = GetPlayer3DPositon();
+    Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 }
 
 //=========================================================================================================
@@ -54,33 +55,8 @@ void Camera_Finalize()
 //=========================================================================================================
 void Camera_Update()
 {
-<<<<<<< HEAD
-	static bool CamMode = false;
-
-	if (Keyboard_IsKeyDownTrigger(KK_C)) {
-		CamMode = !CamMode;
-	}
-
-	if (CamMode)
-	{
-		Mose();
-	}
-	else
-	{
-		Keyb();
-	}
-
-
-	if (debugMode)
-	{
-		ImGui::Begin("Debug - CHEN");
-		if (CamMode) ImGui::Text("is Camera");
-		else ImGui::Text("is Player");
-		ImGui::End();
-	}
-=======
 	Mose();
->>>>>>> e5c42e52dadd8f7ac1b98dbd526d411a4a6f1297
+
 }
 
 //=========================================================================================================
@@ -203,7 +179,20 @@ void Mose()
         const float moveSpeedBase = 0.1f;
 
         // 常に相対モードにする
-        Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+        //Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+
+        static bool relativeMode = true;
+        static bool prevRight = false;
+        bool suppressDelta = false;
+        if (ms.rightButton && !prevRight) {//右クリックが押された瞬間
+            relativeMode = !relativeMode;
+            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+                : MOUSE_POSITION_MODE_ABSOLUTE);
+            suppressDelta = true;
+        }
+        prevRight = ms.rightButton;
+
+
        
         // FOV調整
         if (Keyboard_IsKeyDown(KK_Q)) {
@@ -245,7 +234,7 @@ void Mose()
         }
 
         // マウスによる回転
-        if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE) {
+        if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE && !suppressDelta) {
             gYawDeg -= ms.x * sensitivityYaw;
             gPitchDeg += ms.y * sensitivityPitch;
             XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
