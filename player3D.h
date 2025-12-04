@@ -1,56 +1,55 @@
 #pragma once
-
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
 #include "model.h"
+//=========================================================================================================
+// „Éû„ÇØ„É≠ÂÆöÁæ©
+//=========================================================================================================
+#define PLAYER3D_RADIUS (0.2f)			//ÂçäÂæÑ
 
 //=========================================================================================================
-// É}ÉNÉçíËã`
+// ÂàóÊåô
 //=========================================================================================================
-#define PLAYER3D_RADIUS (0.2f)			//îºåa
-
-//=========================================================================================================
-// ç\ë¢ëÃ
-//=========================================================================================================
-//ÉvÉåÉCÉÑÅ[ÉXÉeÅ[Ég
 enum PLAYER3D_STATE
 {
-	PLAYER3D_STATE_IDLE = 0,	//âΩÇ‡ÇµÇ»Ç¢
-	PLAYER3D_STATE_MOVE,		//à⁄ìÆíÜ
-	PLAYER3D_STATE_FALL,		//óéâ∫íÜ
-	PLAYER3D_STATE_UP,			//è„è∏íÜ
-	PLAYER3D_STATE_ACTION,		//ÉAÉNÉVÉáÉìíÜ
+	PLAYER3D_IDLE=0,
+	PLAYER3D_MOVE,					//ÁßªÂãï
+	PLAYER3D_RESPAWN,				//Âæ©Ê¥ª
 
-	PLAYER3D_STATE_MAX,
+	PLAYER3D_MAX,
+
 };
 
+//=========================================================================================================
+// ÊßãÈÄ†‰ΩìÂÆ£Ë®Ä
+//=========================================================================================================
 class PLAYER3D
 {
 public:
-	XMFLOAT3 Position;			//ç¿ïW
-	XMFLOAT3 Rotation;			//âÒì]
-	XMFLOAT3 Scaling;			//ÉTÉCÉY
-	XMFLOAT3 Velocity;			//ï˚å¸
-	XMFLOAT3 Acceleration;		//
-	PLAYER3D_STATE state;		//èÛë‘
-	MODEL* Model;				//ÉÇÉfÉãÉfÅ[É^
-	XMVECTOR Quaternion;		//
-
+	XMFLOAT3 Position;			//Â∫ßÊ®ô
+	XMFLOAT3 Rotation;			//ÂõûËª¢
+	XMFLOAT3 Scaling;			//„Çµ„Ç§„Ç∫
+	XMFLOAT3 Velocity;			//ÊñπÂêë
+	XMFLOAT3 Acceleration;	//
+	PLAYER3D_STATE state;			//Áä∂ÊÖã
+	MODEL* Model;					//„É¢„Éá„É´„Éá„Éº„Çø
+	XMVECTOR Quaternion;	//
+	XMVECTOR Axis;				//
+	float Speed;						//
 };
 
 //=========================================================================================================
-// ÉvÉçÉgÉ^ÉCÉvêÈåæ
+//„Éó„É≠„Éà„Çø„Ç§„ÉóÂÆ£Ë®Ä
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-void Player3D_Finalize(void);
+void Player3D_Finalize();
 void Player3D_Update();
-void Player3D_Draw(void);
-
+void Player3D_Draw();
 XMFLOAT3 GetPlayer3DPositon();
-
-void Player3D_Gravity();
+void Player3D_Idle();
 void Player3D_Move();
+
 void Player3D_Jump();
 void Player3D_Change();
 void Player3D_Action();
@@ -67,3 +66,6 @@ PLAYER3D* GetPlayer3D();
 
 bool     Player3D_IsNearPoint(const XMFLOAT3& point);
 XMFLOAT3 Player3D_GetDetectHalfSize();
+void Player3D_Respawn();
+PLAYER3D* GetPlayer3D();
+

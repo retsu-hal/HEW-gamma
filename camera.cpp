@@ -1,8 +1,15 @@
 #include "camera.h"
 #include"keyboard.h"
 #include "mouse.h"
-
+#include "player3D.h"
 #include "debug.h"
+
+
+//=========================================================================================================
+// グローバル変数
+//=========================================================================================================
+static CAMERA CameraObject;
+XMFLOAT3 g_PlayerPosOld;
 static bool debugMode = TRUE;
 
 
@@ -14,12 +21,6 @@ static float  gYawDeg = 0.0f;
 static float  gPitchDeg = 0.0f;
 static const float kPitchMin = -85.0f;
 static const float kPitchMax = 85.0f;
-
-//=========================================================================================================
-// グローバル変数
-//=========================================================================================================
-static CAMERA CameraObject;
-XMFLOAT3 g_BallPosOld;
 
 //=========================================================================================================
 // 初期化処理
@@ -37,7 +38,7 @@ void Camera_Initialize()
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 
-	//g_BallPosOld = GetBallPositon();
+	g_PlayerPosOld = GetPlayer3DPositon();
 }
 
 //=========================================================================================================
@@ -53,20 +54,7 @@ void Camera_Finalize()
 //=========================================================================================================
 void Camera_Update()
 {
-	static bool CamMode = false;
-
-	if (Keyboard_IsKeyDown(KK_C)) {
-		CamMode = !CamMode;
-	}
-
-	if (CamMode)
-	{
-		Mose();
-	}
-	else
-	{
-		Keyb();
-	}
+	Mose();
 }
 
 //=========================================================================================================
@@ -182,177 +170,136 @@ XMFLOAT3 GetCameraPosition()
 
 void Mose()
 {
-	Mouse_GetState(&ms);
+        Mouse_GetState(&ms);
 
-	const float sensitivityYaw = 0.5f;//x  マウス感度調整用
-	const float sensitivityPitch = 0.5f;//y  マウス感度調整用
-	const float moveSpeedBase = 0.1f;
+        const float sensitivityYaw = 0.5f;   // x  マウス感度調整用
+        const float sensitivityPitch = 0.5f; // y  マウス感度調整用
+        const float moveSpeedBase = 0.1f;
 
+        // 常に相対モードにする
+        Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+       
+        // FOV調整
+        if (Keyboard_IsKeyDown(KK_Q)) {
+            CameraObject.Fov += 0.5f;
+            if (CameraObject.Fov > 160.0f) CameraObject.Fov = 160.0f;
+        }
+        if (Keyboard_IsKeyDown(KK_E)) {
+            CameraObject.Fov -= 0.5f;
+            if (CameraObject.Fov < 5.0f) CameraObject.Fov = 5.0f;
+        }
 
-	static bool relativeMode = false;
-	static bool prevRight = false;
-	bool suppressDelta = false;
+        // プレイヤーの移動量取得
+        XMFLOAT3 playerDelta = g_PlayerPosOld;
+        g_PlayerPosOld = GetPlayer3DPositon();
+        playerDelta.x = g_PlayerPosOld.x - playerDelta.x;
+        playerDelta.y = g_PlayerPosOld.y - playerDelta.y;
+        playerDelta.z = g_PlayerPosOld.z - playerDelta.z;
 
-	if (ms.rightButton && !prevRight) {//右クリックが押された瞬間
-		relativeMode = !relativeMode;
-		Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-			: MOUSE_POSITION_MODE_ABSOLUTE);
-		suppressDelta = true;
-	}
+        XMFLOAT3 pos = CameraObject.Position;
+        XMFLOAT3 at = CameraObject.AtPosition;
 
-	prevRight = ms.rightButton;
+        // 初期角度計算
+        if (!gCamAnglesInit) {
+            float rx = pos.x - at.x;
+            float ry = pos.y - at.y;
+            float rz = pos.z - at.z;
+            float r = sqrtf(rx * rx + ry * ry + rz * rz);
+            if (r < 1e-6f) r = 1e-6f;
 
-	if (Keyboard_IsKeyDown(KK_Z)) {
-		CameraObject.Fov += 0.5f;
-		if (CameraObject.Fov > 160.0f)
-		{
-			CameraObject.Fov = 160.0f;
-		}
-	}
-	if (Keyboard_IsKeyDown(KK_X)) {
-		CameraObject.Fov -= 0.5f;
-		if (CameraObject.Fov < 5.0f)
-		{
-			CameraObject.Fov = 5.0f;
-		}
-	}
+            gYawDeg = XMConvertToDegrees(atan2f(rz, rx));
+            gPitchDeg = XMConvertToDegrees(asinf(ry / r));
+            XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
+            XMVECTOR lo = XMVectorReplicate(kPitchMin);
+            XMVECTOR hi = XMVectorReplicate(kPitchMax);
+            v = XMVectorClamp(v, lo, hi);
+            gPitchDeg = XMVectorGetX(v);
 
-	XMFLOAT3 pos = CameraObject.Position;
-	XMFLOAT3 at = CameraObject.AtPosition;
+            gCamAnglesInit = true;
+        }
 
-	if (!gCamAnglesInit) {
-		float rx = pos.x - at.x;
-		float ry = pos.y - at.y;
-		float rz = pos.z - at.z;
-		float r = sqrtf(rx * rx + ry * ry + rz * rz);
-		if (r < 1e-6f) r = 1e-6f;
+        // マウスによる回転
+        if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE) {
+            gYawDeg -= ms.x * sensitivityYaw;
+            gPitchDeg += ms.y * sensitivityPitch;
+            XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
+            XMVECTOR lo = XMVectorReplicate(kPitchMin);
+            XMVECTOR hi = XMVectorReplicate(kPitchMax);
+            v = XMVectorClamp(v, lo, hi);
+            gPitchDeg = XMVectorGetX(v);
+        }
 
-		gYawDeg = XMConvertToDegrees(atan2f(rz, rx));
-		gPitchDeg = XMConvertToDegrees(asinf(ry / r));
-		XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
-		XMVECTOR lo = XMVectorReplicate(kPitchMin);
-		XMVECTOR hi = XMVectorReplicate(kPitchMax);
-		v = XMVectorClamp(v, lo, hi);
-		gPitchDeg = XMVectorGetX(v);
+        // カメラ半径と位置計算
+        float relX = pos.x - at.x;
+        float relY = pos.y - at.y;
+        float relZ = pos.z - at.z;
+        float radius = sqrtf(relX * relX + relY * relY + relZ * relZ);
+        if (radius < 1e-6f) radius = 1e-6f;
 
-		gCamAnglesInit = true;
-	}
+        float yawRad = XMConvertToRadians(gYawDeg);
+        float pitchRad = XMConvertToRadians(gPitchDeg);
 
-	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE && !suppressDelta) {
-		gYawDeg -= ms.x * sensitivityYaw;
+        float cp = cosf(pitchRad);
+        float sp = sinf(pitchRad);
+        float cy = cosf(yawRad);
+        float sy = sinf(yawRad);
 
-		gPitchDeg += ms.y * sensitivityPitch;
-		XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
-		XMVECTOR lo = XMVectorReplicate(kPitchMin);
-		XMVECTOR hi = XMVectorReplicate(kPitchMax);
-		v = XMVectorClamp(v, lo, hi);
-		gPitchDeg = XMVectorGetX(v);
-	}
+        float rx = radius * cp * cy;
+        float ry = radius * sp;
+        float rz = radius * cp * sy;
 
-	float relX = pos.x - at.x;
-	float relY = pos.y - at.y;
-	float relZ = pos.z - at.z;
-	float radius = sqrtf(relX * relX + relY * relY + relZ * relZ);
-	if (radius < 1e-6f) radius = 1e-6f;
+        pos.x = at.x + rx;
+        pos.y = at.y + ry;
+        pos.z = at.z + rz;
 
-	float yawRad = XMConvertToRadians(gYawDeg);
-	float pitchRad = XMConvertToRadians(gPitchDeg);
+        // 正規化された方向ベクトル
+        XMFLOAT3 fwd = { at.x - pos.x, at.y - pos.y, at.z - pos.z };
+        float flen = sqrtf(fwd.x * fwd.x + fwd.z * fwd.z);
+        if (flen > 1e-6f) {
+            fwd.x /= flen;
+            fwd.y /= flen;
+            fwd.z /= flen;
+        }
+        else {
+            fwd = { 0.0f, 0.0f, 1.0f };
+        }
+        XMFLOAT3 right = { fwd.z, 0.0f, -fwd.x };
+        const XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
 
-	float cp = cosf(pitchRad);
-	float sp = sinf(pitchRad);
-	float cy = cosf(yawRad);
-	float sy = sinf(yawRad);
+        // プレイヤー移動分をカメラに反映
+        pos.x += playerDelta.x;
+        pos.y += playerDelta.y;
+        pos.z += playerDelta.z;
+        at.x += playerDelta.x;
+        at.y += playerDelta.y;
+        at.z += playerDelta.z;
 
-	float rx = radius * cp * cy;
-	float ry = radius * sp;
-	float rz = radius * cp * sy;
-
-	pos.x = at.x + rx;
-	pos.y = at.y + ry;
-	pos.z = at.z + rz;
-
-
-	XMFLOAT3 fwd = { at.x - pos.x,at.y - pos.y,at.z - pos.z };
-	float flen = sqrtf(fwd.x * fwd.x + fwd.z * fwd.z);
-	if (flen > 1e-6f) {
-		fwd.x /= flen;
-		fwd.y /= flen;
-		fwd.z /= flen;
-	}
-	else
-	{
-		fwd = { 0.0f,0.0f,1.0f };
-	}
-
-	XMFLOAT3 right = { fwd.z,0.0f,-fwd.x };
-	const XMFLOAT3 up = { 0.0f,1.0f,0.0f };
-
-
-
-
-	//float speedMul = Keyboard_IsKeyDown(KK_LEFTSHIFT) ? 4.0f : 1.0f;
-	float moveSpeed = moveSpeedBase * 1.0f;
-
-	float spF = 0.0f;
-	float spR = 0.0f;
-	float spU = 0.0f;
-
-	if (Keyboard_IsKeyDown(KK_W)) spF += moveSpeed;
-	if (Keyboard_IsKeyDown(KK_S)) spF -= moveSpeed;
-
-	if (Keyboard_IsKeyDown(KK_D)) spR += moveSpeed;
-	if (Keyboard_IsKeyDown(KK_A)) spR -= moveSpeed;
-
-	if (Keyboard_IsKeyDown(KK_LEFTSHIFT)) spU += moveSpeed;
-	if (Keyboard_IsKeyDown(KK_LEFTCONTROL)) spU -= moveSpeed;
-
-	XMFLOAT3 disp = {
-		fwd.x * spF + right.x * spR + up.x * spU,
-		fwd.y * spF + right.y * spR + up.y * spU,
-		fwd.z * spF + right.z * spR + up.z * spU,
-	};
-
-	pos.x += disp.x;
-	pos.y += disp.y;
-	pos.z += disp.z;
-	at.x += disp.x;
-	at.y += disp.y;
-	at.z += disp.z;
-
-	CameraObject.Position = pos;
-	CameraObject.AtPosition = at;
-}
+        CameraObject.Position = pos;
+        CameraObject.AtPosition = at;
+    }
 
 void Keyb()
 {
-	//ボールの座標を取得
-	XMFLOAT3 pos = g_BallPosOld;
-	//g_BallPosOld = GetBallPositon();
+	//プレイヤーの座標を取得
+	XMFLOAT3 pos = g_PlayerPosOld;
+	g_PlayerPosOld = GetPlayer3DPositon();
 
-	//前回のボールと現在のボールの座標の差分
-	pos.x = g_BallPosOld.x - pos.x;
-	pos.y = g_BallPosOld.y - pos.y;
-	pos.z = g_BallPosOld.z - pos.z;
+	//前回のプレイヤーと現在のプレイヤーの座標の差分
+	pos.x = g_PlayerPosOld.x - pos.x;
+	pos.y = g_PlayerPosOld.y - pos.y;
+	pos.z = g_PlayerPosOld.z - pos.z;
 	//カメラを移動
 	CameraObject.Position.x += pos.x;
 	CameraObject.Position.y += pos.y;
 	CameraObject.Position.z += pos.z;
 
 	//ボールの座標を注視点としてセット
-	CameraObject.AtPosition.x = g_BallPosOld.x;
-	CameraObject.AtPosition.y = g_BallPosOld.y;
-	CameraObject.AtPosition.z = g_BallPosOld.z;
+	CameraObject.AtPosition.x = g_PlayerPosOld.x;
+	CameraObject.AtPosition.y = g_PlayerPosOld.y;
+	CameraObject.AtPosition.z = g_PlayerPosOld.z;
 
 	//注視点を中心にカメラの回転(Y軸回転)
 	float Rotation = 0.0f;
-	if (Keyboard_IsKeyDown(KK_A))
-	{
-		Rotation = 1.0f;
-	}
-	if (Keyboard_IsKeyDown(KK_D))
-	{
-		Rotation = -1.0f;
-	}
 
 	//注視点を中心にカメラの回転
 	XMFLOAT2 vec;
@@ -365,43 +312,5 @@ void Keyb()
 	CameraObject.Position.z = (vec.x * si + vec.y * co);
 	CameraObject.Position.x += CameraObject.AtPosition.x;
 	CameraObject.Position.z += CameraObject.AtPosition.z;
-	/*
-	//vecを正規化
-	float len = sqrtf(vec.x * vec.x + vec.y * vec.y);
-	vec.x /= len;
-	vec.y /= len;
 
-	float speed = 0.0f;
-	if (Keyboard_IsKeyDown(KK_W))
-	{
-		speed = -0.1f;
-	}
-	if (Keyboard_IsKeyDown(KK_S))
-	{
-		speed = 0.1f;
-	}
-	vec.x *= speed;
-	vec.y *= speed;
-	CameraObject.Position.x += vec.x;
-	CameraObject.Position.z += vec.y;
-	CameraObject.AtPosition.x += vec.x;
-	CameraObject.AtPosition.z += vec.y;
-	*/
-
-	if (Keyboard_IsKeyDown(KK_Q))
-	{
-		CameraObject.Fov += 0.3f;
-		if (CameraObject.Fov > 160.0f)
-		{
-			CameraObject.Fov = 160.0f;
-		}
-	}
-	if (Keyboard_IsKeyDown(KK_E))
-	{
-		CameraObject.Fov -= 0.3f;
-		if (CameraObject.Fov < 5.0f)
-		{
-			CameraObject.Fov = 5.0f;
-		}
-	}
 }
