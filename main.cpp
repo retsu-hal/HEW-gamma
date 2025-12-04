@@ -120,11 +120,23 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 
+		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;       
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     
+
 		ImGui::StyleColorsDark();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
 
 		// 日本語フォント設定
 		io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/msyh.ttc", 18.0f, nullptr,
 			io.Fonts->GetGlyphRangesChineseFull());
+
 
 		// ImGui 用の DirectX11 と Win32 の初期化
 		ImGui_ImplWin32_Init(hWnd);
@@ -178,9 +190,22 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				//更新処理
 				Manager_Update();
 
+				
+
+
 				//描画処理
 				Direct3D_Clear();
 				Manager_Draw();
+
+				{
+					ImGuiIO& io = ImGui::GetIO();
+					if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+					{
+						ImGui::UpdatePlatformWindows();
+						ImGui::RenderPlatformWindowsDefault();
+					}
+				}
+
 				Direct3D_Present();
 				keycopy();
 				Mouse_ResetScrollWheelValue();

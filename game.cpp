@@ -79,8 +79,8 @@ void Game_Update()
 {
 	Camera_Update();
 	field_Update();
-
 	Player3D_Update();
+
 	/*
 	//Block_Update();
 	//Effect_Update();

@@ -64,10 +64,14 @@ void Camera_Draw()
 {
 	if (debugMode)
 	{
-		ImGui::Begin("Camera");
-		ImGui::Text("PosX: %.2f", CameraObject.Position.x);
-		ImGui::Text("PosY: %.2f", CameraObject.Position.y);
-		ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
+		ImGui::Begin("Debug - CHEN");
+		if (ImGui::TreeNode("canera.cpp"))
+		{
+			ImGui::Text("PosX: %.2f", CameraObject.Position.x);
+			ImGui::Text("PosY: %.2f", CameraObject.Position.y);
+			ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
+			ImGui::TreePop();
+		}
 		ImGui::End();
 	}
 
