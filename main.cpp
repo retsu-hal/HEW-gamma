@@ -78,7 +78,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	//クライアント領域のサイズを表す矩形 (左からleft, top, right, bottom)
 	RECT window_rect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 	//ウィンドウのスタイル（ウィンドウ枠と最大化ボタンを削除）
-	DWORD window_style = WS_OVERLAPPEDWINDOW ^ (WS_THICKFRAME | WS_MAXIMIZEBOX);
+	DWORD window_style = WS_OVERLAPPEDWINDOW;
+	//DWORD window_style = WS_OVERLAPPEDWINDOW ^ (WS_THICKFRAME | WS_MAXIMIZEBOX);
 	//指定したクライアント領域を確保するために新たな矩形座標を計算
 	AdjustWindowRect(&window_rect, window_style, FALSE);
 	//調整された矩形の横と縦のサイズを計算
@@ -121,8 +122,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		ImGuiIO& io = ImGui::GetIO();
 
 		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;       
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 		ImGui::StyleColorsDark();
 
@@ -181,7 +182,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				dwExecLastTime = dwCurrentTime;//現在のタイマーと保存
 #ifdef _DEBUG
 				//ウィンドウキャプションへ現在のFPSを表示
-				wsprintf(g_DebugStr, "DX21 プロジェクト ");
+				wsprintf(g_DebugStr, "GAMMA ");
 				wsprintf(&g_DebugStr[strlen(g_DebugStr)],
 					" FPS : %d", g_CountFPS);
 				SetWindowText(hWnd, g_DebugStr);
@@ -261,29 +262,96 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Keyboard_ProcessMessage(uMsg, wParam, lParam);
 		break;
 
-	case WM_KEYDOWN:	//キーが押された
-		if (wParam == VK_ESCAPE)//押されたのはESCキー
+
+	case WM_SIZING:
+	{
+		const float targetAspect = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+
+		RECT* rc = reinterpret_cast<RECT*>(lParam);
+		int w = rc->right - rc->left;
+		int h = rc->bottom - rc->top;
+
+		float currentAspect = (float)w / (float)h;
+
+		switch (wParam)
 		{
-			//ウィンドウを閉じたいリクエストをWindowsに送る
-			SendMessage(hWnd, WM_CLOSE, 0, 0);
+		case WMSZ_LEFT:
+		case WMSZ_RIGHT:
+			h = (int)(w / targetAspect + 0.5f);
+			if (wParam == WMSZ_LEFT)
+				rc->top = rc->bottom - h;
+			else
+				rc->bottom = rc->top + h;
+			break;
+
+		case WMSZ_TOP:
+		case WMSZ_BOTTOM:
+			w = (int)(h * targetAspect + 0.5f);
+			if (wParam == WMSZ_TOP)
+				rc->left = rc->right - w;
+			else
+				rc->right = rc->left + w;
+			break;
+
+		default:
+			if (currentAspect > targetAspect)
+			{
+				w = (int)(h * targetAspect + 0.5f);
+			}
+			else
+			{
+				h = (int)(w / targetAspect + 0.5f);
+			}
+
+			if (wParam == WMSZ_TOPLEFT)
+			{
+				rc->left = rc->right - w;
+				rc->top = rc->bottom - h;
+			}
+			else if (wParam == WMSZ_TOPRIGHT)
+			{
+				rc->right = rc->left + w;
+				rc->top = rc->bottom - h;
+			}
+			else if (wParam == WMSZ_BOTTOMLEFT)
+			{
+				rc->left = rc->right - w;
+				rc->bottom = rc->top + h;
+			}
+			else if (wParam == WMSZ_BOTTOMRIGHT)
+			{
+				rc->right = rc->left + w;
+				rc->bottom = rc->top + h;
+			}
+			break;
 		}
+
+		return TRUE;
+	}
+
+	case WM_KEYDOWN:	//キーが押された
+		//if (wParam == VK_ESCAPE)//押されたのはESCキー
+		//{
+		//	//ウィンドウを閉じたいリクエストをWindowsに送る
+		//	SendMessage(hWnd, WM_CLOSE, 0, 0);
+		//}
 
 		Keyboard_ProcessMessage(uMsg, wParam, lParam);
 		break;
-	case WM_CLOSE:	//ウィンドウを閉じなさい命令				
-		//if (
-		//	MessageBox(hWnd, "本当に終了してよろしいですか？",
-		//		"確認", MB_OKCANCEL | MB_DEFBUTTON2) == IDOK
-		//	)
-		//{//OKが押されたとき
-		//	DestroyWindow(hWnd);//終了する手続きをWindowsへリクエスト
-		//}
-		//else
-		//{
-		//	return 0;	//やっぱり終わらない
-		//}
+	//case WM_CLOSE:	//ウィンドウを閉じなさい命令				
+	//	//if (
+	//	//	MessageBox(hWnd, "本当に終了してよろしいですか？",
+	//	//		"確認", MB_OKCANCEL | MB_DEFBUTTON2) == IDOK
+	//	//	)
+	//	//{//OKが押されたとき
+	//	//	DestroyWindow(hWnd);//終了する手続きをWindowsへリクエスト
+	//	//}
+	//	//else
+	//	//{
+	//	//	return 0;	//やっぱり終わらない
+	//	//}
 
-		//break;
+	//	//break;
 	case WM_DESTROY:	//終了してOKですよ
 		PostQuitMessage(0);		//自分のメッセージに０を送る
 		break;

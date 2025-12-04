@@ -39,6 +39,8 @@ void Camera_Initialize()
 	CameraObject.FarClip = 1000.0f;
 
 	g_PlayerPosOld = GetPlayer3DPositon();
+    
+    // 普通に相対モードにする
     Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 }
 
@@ -55,7 +57,7 @@ void Camera_Finalize()
 //=========================================================================================================
 void Camera_Update()
 {
-	Mose();
+	Mouse();
 
 }
 
@@ -67,7 +69,7 @@ void Camera_Draw()
 	if (debugMode)
 	{
 		ImGui::Begin("Debug - CHEN");
-		if (ImGui::TreeNode("canera.cpp"))
+		if (ImGui::TreeNode("camera.cpp"))
 		{
 			ImGui::Text("PosX: %.2f", CameraObject.Position.x);
 			ImGui::Text("PosY: %.2f", CameraObject.Position.y);
@@ -170,7 +172,7 @@ XMFLOAT3 GetCameraPosition()
 	return CameraObject.Position;
 }
 
-void Mose()
+void Mouse()
 {
         Mouse_GetState(&ms);
 
@@ -178,21 +180,18 @@ void Mose()
         const float sensitivityPitch = 0.5f; // y  マウス感度調整用
         const float moveSpeedBase = 0.1f;
 
-        // 常に相対モードにする
-        //Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
-
+        
         static bool relativeMode = true;
-        static bool prevRight = false;
         bool suppressDelta = false;
-        if (ms.rightButton && !prevRight) {//右クリックが押された瞬間
-            relativeMode = !relativeMode;
-            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-                : MOUSE_POSITION_MODE_ABSOLUTE);
-            suppressDelta = true;
+		{// マウスモード切替(Debug用)
+            //Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+            if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+                relativeMode = !relativeMode;
+                Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+                    : MOUSE_POSITION_MODE_ABSOLUTE);
+                suppressDelta = true;
+            }
         }
-        prevRight = ms.rightButton;
-
-
        
         // FOV調整
         if (Keyboard_IsKeyDown(KK_Q)) {
