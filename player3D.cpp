@@ -1,21 +1,30 @@
-#include "Player3D.h"
+#include "player3D.h"
 #include "keyboard.h"
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
+//=========================================================================================================
+// 繝槭け繝ｭ螳夂ｾｩ
+//=========================================================================================================
+#define PLAYER3D_SPEEDMAX (2.0f)		//譛螟ｧ騾溷ｺｦ
 
 //=========================================================================================================
-//グローバル変数
+// 繧ｰ繝ｭ繝ｼ繝舌Ν螟画焚
 //=========================================================================================================
-PLAYER3D g_Player3D;
+PLAYER3D g_player3D;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
+
 float g_StopTime = 0.0f;
 
+<<<<<<< HEAD
 // 入力ベクトル
 XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 
 //リセット用
+=======
+//繝ｪ繧ｻ繝・ヨ逕ｨ
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 XMFLOAT3		Firstposition;
 XMFLOAT3		FirstRotation;
 XMFLOAT3		FirstScaling;
@@ -25,6 +34,7 @@ PLAYER3D_STATE	FirstState;
 float			FirstStopTime;
 XMVECTOR		FirstQuaternion;
 
+<<<<<<< HEAD
 //プレイヤーステータス
 float moveSpeed =		 0.005f;			//移動速度
 float maxMoveSpeed =	 1.0f;				//最大移動速度
@@ -46,15 +56,40 @@ static const auto ChangeKey =	KK_F;		//影変身
 static const auto ResetKey =	KK_R;		//リセット
 static const auto MenuKey =		KK_ESCAPE;	//終了
 
+//繝励Ξ繧､繝､繝ｼ繧ｹ繝・・繧ｿ繧ｹ
+float moveSpeed = 0.005f;				//遘ｻ蜍暮溷ｺｦ
+float maxMoveSpeed = 1.0f;				//譛螟ｧ遘ｻ蜍暮溷ｺｦ
+float maxGravity = -0.25f;				//譛螟ｧ關ｽ荳矩溷ｺｦ
+float jumpPower = 0.25f;				//繧ｸ繝｣繝ｳ繝怜鴨
+bool isGround = false;					//謗･蝨ｰ蛻､螳・
+
+//繧ｭ繝ｼ繝懊・繝牙ｮ夂ｾｩ
+//遘ｻ蜍・
+static const auto UpKey = KK_W;			//蜑埼ｲ
+static const auto RightKey = KK_D;		//蜿ｳ遘ｻ蜍・
+static const auto DownKey = KK_S;		//蠕碁
+static const auto LeftKey = KK_A;		//蟾ｦ遘ｻ蜍・
+//陦悟虚
+static const auto JumpKey = KK_SPACE;	//繧ｸ繝｣繝ｳ繝・
+static const auto ActionKey = KK_F;		//繧｢繧ｯ繧ｷ繝ｧ繝ｳ
+static const auto ChangeKey = KK_F;		//蠖ｱ螟芽ｺｫ
+//縺昴・莉・
+static const auto ResetKey = KK_R;		//繝ｪ繧ｻ繝・ヨ
+static const auto MenuKey = KK_ESCAPE;	//邨ゆｺ・
+=======
+float g_StopTime=0.0f;
+
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
+
 //=========================================================================================================
-//初期化処理
+// 蛻晄悄蛹門・逅・
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// デバイスとデバイスコンテキストの保存
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
+<<<<<<< HEAD
 	g_Player3D.Model = ModelLoad("asset\\model\\Test_man_stand.fbx");
 
 	Firstposition		= g_Player3D.Position		= XMFLOAT3(0.0f, 1.2f, 0.0f);
@@ -66,60 +101,73 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	FirstStopTime		= g_StopTime				= 0.0f;
 	FirstQuaternion		= g_Player3D.Quaternion		= XMQuaternionIdentity();
 	
+=======
+	g_player3D.Model= ModelLoad("asset\\model\\Test_man_stand.fbx");
+	g_player3D.Position = XMFLOAT3(0.0f,1.2f,0.0f);
+	g_player3D.Rotation = XMFLOAT3(-90.0f,0.0f,0.0f);
+	g_player3D.Scaling = XMFLOAT3(0.01f,0.01f,0.01f);
+	g_player3D.Velocity = XMFLOAT3(0.0f,0.0f,0.0f);
+	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	g_player3D.state = PLAYER3D_MOVE;
+	g_StopTime = 0.0f;
+	g_player3D.Quaternion = XMQuaternionIdentity();
+	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 }
 
 //=========================================================================================================
-//終了処理
+// 邨ゆｺ・・逅・
 //=========================================================================================================
-void Player3D_Finalize(void)
+void Player3D_Finalize()
 {
-	ModelRelease(g_Player3D.Model);
+	ModelRelease(g_player3D.Model);
 }
 
 //=========================================================================================================
-//更新処理
+// 譖ｴ譁ｰ蜃ｦ逅・
 //=========================================================================================================
 void Player3D_Update()
 {
-	Player3D_Respown();	//リスポーン
+	Player3D_Respown();	//繝ｪ繧ｹ繝昴・繝ｳ
 
-	//プレイヤー操作
-	Player3D_Move();	//移動
-	Player3D_Jump();	//ジャンプ
-	Player3D_Change();	//影変身
-	Player3D_Action();	//アクション
+	//繝励Ξ繧､繝､繝ｼ謫堺ｽ・
+	Player3D_Move();	//遘ｻ蜍・
+	Player3D_Jump();	//繧ｸ繝｣繝ｳ繝・
+	Player3D_Change();	//蠖ｱ螟芽ｺｫ
+	Player3D_Action();	//繧｢繧ｯ繧ｷ繝ｧ繝ｳ
 
-	Player3D_Gravity();	//重力処理
+	Player3D_Gravity();	//驥榊鴨蜃ｦ逅・
 	
+	switch (g_player3D.state)
 
-	switch (g_Player3D.state)
 	{
-	case PLAYER3D_STATE_IDLE:
-
+	case PLAYER3D_IDLE:
+		Player3D_Idle();
 		break;
-
-	case PLAYER3D_STATE_MOVE:
-		
+	case PLAYER3D_MOVE:
+		Player3D_Move();
 		break;
-
-	case PLAYER3D_STATE_FALL:
-
+	case PLAYER3D_DIRECTION:
+		Player3D_Direction();
 		break;
-
-	case PLAYER3D_STATE_ACTION:
-
+	case PLAYER3D_POWER:
+		Player3D_Power();
 		break;
-
-	default:
+	case PLAYER3D_RESPAWN:
+		Player3D_Respawn();
+		Camera_Initialize();
 		break;
 	}
+
 }
 
+
 //=========================================================================================================
-//描画処理
+// 謠冗判蜃ｦ逅・
 //=========================================================================================================
-void Player3D_Draw(void)
+void Player3D_Draw()
 {
+<<<<<<< HEAD
 	// ワールド行列の作成
 	//スケーリング行列の作成
 	XMMATRIX ScalingMatrix = XMMatrixScaling(g_Player3D.Scaling.x, g_Player3D.Scaling.y, g_Player3D.Scaling.z);
@@ -129,38 +177,58 @@ void Player3D_Draw(void)
 	XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(XMConvertToRadians(g_Player3D.Rotation.x), XMConvertToRadians(g_Player3D.Rotation.y), XMConvertToRadians(g_Player3D.Rotation.z));
 	//計算の順番「スケール*回転*平行移動」
 	XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
+=======
+	//繝ｯ繝ｼ繝ｫ繝芽｡悟・菴懈・
+	XMMATRIX scale = XMMatrixScaling
+	(
+		g_player3D.Scaling.x,
+		g_player3D.Scaling.y,
+		g_player3D.Scaling.z);
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 
-	//プロジェクション行列作成
-	XMMATRIX Projection = GetProjectionMatrix();
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
+	(
+		XMConvertToRadians(g_player3D.Rotation.x),
+		XMConvertToRadians(g_player3D.Rotation.y),
+		XMConvertToRadians(g_player3D.Rotation.z)
+	);
 
-	//ビュー行列作成
-	XMMATRIX View = GetViewMatrix();
+	XMMATRIX translation = XMMatrixTranslation
+	(
+		g_player3D.Position.x,
+		g_player3D.Position.y,
+		g_player3D.Position.z
+	);
 
-	//最終的な変換行列を作成	順番に注意！！
-	XMMATRIX WVP = WorldMatrix * View * Projection;
+	XMMATRIX world = scale * rotation * translation;
 
-	//変換行列を頂点シェーダへセット
-	Shader_SetWorldMatrix(WorldMatrix);
-	Shader_SetMatrix(WVP);
+	//螟画鋤陦悟・菴懈・
+	XMMATRIX view = GetViewMatrix();
+	XMMATRIX projection = GetProjectionMatrix();
+	XMMATRIX wvp = world * view * projection;
 
-	//描画リクエスト
-	ModelDraw(g_Player3D.Model);
-	
+	//繧ｷ繧ｧ繝ｼ繝繝ｼ縺ｸ陦悟・繧偵そ繝・ヨ
+	Shader_SetWorldMatrix(world);
+	Shader_SetMatrix(wvp);
+
+	//繝｢繝・Ν縺ｮ謠冗判繝ｪ繧ｯ繧ｨ繧ｹ繝・
+	ModelDraw(g_player3D.Model);
 }
+
 //=========================================================================================================
-// ゲッター
+// 繧ｲ繝・ち繝ｼ
 //=========================================================================================================
 XMFLOAT3 GetPlayer3DPositon()
 {
-	return g_Player3D.Position;
+	return g_player3D.Position;
 }
 
 //=========================================================================================================
-//処理
+// state縺斐→縺ｮ蜃ｦ逅・ｼ・dle迥ｶ諷具ｼ・
 //=========================================================================================================
-
-void Player3D_Gravity()
+void Player3D_Idle()
 {
+<<<<<<< HEAD
 	// 横・縦・奥行きの加算（既存ロジック保持）
 	if (g_Player3D.Velocity.x >= maxMoveSpeed)
 	{
@@ -171,14 +239,24 @@ void Player3D_Gravity()
 		g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 	}
 
+=======
+
+	g_Player3D.Velocity.x += g_Player3D.Acceleration.x; //驥榊鴨
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 	if (g_Player3D.Velocity.y < maxGravity)
 	{
 		g_Player3D.Velocity.y = maxGravity;
 	}
 	else
 	{
+<<<<<<< HEAD
 		g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
 	}
+=======
+		g_Player3D.Velocity.y += g_Player3D.Acceleration.y; //驥榊鴨
+	}
+	g_Player3D.Velocity.z += g_Player3D.Acceleration.z; //驥榊鴨
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 
 	if (g_Player3D.Velocity.z >= maxMoveSpeed)
 	{
@@ -198,10 +276,26 @@ void Player3D_Gravity()
 	g_Player3D.Position.x += g_Player3D.Velocity.x;
 	g_Player3D.Position.y += g_Player3D.Velocity.y;
 	g_Player3D.Position.z += g_Player3D.Velocity.z;
+=======
+
+<<<<<<< HEAD
+
+=======
+}
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 
 
+//=========================================================================================================
+// state縺斐→縺ｮ蜃ｦ逅・ｼ・ove迥ｶ諷具ｼ・
+//=========================================================================================================
+void Player3D_Move()
+{
+	g_player3D.Velocity.x += g_player3D.Acceleration.x; //驥榊鴨
+	g_player3D.Velocity.y += g_player3D.Acceleration.y; //驥榊鴨
+	g_player3D.Velocity.z += g_player3D.Acceleration.z; //驥榊鴨
 
-	// 静止チェック
+
+	// 髱呎ｭ｢繝√ぉ繝・け
 	float len = (g_Player3D.Velocity.x * g_Player3D.Velocity.x + g_Player3D.Velocity.y * g_Player3D.Velocity.y + g_Player3D.Velocity.z * g_Player3D.Velocity.z);
 	if (len <= 0.0002f)
 	{
@@ -219,17 +313,28 @@ void Player3D_Gravity()
 
 void Player3D_Respown()
 {
-	//落下チェック
-	if (g_Player3D.Position.y < -10.0f)
+=======
+	g_player3D.Position.x += g_player3D.Velocity.x;
+	g_player3D.Position.y += g_player3D.Velocity.y;
+	g_player3D.Position.z += g_player3D.Velocity.z;
+
+	g_player3D.Velocity.x *= 0.98f;		//螂ｽ縺ｿ縺ｧ貂幄｡ｰ縺輔○繧・
+	//g_player3D.Velocity.y *= 0.98f;		//螂ｽ縺ｿ縺ｧ貂幄｡ｰ縺輔○繧・
+	g_player3D.Velocity.z *= 0.98f;		//螂ｽ縺ｿ縺ｧ貂幄｡ｰ縺輔○繧・
+
+
+	//關ｽ荳九メ繧ｧ繝・け
+	if (g_player3D.Position.y < -10.0f)
 	{
-		Player3D_Reset();
+		g_player3D.state = PLAYER3D_RESPAWN;
 		return;
 	}
-	if (Keyboard_IsKeyDownTrigger(ResetKey))
+	
+	//蜑咲ｧｻ蜍・
+	if (Keyboard_IsKeyDown(KK_W))
 	{
-		Player3D_Reset();
+		g_player3D.Position.z += 0.1f;
 	}
-}
 
 void Player3D_Move()
 {
@@ -246,6 +351,7 @@ void Player3D_Move()
 	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
 	if (len > 0.0001f)
 	{
+<<<<<<< HEAD
 		// 正規化ベクトル × 加速
 		inputDir.x /= len;
 		inputDir.z /= len;
@@ -283,33 +389,110 @@ void Player3D_Jump()
 			// 空中にいる状態へ
 			//g_Player3D.state = PLAYER3D_STATE_FALL;
 		}
+=======
+		//g_Player3D.Position.z += moveSpeed;
+		g_Player3D.Velocity.z += +moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(RightKey))
+	{
+		//g_Player3D.Position.x += moveSpeed;
+		g_Player3D.Velocity.x += +moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(DownKey))
+	{
+		//g_Player3D.Position.z += -moveSpeed;
+		g_Player3D.Velocity.z += -moveSpeed;
+	}
+	if (Keyboard_IsKeyDown(LeftKey))
+	{
+		//g_Player3D.Position.x += -moveSpeed;
+		g_Player3D.Velocity.x += -moveSpeed;
+
+	//蠕後ｍ遘ｻ蜍・
+	if (Keyboard_IsKeyDown(KK_S))
+	{
+		g_player3D.Position.z -= 0.1f;
+	}
+
+	//蜿ｳ遘ｻ蜍・
+	if (Keyboard_IsKeyDown(KK_D))
+	{
+		g_player3D.Position.x += 0.1f;
+
+	}
+
+	//蟾ｦ遘ｻ蜍・
+	if (Keyboard_IsKeyDown(KK_A))
+	{
+		g_player3D.Position.x -= 0.1f;
+	}
+
+	float hit = Player3DField_Collision();
+
+	
+}
+
+//=========================================================================================================
+// state縺斐→縺ｮ蜃ｦ逅・ｼ・ower迥ｶ諷具ｼ・
+//=========================================================================================================
+void Player3D_Power()
+{
+	/*float power = PLAYER3D_SPEEDMAX * 0.12f;
+
+	g_player3D.Velocity.x *= power;
+	g_player3D.Velocity.y *= power;
+	g_player3D.Velocity.z *= power;*/
+
+
+
+	g_player3D.state = PLAYER3D_MOVE;
+}
+
+//=========================================================================================================
+// state縺斐→縺ｮ蜃ｦ逅・ｼ・irection迥ｶ諷具ｼ・
+//=========================================================================================================
+void Player3D_Direction()
+{
+	//繧ｭ繝ｼ繧呈款縺励◆繧芽ｻ｢縺後ｋ
+	if (Keyboard_IsKeyDownTrigger(KK_F))
+	{
+		//繧ｫ繝｡繝ｩ縺ｮ蜷代″繧貞叙蠕・
+		XMFLOAT3 Cap = GetCameraAtPosition();
+		XMFLOAT3 Cp = GetCameraPosition();
+		XMFLOAT3 Direction;
+		Direction.x = Cap.x - Cp.x;
+		Direction.y = 0.0f;
+		Direction.z = Cap.z - Cp.z;
+
+		//豁｣隕丞喧
+		float len = sqrtf(Direction.x * Direction.x + Direction.y * Direction.y + Direction.z * Direction.z);
+		Direction.x /= len;
+		Direction.y /= len;
+		Direction.z /= len;
+
+		g_player3D.Velocity = Direction;
+		g_player3D.state =PLAYER3D_MOVE;
+>>>>>>> 693a74ade764a6e3125aecf28c8f9589aa595c8a
 	}
 }
 
-void Player3D_Change()
+//=========================================================================================================
+// state縺斐→縺ｮ蜃ｦ逅・ｼ・espawn迥ｶ諷具ｼ・
+//=========================================================================================================
+void Player3D_Respawn()
 {
-
-}
-
-void Player3D_Action()
-{
-
-}
-
-void Player3D_Reset()
-{
-	
-		g_Player3D.Position = Firstposition;
-		g_Player3D.Rotation = FirstRotation;
-		g_Player3D.Scaling = FirstScaling;
-		g_Player3D.Velocity = FirstVelocity;
-		g_Player3D.Acceleration = FirstAcceleration;
-		g_Player3D.state = FirstState;
-		g_StopTime = FirstStopTime;
-		g_Player3D.Quaternion = FirstQuaternion;
+	g_player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
+	g_player3D.Rotation = XMFLOAT3(-90.0f, 0.0f, 0.0f);
+	g_player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
+	g_player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	g_player3D.state =PLAYER3D_MOVE;
+	g_StopTime = 0.0f;
+	g_player3D.Quaternion = XMQuaternionIdentity();
+	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 }
 
 PLAYER3D* GetPlayer3D()
 {
-	return &g_Player3D;
+	return &g_player3D;
 }

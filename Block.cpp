@@ -5,7 +5,7 @@
 #include "sprite.h"
 #include "keyboard.h"
 #include "Block.h"
-#include "Player3D.h"
+#include "player.h"
 #include "Effect.h"
 #include "score.h"
 using namespace DirectX;
@@ -334,7 +334,7 @@ void Block_EraseBlock()
 	}
 	else
 	{//消滅は無かった
-		//Player3D_Create();		//新しいプレイヤー発生
+		Player_Create();		//新しいプレイヤー発生
 		g_BlockState = BLOCK_STATE::BLOCK_STATE_IDLE;
 		g_BlockStateCount = 0;
 	}
@@ -375,7 +375,7 @@ void Block_StackBlock()
 	}
 	else
 	{	//落下処理が無かった場合
-		//Player3D_Create();
+		Player_Create();
 		g_BlockState = BLOCK_STATE::BLOCK_STATE_IDLE;
 		g_BlockStateCount = 0;
 	}

@@ -60,10 +60,6 @@ void Game_Finalize()
 	field_Finalize();
 	Polygon3D_Finalize();
 	Camera_Finalize();
-	
-	Player3D_Finalize();
-
-
 	/*
 	//Block_Finalize();
 	
