@@ -90,25 +90,25 @@
     <ClCompile Include="direct3d.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\imgui.cpp">
+    <ClCompile Include="imgui-docking\imgui.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\imgui_demo.cpp">
+    <ClCompile Include="imgui-docking\imgui_demo.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\imgui_draw.cpp">
+    <ClCompile Include="imgui-docking\imgui_draw.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\imgui_tables.cpp">
+    <ClCompile Include="imgui-docking\imgui_tables.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\imgui_widgets.cpp">
+    <ClCompile Include="imgui-docking\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\backends\imgui_impl_dx11.cpp">
+    <ClCompile Include="imgui-docking\backends\imgui_impl_dx11.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="imgui-master\backends\imgui_impl_win32.cpp">
+    <ClCompile Include="imgui-docking\backends\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
   </ItemGroup>
@@ -188,13 +188,13 @@
     <ClInclude Include="debug.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui-master\imgui.h">
+    <ClInclude Include="imgui-docking\imgui.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui-master\backends\imgui_impl_dx11.h">
+    <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h">
       <Filter>imgui</Filter>
     </ClInclude>
-    <ClInclude Include="imgui-master\backends\imgui_impl_win32.h">
+    <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
     </ClInclude>
   </ItemGroup>

@@ -121,10 +121,15 @@ void Player3D_Draw(void)
 {
 	if (debugMode)
 	{
-		ImGui::Begin("Player");
-		ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
-		ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
-		ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+
+		ImGui::Begin("Debug - CHEN");
+		if (ImGui::TreeNode("Player3D.cpp"))
+		{
+			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
+			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
+			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+			ImGui::TreePop();
+		}
 		ImGui::End();
 	}
 
