@@ -11,12 +11,14 @@
 #include "field.h"
 #include "sprite.h"
 #include "keyboard.h"
-#include "player.h"
+#include "Player3D.h"
 #include "Effect.h"
 #include "score.h"
 #include "Manager.h"
 #include "Audio.h"	
 #include "Mouse.h"
+
+#include "debug.h"
 
 //==================================
 //グローバル変数
@@ -38,6 +40,10 @@ char	g_DebugStr[2048];	//FPS表示文字列
 //===================================
 //プロトタイプ宣言
 //===================================
+
+// ImGui用ウィンドウプロシージャハンドラ
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 
 //ウィンドウプロシージャ
 //コールバック関数＝＞他人が呼び出してくれる関数
@@ -103,12 +109,39 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	Direct3D_Initialize(hWnd);
 	Mouse_Initialize(hWnd);
 	Keyboard_Initialize();
+
 	Shader_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext()); // シェーダの初期化
 	InitializeSprite();//スプライトの初期化
 
 	InitAudio();	//サウンドの初期化
 
+	{// ImGui 初期化
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO();
 
+		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;       
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;     
+
+		ImGui::StyleColorsDark();
+
+		ImGuiStyle& style = ImGui::GetStyle();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
+
+		// 日本語フォント設定
+		io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/msyh.ttc", 18.0f, nullptr,
+			io.Fonts->GetGlyphRangesChineseFull());
+
+
+		// ImGui 用の DirectX11 と Win32 の初期化
+		ImGui_ImplWin32_Init(hWnd);
+		ImGui_ImplDX11_Init(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+	}
 
 	Manager_Initialize();
 
@@ -157,11 +190,25 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				//更新処理
 				Manager_Update();
 
+				
+
+
 				//描画処理
 				Direct3D_Clear();
 				Manager_Draw();
+
+				{
+					ImGuiIO& io = ImGui::GetIO();
+					if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+					{
+						ImGui::UpdatePlatformWindows();
+						ImGui::RenderPlatformWindowsDefault();
+					}
+				}
+
 				Direct3D_Present();
 				keycopy();
+				Mouse_ResetScrollWheelValue();
 
 				dwFrameCount++;		//処理回数更新
 			}
@@ -171,10 +218,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	Manager_Finalize();
 
-
+	Mouse_Finalize();
 	UninitAudio();		//サウンドの終了
 
-	Mouse_Finalize();
 	Shader_Finalize(); // シェーダの終了処理
 	FinalizeSprite();	//スプライトの終了処理
 	/////////////////////////////////////////
@@ -196,6 +242,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	HDC		hdc;	//ウィンドウ画面を表す情報（デバイスコンテキスト 入出力先）
 	PAINTSTRUCT	ps;	//ウィンドウ画面の大きさなど描画関連の情報
+
+	if (ImGui::GetCurrentContext() != nullptr) {
+		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
+			return 0;
+	}
 
 	switch (uMsg)
 	{
@@ -248,6 +299,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		Mouse_ProcessMessage(uMsg, wParam, lParam);
 		break;
 	}
+
+	
 
 	//必用の無いメッセージは適当に処理させて終了
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
