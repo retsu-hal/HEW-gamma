@@ -3,10 +3,8 @@
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
-
-//=========================================================================================================
-//グローバル変数
 #include "debug.h"
+
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
@@ -53,6 +51,14 @@ static const auto ChangeKey = KK_F;		//影変身
 //その他
 static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//終了
+
+static bool debugMode = TRUE;
+static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
+	PLAYER3D_DETECT_HALF_X,
+	PLAYER3D_DETECT_HALF_Y,
+	PLAYER3D_DETECT_HALF_Z
+);
+
 
 //=========================================================================================================
 //初期化処理
@@ -135,34 +141,34 @@ void Player3D_Draw(void)
 		ImGui::Begin("Debug - CHEN");
 		if (ImGui::TreeNode("Player3D.cpp"))
 		{
-			ImGui::Text("PosX: %.2f", g_player3D.Position.x);
-			ImGui::Text("PosY: %.2f", g_player3D.Position.y);
-			ImGui::Text("PosZ: %.2f", g_player3D.Position.z);
+			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
+			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
+			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
 			ImGui::TreePop();
 		}
 		ImGui::End();
 
-		DebugDrawDetectBox();
+		//DebugDrawDetectBox();
 	}
 	//ワールド行列作成
 	XMMATRIX scale = XMMatrixScaling
 	(
-		g_player3D.Scaling.x,
-		g_player3D.Scaling.y,
-		g_player3D.Scaling.z);
+		g_Player3D.Scaling.x,
+		g_Player3D.Scaling.y,
+		g_Player3D.Scaling.z);
 
 	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
 	(
-		XMConvertToRadians(g_player3D.Rotation.x),
-		XMConvertToRadians(g_player3D.Rotation.y),
-		XMConvertToRadians(g_player3D.Rotation.z)
+		XMConvertToRadians(g_Player3D.Rotation.x),
+		XMConvertToRadians(g_Player3D.Rotation.y),
+		XMConvertToRadians(g_Player3D.Rotation.z)
 	);
 
 	XMMATRIX translation = XMMatrixTranslation
 	(
-		g_player3D.Position.x,
-		g_player3D.Position.y,
-		g_player3D.Position.z
+		g_Player3D.Position.x,
+		g_Player3D.Position.y,
+		g_Player3D.Position.z
 	);
 
 	XMMATRIX world = scale * rotation * translation;
@@ -177,23 +183,9 @@ void Player3D_Draw(void)
 	Shader_SetMatrix(wvp);
 
 	//モデルの描画リクエスト
-	ModelDraw(g_player3D.Model);
-}
-
-	//ビュー行列作成
-	XMMATRIX View = GetViewMatrix();
-
-	//最終的な変換行列を作成	順番に注意！！
-	XMMATRIX WVP = WorldMatrix * View * Projection;
-
-	//変換行列を頂点シェーダへセット
-	Shader_SetWorldMatrix(WorldMatrix);
-	Shader_SetMatrix(WVP);
-
-	//描画リクエスト
 	ModelDraw(g_Player3D.Model);
-
 }
+
 //=========================================================================================================
 // ゲッター
 //=========================================================================================================
@@ -368,11 +360,82 @@ XMFLOAT3 Player3D_GetDetectHalfSize()
 
 bool Player3D_IsNearPoint(const XMFLOAT3& point)
 {
-	const XMFLOAT3& c = g_player3D.Position;
+	const XMFLOAT3& c = g_Player3D.Position;
 
 	if (fabsf(point.x - c.x) > g_DetectHalfSize.x) return false;
 	if (fabsf(point.y - c.y) > g_DetectHalfSize.y) return false;
 	if (fabsf(point.z - c.z) > g_DetectHalfSize.z) return false;
 
 	return true;
+}
+
+static ImVec2 WorldToScreen(const XMFLOAT3& p)
+{
+	using namespace DirectX;
+
+	float bbWidth = (float)Direct3D_GetBackBufferWidth();
+	float bbHeight = (float)Direct3D_GetBackBufferHeight();
+
+	XMMATRIX view = GetViewMatrix();
+	XMMATRIX proj = GetProjectionMatrix();
+	XMMATRIX vp = XMMatrixMultiply(view, proj);
+
+
+	XMVECTOR v = XMVectorSet(p.x, p.y, p.z, 1.0f);
+	v = XMVector3TransformCoord(v, vp);
+
+	XMFLOAT3 ndc;
+	XMStoreFloat3(&ndc, v);
+
+
+	float x_bb = (ndc.x * 0.5f + 0.5f) * bbWidth;
+	float y_bb = (-ndc.y * 0.5f + 0.5f) * bbHeight;
+
+
+	ImGuiIO& io = ImGui::GetIO();
+	float x_imgui = x_bb / bbWidth * io.DisplaySize.x;
+	float y_imgui = y_bb / bbHeight * io.DisplaySize.y;
+
+	return ImVec2(x_imgui, y_imgui);
+}
+
+
+static void DebugDrawDetectBox()
+{
+	using namespace DirectX;
+
+	ImDrawList* draw = ImGui::GetBackgroundDrawList();
+	const XMFLOAT3& c = g_Player3D.Position;
+	const XMFLOAT3& h = g_DetectHalfSize;
+
+
+	XMFLOAT3 corners[8] =
+	{
+		{c.x - h.x, c.y - h.y, c.z - h.z},
+		{c.x + h.x, c.y - h.y, c.z - h.z},
+		{c.x + h.x, c.y + h.y, c.z - h.z},
+		{c.x - h.x, c.y + h.y, c.z - h.z},
+		{c.x - h.x, c.y - h.y, c.z + h.z},
+		{c.x + h.x, c.y - h.y, c.z + h.z},
+		{c.x + h.x, c.y + h.y, c.z + h.z},
+		{c.x - h.x, c.y + h.y, c.z + h.z},
+	};
+
+	ImVec2 pts[8];
+	for (int i = 0; i < 8; ++i)
+		pts[i] = WorldToScreen(corners[i]);
+
+	ImU32 col = IM_COL32(0, 255, 0, 255);
+
+	auto Line = [&](int a, int b)
+		{
+			draw->AddLine(pts[a], pts[b], col, 1.0f);
+		};
+
+
+	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
+
+	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
+
+	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
 }
