@@ -494,3 +494,63 @@ MAPDATA* GetFieldMap(void)
 	return &map[0];
 }
 
+XMMATRIX Field_GetWorldMatrix(int i)
+{
+	XMMATRIX ScalingMatrix = XMMatrixScaling(
+		1.0f, 1.0f, 1.0f);
+
+	//•½sˆÚ“®s—ñ‚Ìì¬
+	XMMATRIX TranslationMAtrix = XMMatrixTranslation(
+		map[i].pos.x, map[i].pos.y, map[i].pos.z);
+
+
+	//‰ñ“]s—ñ‚Ìì¬
+	XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(
+		//XMConvertToRadians(rot),
+		XMConvertToRadians(0.0f),
+		XMConvertToRadians(0.0f),
+		XMConvertToRadians(0.0f));
+
+	return ScalingMatrix * RotationMatrix * TranslationMAtrix;
+}
+
+
+void Field_DrawShadowMap(const XMMATRIX& lightViewProj)
+{
+	int objectsDrawn = 0;
+	int i = 0;
+
+	while (map[i].no != FIELD_MAX)
+	{
+		// Calculate world matrix for this specific field object
+		XMMATRIX world = Field_GetWorldMatrix(i);
+
+		// Set matrices for shadow rendering
+		Shader_SetWorldMatrix(world);
+		Shader_SetMatrix(world * lightViewProj);
+
+		if (map[i].no == FIELD_BOX)
+		{
+			// Set vertex and index buffers for box
+			UINT stride = sizeof(Vertex3D);
+			UINT offset = 0;
+			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+			g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			g_pContext->DrawIndexed(6 * 6, 0, 0);
+			objectsDrawn++;
+		}
+		else
+		{
+			// Draw model for other field types
+			if (Model[map[i].no] != NULL)
+			{
+				ModelDraw(Model[map[i].no]);
+				objectsDrawn++;
+			}
+		}
+		i++;
+	}
+}
+
