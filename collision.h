@@ -31,3 +31,5 @@ enum COLLISION_HIT
 // プロトタイプ宣言
 //=========================================================================================================
 float Player3DField_Collision();
+
+void Collision_DebugDraw();

@@ -1,20 +1,18 @@
-﻿  camera.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“camera.cpp”)
+﻿  Collision.cpp
+F:\code\hew\Collision.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+F:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“Collision.cpp”)
   
-E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“camera.cpp”)
+F:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“Collision.cpp”)
   
-  main.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“main.cpp”)
+F:\code\hew\Collision.cpp(28,3): warning C4065: switch 语句包含“default”但是未包含“case”标签
+  game.cpp
+F:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“game.cpp”)
   
-E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“main.cpp”)
+F:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“game.cpp”)
   
-E:\code\hew\main.cpp(248,7): warning C4101: “hdc”: 未引用的局部变量
-E:\code\hew\main.cpp(246,10): warning C4101: “hbrWhite”: 未引用的局部变量
-E:\code\hew\main.cpp(249,14): warning C4101: “ps”: 未引用的局部变量
-E:\code\hew\main.cpp(246,20): warning C4101: “hbrGray”: 未引用的局部变量
   正在生成代码...
-  base.vcxproj -> E:\code\hew\x64\Debug\base.exe
+  base.vcxproj -> F:\code\hew\x64\Debug\base.exe

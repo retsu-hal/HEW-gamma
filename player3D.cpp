@@ -49,84 +49,12 @@ static const auto MenuKey = KK_ESCAPE;	//終了
 
 float g_StopTime=0.0f;
 static bool debugMode = TRUE;
+
 static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
 	PLAYER3D_DETECT_HALF_X,
 	PLAYER3D_DETECT_HALF_Y,
 	PLAYER3D_DETECT_HALF_Z
 );
-
-
-static ImVec2 WorldToScreen(const XMFLOAT3& p)
-{
-	using namespace DirectX;
-
-	float bbWidth = (float)Direct3D_GetBackBufferWidth();
-	float bbHeight = (float)Direct3D_GetBackBufferHeight();
-
-	XMMATRIX view = GetViewMatrix();
-	XMMATRIX proj = GetProjectionMatrix();
-	XMMATRIX vp = XMMatrixMultiply(view, proj);
-
-
-	XMVECTOR v = XMVectorSet(p.x, p.y, p.z, 1.0f);
-	v = XMVector3TransformCoord(v, vp);
-
-	XMFLOAT3 ndc;
-	XMStoreFloat3(&ndc, v);
-
-
-	float x_bb = (ndc.x * 0.5f + 0.5f) * bbWidth;
-	float y_bb = (-ndc.y * 0.5f + 0.5f) * bbHeight;
-
-
-	ImGuiIO& io = ImGui::GetIO();
-	float x_imgui = x_bb / bbWidth * io.DisplaySize.x;
-	float y_imgui = y_bb / bbHeight * io.DisplaySize.y;
-
-	return ImVec2(x_imgui, y_imgui);
-}
-
-
-static void DebugDrawDetectBox()
-{
-	using namespace DirectX;
-
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-	const XMFLOAT3& c = g_player3D.Position;
-	const XMFLOAT3& h = g_DetectHalfSize;
-
-
-	XMFLOAT3 corners[8] =
-	{
-		{c.x - h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y + h.y, c.z + h.z},
-		{c.x - h.x, c.y + h.y, c.z + h.z},
-	};
-
-	ImVec2 pts[8];
-	for (int i = 0; i < 8; ++i)
-		pts[i] = WorldToScreen(corners[i]);
-
-	ImU32 col = IM_COL32(0, 255, 0, 255);
-
-	auto Line = [&](int a, int b)
-		{
-			draw->AddLine(pts[a], pts[b], col, 1.0f);
-		};
-
-
-	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
-
-	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
-
-	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
-}
-
 
 
 //=========================================================================================================
@@ -199,7 +127,6 @@ void Player3D_Draw()
 		}
 		ImGui::End();
 
-		DebugDrawDetectBox();
 	}
 	//ワールド行列作成
 	XMMATRIX scale = XMMatrixScaling
@@ -337,15 +264,4 @@ PLAYER3D* GetPlayer3D()
 XMFLOAT3 Player3D_GetDetectHalfSize()
 {
 	return g_DetectHalfSize;
-}
-
-bool Player3D_IsNearPoint(const XMFLOAT3& point)
-{
-	const XMFLOAT3& c = g_player3D.Position;
-
-	if (fabsf(point.x - c.x) > g_DetectHalfSize.x) return false;
-	if (fabsf(point.y - c.y) > g_DetectHalfSize.y) return false;
-	if (fabsf(point.z - c.z) > g_DetectHalfSize.z) return false;
-
-	return true;
 }
