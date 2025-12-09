@@ -1,44 +1,8 @@
-﻿  Audio.cpp
+﻿  LightSource.cpp
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
-  (ソース ファイル 'Audio.cpp' をコンパイルしています)
+  (ソース ファイル 'LightSource.cpp' をコンパイルしています)
   
-  game.cpp
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\game.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
-  (ソース ファイル 'game.cpp' をコンパイルしています)
-  
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\Player3D.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-  (ソース ファイル 'game.cpp' をコンパイルしています)
-  
-  keyboard.cpp
-  Player3D.cpp
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\Player3D.cpp(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\player3D.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-  (ソース ファイル 'Player3D.cpp' をコンパイルしています)
+  (ソース ファイル 'LightSource.cpp' をコンパイルしています)
   
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
-  (ソース ファイル 'Player3D.cpp' をコンパイルしています)
-  
-  shader.cpp
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
-  (ソース ファイル 'shader.cpp' をコンパイルしています)
-  
-  title.cpp
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
-  (ソース ファイル 'title.cpp' をコンパイルしています)
-  
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\title.cpp(38,10): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\title.cpp(65,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\title.cpp(72,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
-  コードを生成中...
-DirectXTex_Debug.lib(DirectXTexImage.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexImage.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(DirectXTexWIC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexWIC.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(DirectXTexD3D11.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexD3D11.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(DirectXTexUtil.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexUtil.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexConvert.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(DirectXTexCompress.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexCompress.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexMipMaps.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(BC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(BC4BC5.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC4BC5.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
-DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC6HBC7.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
   base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
