@@ -152,6 +152,7 @@
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="keyboard.cpp" />
+    <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="manager.cpp" />
     <ClCompile Include="model.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h" />
     <ClInclude Include="imgui-docking\imgui.h" />
     <ClInclude Include="keyboard.h" />
+    <ClInclude Include="LightSource.h" />
     <ClInclude Include="manager.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />

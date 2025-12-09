@@ -108,6 +108,9 @@
     <ClCompile Include="imgui-docking\backends\imgui_impl_win32.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="LightSource.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="direct3d.h">
@@ -190,6 +193,9 @@
     </ClInclude>
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="LightSource.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
