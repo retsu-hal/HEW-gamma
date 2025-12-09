@@ -1,8 +1,1 @@
-﻿  LightSource.cpp
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
-  (ソース ファイル 'LightSource.cpp' をコンパイルしています)
-  
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\player3D.h(1,1): warning C4819: ファイルは、現在のコード ページ (932) で表示できない文字を含んでいます。データの損失を防ぐために、ファイルを Unicode 形式で保存してください。
-  (ソース ファイル 'LightSource.cpp' をコンパイルしています)
-  
-  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
+﻿  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
