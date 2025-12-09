@@ -12,13 +12,13 @@ using namespace DirectX;
 #include "direct3d.h"
 #include "debug_ostream.h"
 #include <fstream>
-#include "shader.h"
 
 
 static ID3D11VertexShader* g_pVertexShader = nullptr;//頂点シェーダー
 static ID3D11InputLayout* g_pInputLayout = nullptr;//頂点レイアウト
 static ID3D11Buffer* g_pVSConstantBuffer = nullptr;//定数バッファ1個
 static ID3D11PixelShader* g_pPixelShader = nullptr;//ピクセルシェーダー
+
 static ID3D11Buffer* g_pLightConstantBuffer = nullptr;//定数バッファ1個
 static ID3D11Buffer* g_pWorldConstantBuffer = nullptr;//定数バッファ1個
 
@@ -26,6 +26,8 @@ static ID3D11Buffer* g_pWorldConstantBuffer = nullptr;//定数バッファ1個
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
+static ID3D11Buffer* g_pShadowMatrixBuffer = nullptr;
+static ID3D11Buffer* g_pShadowLightBuffer = nullptr;
 
 bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -58,7 +60,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	// バイナリデータを格納するためのバッファを確保
 	unsigned char* vsbinary_pointer = new unsigned char[filesize];
-	
+
 	ifs_vs.read((char*)vsbinary_pointer, filesize); // バイナリデータを読み込む
 	ifs_vs.close(); // ファイルを閉じる
 
@@ -78,9 +80,6 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-		{ "BONEINDEX", 0, DXGI_FORMAT_R32G32B32A32_UINT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        { "BONEWEIGHT", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-
 	};
 
 	UINT num_elements = ARRAYSIZE(layout); // 配列の要素数を取得
@@ -104,13 +103,27 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pVSConstantBuffer);
 	g_pContext->VSSetConstantBuffers(0, 1, &g_pVSConstantBuffer);
 
-
 	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pWorldConstantBuffer);
 	g_pContext->VSSetConstantBuffers(1, 1, &g_pWorldConstantBuffer);
-	
-	buffer_desc.ByteWidth = sizeof(LIGHT); // バッファサイズ 
+
+	buffer_desc.ByteWidth = sizeof(LIGHT);
 	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pLightConstantBuffer);
 	g_pContext->VSSetConstantBuffers(2, 1, &g_pLightConstantBuffer);
+
+	buffer_desc.ByteWidth = sizeof(XMFLOAT4X4);
+	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pShadowMatrixBuffer);
+
+	buffer_desc.ByteWidth = sizeof(XMFLOAT4X4) * 2;
+	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pShadowLightBuffer);
+
+	//{
+	//	D3D11_BUFFER_DESC desc = {};
+	//	desc.ByteWidth = sizeof(XMFLOAT4X4);
+	//	desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	//	g_pDevice->CreateBuffer(&desc, nullptr, &g_pShadowMatrixBuffer);
+	//}
 
 	// 事前コンパイル済みピクセルシェーダーの読み込み
 	std::ifstream ifs_ps("shader_pixel_2d.cso", std::ios::binary);
@@ -146,8 +159,10 @@ void Shader_Finalize()
 	SAFE_RELEASE(g_pVSConstantBuffer);
 	SAFE_RELEASE(g_pInputLayout);
 	SAFE_RELEASE(g_pVertexShader);
-	SAFE_RELEASE(g_pWorldConstantBuffer);
 	SAFE_RELEASE(g_pLightConstantBuffer);
+	SAFE_RELEASE(g_pWorldConstantBuffer);
+	SAFE_RELEASE(g_pShadowMatrixBuffer);
+	SAFE_RELEASE(g_pShadowLightBuffer);
 }
 
 void Shader_SetMatrix(const DirectX::XMMATRIX& matrix)
@@ -173,11 +188,51 @@ void Shader_SetWorldMatrix(const DirectX::XMMATRIX& matrix)
 	// 定数バッファに行列をセット
 	g_pContext->UpdateSubresource(g_pWorldConstantBuffer, 0, nullptr, &transpose, 0, 0);
 }
-
 void Shader_SetLight(LIGHT light)
 {
-	// 定数バッファに行列をセット
+	// 定数バッファにLIGHTをセット
 	g_pContext->UpdateSubresource(g_pLightConstantBuffer, 0, nullptr, &light, 0, 0);
+}
+
+// Set shadow matrix:
+void Shader_SetShadowMatrix(const DirectX::XMMATRIX& mat)
+{
+	XMFLOAT4X4 data;
+	XMStoreFloat4x4(&data, XMMatrixTranspose(mat));
+	g_pContext->UpdateSubresource(g_pShadowMatrixBuffer, 0, nullptr, &data, 0, 0);
+	g_pContext->VSSetConstantBuffers(3, 1, &g_pShadowMatrixBuffer);
+}
+// Bind shadow map SRV to t1:
+void Shader_SetShadowMap(ID3D11ShaderResourceView* shadowSRV)
+{
+	g_pContext->PSSetShaderResources(1, 1, &shadowSRV); // t1
+}
+// Bind shadow sampler to s1:
+void Shader_SetShadowSampler(ID3D11SamplerState* sampler)
+{
+	g_pContext->PSSetSamplers(1, 1, &sampler); // s1
+}
+
+void Shader_SetShadowLightData(const DirectX::XMFLOAT3& pos, float radius, float intensity, float shadowPassMode)
+{
+	struct ShadowLightData
+	{
+		DirectX::XMFLOAT3 ShadowLightPos;
+		float ShadowPassMode;
+		float ShadowLightRadius;
+		DirectX::XMFLOAT3 pad2;
+		float ShadowIntensity;
+	};
+
+	ShadowLightData data{};
+	data.ShadowLightPos = pos;
+	data.ShadowPassMode = shadowPassMode;
+	data.ShadowLightRadius = radius;
+	data.pad2 = DirectX::XMFLOAT3(0, 0, 0);
+	data.ShadowIntensity = intensity;
+
+	g_pContext->UpdateSubresource(g_pShadowLightBuffer, 0, nullptr, &data, 0, 0);
+	g_pContext->PSSetConstantBuffers(4, 1, &g_pShadowLightBuffer);
 }
 
 void Shader_Begin()

@@ -105,5 +105,22 @@ public:
 	void SetAmbient(XMFLOAT4 a) { Light.Ambient = a; }
 };
 
+#define SHADOW_MAP_SIZE 2048
+
+extern ID3D11Texture2D* g_pShadowCubemapTex;
+extern ID3D11RenderTargetView* g_pShadowCubemapRTV[6];
+extern ID3D11ShaderResourceView* g_pShadowCubemapSRV;
+extern ID3D11SamplerState* g_pShadowSamplerState;
+
+extern ID3D11RasterizerState* g_pShadowRasterizer;
+
+extern XMFLOAT3 g_ShadowLightPos;
+extern float g_ShadowLightRadius;
+
+void Direct3D_InitializeShadowMap();
+void Direct3D_BeginShadowPass(int faceIndex);
+void Direct3D_EndShadowPass();
+XMMATRIX Direct3D_GetCubemapFaceViewProj(int faceIndex, const XMFLOAT3& lightPos, float radius);
+
 
 #endif // DIRECT3D_H

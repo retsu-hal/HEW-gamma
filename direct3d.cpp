@@ -7,6 +7,7 @@
 #include <d3d11.h>
 #include "direct3d.h"
 #include "debug_ostream.h"
+#include <float.h>
 
 #pragma comment(lib, "d3d11.lib")//DirectXのプログラムを追加する
 // #pragma comment(lib, "dxgi.lib")
@@ -32,24 +33,33 @@ static ID3D11BlendState* bState[BLENDSTATE_MAX];
 static ID3D11DepthStencilState* g_DepthStateEnable;
 static ID3D11DepthStencilState* g_DepthStateDisable;
 
+ID3D11Texture2D* g_pShadowCubemapTex = nullptr;
+ID3D11RenderTargetView* g_pShadowCubemapRTV[6] = {};
+ID3D11ShaderResourceView* g_pShadowCubemapSRV = nullptr;
+ID3D11SamplerState* g_pShadowSamplerState = nullptr;
+ID3D11RasterizerState* g_pShadowRasterizer = nullptr;
 
+static ID3D11Texture2D* g_pShadowDepthTex = nullptr;
+static ID3D11DepthStencilView* g_pShadowDepthDSV = nullptr;
 
+XMFLOAT3 g_ShadowLightPos = XMFLOAT3(0.0f, 5.0f, 5.0f);
+float g_ShadowLightRadius = 15.0f;
 
 bool Direct3D_Initialize(HWND hWnd)
 {
-    /* デバイス、スワップチェーン、コンテキスト生成 */
-    DXGI_SWAP_CHAIN_DESC swap_chain_desc{};
-    swap_chain_desc.Windowed = TRUE;
-    swap_chain_desc.BufferCount = 2;
-    // swap_chain_desc.BufferDesc.Width = 0;
-    // swap_chain_desc.BufferDesc.Height = 0;
+	/* デバイス、スワップチェーン、コンテキスト生成 */
+	DXGI_SWAP_CHAIN_DESC swap_chain_desc{};
+	swap_chain_desc.Windowed = TRUE;
+	swap_chain_desc.BufferCount = 2;
+	// swap_chain_desc.BufferDesc.Width = 0;
+	// swap_chain_desc.BufferDesc.Height = 0;
 	// ⇒ ウィンドウサイズに合わせて自動的に設定される
-    swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swap_chain_desc.SampleDesc.Count = 1;
-    swap_chain_desc.SampleDesc.Quality = 0;
-    swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;//0にしてみる
-    swap_chain_desc.OutputWindow = hWnd;
+	swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swap_chain_desc.SampleDesc.Count = 1;
+	swap_chain_desc.SampleDesc.Quality = 0;
+	swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;//0にしてみる
+	swap_chain_desc.OutputWindow = hWnd;
 
 	/*
 	IDXGIFactory1* pFactory;
@@ -65,34 +75,34 @@ bool Direct3D_Initialize(HWND hWnd)
 	UINT device_flags = 0;
 
 #if defined(DEBUG) || defined(_DEBUG)
-    //device_flags |= D3D11_CREATE_DEVICE_DEBUG;
+	//device_flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
 
-    D3D_FEATURE_LEVEL levels[] = {
-        D3D_FEATURE_LEVEL_11_1,
-        D3D_FEATURE_LEVEL_11_0
-    };
-    
-    D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
- 
-    HRESULT hr = D3D11CreateDeviceAndSwapChain(
-        nullptr,
-        D3D_DRIVER_TYPE_HARDWARE,
-        nullptr,
-        device_flags,
-        levels,
-        ARRAYSIZE(levels),
-        D3D11_SDK_VERSION,
-        &swap_chain_desc,
-        &g_pSwapChain,
-        &g_pDevice,
-        &feature_level,
-        &g_pDeviceContext);
+	D3D_FEATURE_LEVEL levels[] = {
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0
+	};
 
-    if (FAILED(hr)) {
+	D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_0;
+
+	HRESULT hr = D3D11CreateDeviceAndSwapChain(
+		nullptr,
+		D3D_DRIVER_TYPE_HARDWARE,
+		nullptr,
+		device_flags,
+		levels,
+		ARRAYSIZE(levels),
+		D3D11_SDK_VERSION,
+		&swap_chain_desc,
+		&g_pSwapChain,
+		&g_pDevice,
+		&feature_level,
+		&g_pDeviceContext);
+
+	if (FAILED(hr)) {
 		MessageBox(hWnd, "Direct3Dの初期化に失敗しました", "エラー", MB_OK);
-        return false;
-    }
+		return false;
+	}
 
 	if (!configureBackBuffer()) {
 		MessageBox(hWnd, "バックバッファの設定に失敗しました", "エラー", MB_OK);
@@ -150,7 +160,7 @@ bool Direct3D_Initialize(HWND hWnd)
 	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
 	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
 	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_SUBTRACT;//<<<<表示色 = 背景 - ポリゴン
-//	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;//<<<<表示色 = 背景 - ポリゴン
+	//	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_REV_SUBTRACT;//<<<<表示色 = 背景 - ポリゴン
 	g_pDevice->CreateBlendState(&blendDesc, &bState[BLENDSTATE_SUB]);
 
 	SetBlendState(BLENDSTATE_ALFA);//デフォルト設定
@@ -170,8 +180,9 @@ bool Direct3D_Initialize(HWND hWnd)
 
 	g_pDeviceContext->OMSetDepthStencilState(g_DepthStateDisable, NULL); //デフォルト　深度無効
 
+	Direct3D_InitializeShadowMap();
 
-    return true;
+	return true;
 }
 
 void	SetDepthTest(bool flg)
@@ -201,11 +212,22 @@ void Direct3D_Finalize()
 		g_pDeviceContext->Release();
 		g_pDeviceContext = nullptr;
 	}
-	
-    if (g_pDevice) {
+
+	if (g_pDevice) {
 		g_pDevice->Release();
 		g_pDevice = nullptr;
 	}
+
+	SAFE_RELEASE(g_pShadowCubemapTex);
+	for (int i = 0; i < 6; i++) {
+		SAFE_RELEASE(g_pShadowCubemapRTV[i]);
+	}
+	SAFE_RELEASE(g_pShadowCubemapSRV);
+	SAFE_RELEASE(g_pShadowSamplerState);
+	SAFE_RELEASE(g_pShadowRasterizer);
+
+	SAFE_RELEASE(g_pShadowDepthTex);
+	SAFE_RELEASE(g_pShadowDepthDSV);
 }
 
 void Direct3D_Clear()
@@ -225,8 +247,6 @@ void Direct3D_Present()
 	// スワップチェーンの表示
 	g_pSwapChain->Present(1, 0);
 }
-
-//////////////////////////////////////////////追加
 
 ID3D11Device* Direct3D_GetDevice()
 {
@@ -248,37 +268,31 @@ unsigned int Direct3D_GetBackBufferHeight()
 	return g_BackBufferDesc.Height;
 }
 
-
-////////////////////////////////////////////////////////
-
-
-
-
 bool configureBackBuffer()
 {
-    HRESULT hr;
+	HRESULT hr;
 
-    ID3D11Texture2D* back_buffer_pointer = nullptr;
+	ID3D11Texture2D* back_buffer_pointer = nullptr;
 
 	// バックバッファの取得
 	hr = g_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&back_buffer_pointer);
 
-    if (FAILED(hr)) {
+	if (FAILED(hr)) {
 		hal::dout << "バックバッファの取得に失敗しました" << std::endl;
-        return false;
-    }
+		return false;
+	}
 
 	// バックバッファのレンダーターゲットビューの生成
 	hr = g_pDevice->CreateRenderTargetView(back_buffer_pointer, nullptr, &g_pRenderTargetView);
 
-    if (FAILED(hr)) {
-        back_buffer_pointer->Release();
-        hal::dout << "バックバッファのレンダーターゲットビューの生成に失敗しました" << std::endl;
-        return false;
-    }
+	if (FAILED(hr)) {
+		back_buffer_pointer->Release();
+		hal::dout << "バックバッファのレンダーターゲットビューの生成に失敗しました" << std::endl;
+		return false;
+	}
 
 	// バックバッファの状態（情報）を取得
-    back_buffer_pointer->GetDesc(&g_BackBufferDesc);
+	back_buffer_pointer->GetDesc(&g_BackBufferDesc);
 
 	back_buffer_pointer->Release(); // バックバッファのポインタは不要なので解放
 
@@ -327,7 +341,7 @@ bool configureBackBuffer()
 	////////////////////////////////////////////追加
 
 
-    return true;
+	return true;
 }
 
 void releaseBackBuffer()
@@ -355,4 +369,197 @@ void SetBlendState(BLENDSTATE blend)
 
 	g_pDeviceContext->OMSetBlendState(bState[blend], bFactor, 0xffffffff);
 
+}
+
+void Direct3D_InitializeShadowMap()
+{
+	SAFE_RELEASE(g_pShadowCubemapTex);
+	for (int i = 0; i < 6; i++) {
+		SAFE_RELEASE(g_pShadowCubemapRTV[i]);
+	}
+	SAFE_RELEASE(g_pShadowCubemapSRV);
+	SAFE_RELEASE(g_pShadowSamplerState);
+	SAFE_RELEASE(g_pShadowRasterizer);
+	SAFE_RELEASE(g_pShadowDepthTex);
+	SAFE_RELEASE(g_pShadowDepthDSV);
+
+	HRESULT hr;
+
+	hal::dout << "Initializing shadow map (color cubemap)..." << std::endl;
+
+	// ============ COLOR CUBEMAP (stores linear depth as color) ============
+	D3D11_TEXTURE2D_DESC texDesc = {};
+	texDesc.Width = SHADOW_MAP_SIZE;
+	texDesc.Height = SHADOW_MAP_SIZE;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 6;
+	texDesc.Format = DXGI_FORMAT_R32_FLOAT;  // Color format
+	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;  // RTV, not DSV! 
+	texDesc.SampleDesc.Count = 1;
+	texDesc.SampleDesc.Quality = 0;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+
+	hr = g_pDevice->CreateTexture2D(&texDesc, nullptr, &g_pShadowCubemapTex);
+	if (FAILED(hr)) {
+		hal::dout << "ERROR: Failed to create shadow cubemap texture!  HRESULT: " << hr << std::endl;
+		return;
+	}
+	hal::dout << "Shadow cubemap texture created successfully" << std::endl;
+
+	// ============ Create RTV for each cubemap face ============
+	for (int i = 0; i < 6; i++)
+	{
+		D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+		rtvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+		rtvDesc.Texture2DArray.MipSlice = 0;
+		rtvDesc.Texture2DArray.FirstArraySlice = i;
+		rtvDesc.Texture2DArray.ArraySize = 1;
+
+		hr = g_pDevice->CreateRenderTargetView(g_pShadowCubemapTex, &rtvDesc, &g_pShadowCubemapRTV[i]);
+		if (FAILED(hr)) {
+			hal::dout << "ERROR: Failed to create RTV for face " << i << "! HR: " << hr << std::endl;
+		}
+		else {
+			hal::dout << "Created RTV for face " << i << std::endl;
+		}
+	}
+
+	// ============ Separate depth buffer for shadow rendering ============
+	D3D11_TEXTURE2D_DESC depthDesc = {};
+	depthDesc.Width = SHADOW_MAP_SIZE;
+	depthDesc.Height = SHADOW_MAP_SIZE;
+	depthDesc.MipLevels = 1;
+	depthDesc.ArraySize = 1;
+	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthDesc.SampleDesc.Count = 1;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	hr = g_pDevice->CreateTexture2D(&depthDesc, nullptr, &g_pShadowDepthTex);
+	if (FAILED(hr)) {
+		hal::dout << "ERROR: Failed to create shadow depth texture! HR: " << hr << std::endl;
+		return;
+	}
+
+	D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Texture2D.MipSlice = 0;
+
+	hr = g_pDevice->CreateDepthStencilView(g_pShadowDepthTex, &dsvDesc, &g_pShadowDepthDSV);
+	if (FAILED(hr)) {
+		hal::dout << "ERROR: Failed to create shadow depth DSV! HR: " << hr << std::endl;
+	}
+	else {
+		hal::dout << "Shadow depth DSV created successfully" << std::endl;
+	}
+
+	// ============ Cubemap SRV for sampling in pixel shader ============
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MipLevels = 1;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+
+	hr = g_pDevice->CreateShaderResourceView(g_pShadowCubemapTex, &srvDesc, &g_pShadowCubemapSRV);
+	if (FAILED(hr)) {
+		hal::dout << "ERROR: Failed to create cubemap SRV!  HR: " << hr << std::endl;
+	}
+	else {
+		hal::dout << "Cubemap SRV created successfully" << std::endl;
+	}
+
+	// ============ Regular sampler for manual depth comparison ============
+	D3D11_SAMPLER_DESC sampDesc = {};
+	sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampDesc.BorderColor[0] = 1.0f;
+	sampDesc.BorderColor[1] = 1.0f;
+	sampDesc.BorderColor[2] = 1.0f;
+	sampDesc.BorderColor[3] = 1.0f;
+	sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	sampDesc.MaxAnisotropy = 1;
+	sampDesc.MipLODBias = 0;
+	sampDesc.MinLOD = 0;
+	sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+
+	hr = g_pDevice->CreateSamplerState(&sampDesc, &g_pShadowSamplerState);
+	if (FAILED(hr)) {
+		hal::dout << "ERROR: Failed to create shadow sampler! HR: " << hr << std::endl;
+	}
+	else {
+		hal::dout << "Shadow sampler created successfully" << std::endl;
+	}
+
+	hal::dout << "Shadow map initialization complete!" << std::endl;
+}
+
+void Direct3D_BeginShadowPass(int faceIndex)
+{
+	if (faceIndex < 0 || faceIndex >= 6) return;
+
+	// Set viewport to shadow map size
+	D3D11_VIEWPORT vp = {};
+	vp.TopLeftX = 0;
+	vp.TopLeftY = 0;
+	vp.Width = (FLOAT)SHADOW_MAP_SIZE;
+	vp.Height = (FLOAT)SHADOW_MAP_SIZE;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	g_pDeviceContext->RSSetViewports(1, &vp);
+
+	// Render to color cubemap face + depth buffer
+	g_pDeviceContext->OMSetRenderTargets(1, &g_pShadowCubemapRTV[faceIndex], g_pShadowDepthDSV);
+
+
+	// Clear color to 1.0 (far) and depth
+	float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	g_pDeviceContext->ClearRenderTargetView(g_pShadowCubemapRTV[faceIndex], clearColor);
+	g_pDeviceContext->ClearDepthStencilView(g_pShadowDepthDSV, D3D11_CLEAR_DEPTH, 1.0f, 0);
+}
+
+void Direct3D_EndShadowPass()
+{
+	g_pDeviceContext->OMSetRenderTargets(1, &g_pRenderTargetView, g_pDepthStencilView);
+	g_pDeviceContext->RSSetViewports(1, &g_Viewport);
+	g_pDeviceContext->RSSetState(nullptr);
+}
+
+XMMATRIX Direct3D_GetCubemapFaceViewProj(int faceIndex, const XMFLOAT3& lightPos, float radius)
+{
+	XMVECTOR eye = XMLoadFloat3(&lightPos);
+
+	XMVECTOR directions[6] = {
+		XMVectorSet(1,  0,  0, 0), // +X
+		XMVectorSet(-1,  0,  0, 0), // -X
+		XMVectorSet(0,  1,  0, 0), // +Y
+		XMVectorSet(0, -1,  0, 0), // -Y
+		XMVectorSet(0,  0,  1, 0), // +Z
+		XMVectorSet(0,  0, -1, 0)  // -Z
+	};
+
+	XMVECTOR ups[6] = {
+		XMVectorSet(0, 1, 0, 0),  // +X
+		XMVectorSet(0, 1, 0, 0),  // -X
+		XMVectorSet(0, 0,-1, 0),  // +Y
+		XMVectorSet(0, 0, 1, 0),  // -Y
+		XMVectorSet(0, 1, 0, 0),  // +Z
+		XMVectorSet(0, 1, 0, 0)   // -Z
+	};
+
+	XMVECTOR target = XMVectorAdd(eye, directions[faceIndex]);
+	XMVECTOR up = ups[faceIndex];
+
+	XMMATRIX view = XMMatrixLookAtLH(eye, target, up);
+
+	float nearPlane = 0.1f;
+	float farPlane = radius;
+	XMMATRIX proj = XMMatrixPerspectiveFovLH(XM_PIDIV2, 1.0f, nearPlane, farPlane);
+
+	return view * proj;
 }

@@ -38,3 +38,6 @@ void field_Draw(void);
 void CreateBox(void);
 MAPDATA* GetFieldMap(void);
 
+XMMATRIX Field_GetWorldMatrix(int i);
+void Field_DrawShadowMap(const XMMATRIX& lightViewProj);
+
