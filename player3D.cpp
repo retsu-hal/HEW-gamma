@@ -191,7 +191,7 @@ void Player3D_Gravity()
 
 	//–€C‚É‚æ‚éŒ¸‘¬
 	g_Player3D.Velocity.x *= 0.925f;
-	g_Player3D.Velocity.y *= 0.98f;
+	//g_Player3D.Velocity.y *= 0.98f;
 	g_Player3D.Velocity.z *= 0.925f;
 
 	// À•W‚É‘¬“x‚ğ‰ÁZ
@@ -288,17 +288,25 @@ void Player3D_Jump()
 
 void Player3D_Change()
 {
+	if (Keyboard_IsKeyDownTrigger(ChangeKey))
+	{
 
+	}
 }
 
 void Player3D_Action()
 {
+	if(Keyboard_IsKeyDownTrigger(ActionKey))
+	{
+		//” ‚ğ‚Â
 
+		//Æ–¾‚ğ‘€ì‚·‚é
+
+	}
 }
 
 void Player3D_Reset()
 {
-
 	g_Player3D.Position = Firstposition;
 	g_Player3D.Rotation = FirstRotation;
 	g_Player3D.Scaling = FirstScaling;
