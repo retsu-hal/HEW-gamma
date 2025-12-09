@@ -6,15 +6,15 @@
 
 using namespace DirectX;
 
-#define BALL_SPEEDMAX (1.0f)
-#define BALL_RADIUS (0.2f)
+#define LIGHT_SPEEDMAX (1.0f)
+#define LIGHT_RADIUS (0.2f)
 
-void Ball_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
-void Ball_Finalize(void);
-void Ball_Update(void);
-void Ball_Draw(void);
+void Light_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
+void Light_Finalize(void);
+void Light_Update(void);
+void Light_Draw(void);
 
-XMFLOAT3 GetBall_Position();
+XMFLOAT3 GetLight_Position();
 
 class LightSource
 {
@@ -32,6 +32,6 @@ public:
 	float qSpeed;
 };
 
-LightSource* GetBall();
-XMMATRIX Ball_GetWorldMatrix();
-void Ball_DrawRaw(const XMMATRIX& world, const XMMATRIX& matrix);
+LightSource* GetLight();
+XMMATRIX Light_GetWorldMatrix();
+void Light_DrawRaw(const XMMATRIX& world, const XMMATRIX& matrix);

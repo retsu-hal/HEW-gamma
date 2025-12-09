@@ -81,18 +81,18 @@ void Game_Finalize()
 void Game_Update()
 {
 	//更新処理
-	Ball_Update();
+	Light_Update();
 
 	// Update ball light position
-	XMFLOAT3 ballPos = GetBall_Position();
+	XMFLOAT3 LightPos = GetLight_Position();
 	g_BallLight.SetEnable(true);
 	g_BallLight.SetDirection(XMFLOAT4(0, 0, 0, 0)); // No fixed direction (omnidirectional)
-	g_BallLight.Light.Direction = XMFLOAT4(ballPos.x, ballPos.y, ballPos.z, 1.0f); // Set light position
+	g_BallLight.Light.Direction = XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f); // Set light position
 
 	// Update global shadow light position to match ball
-	//g_ShadowLightPos = ballPos;
+	//g_ShadowLightPos = LightPos;
 	float shadowIntensity = 1.0f; // Blend value: higher means stronger light influence.
-	Shader_SetShadowLightData(ballPos, g_ShadowLightRadius, shadowIntensity);
+	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
 
 	Camera_Update();
 	field_Update();
@@ -138,10 +138,10 @@ void Game_Draw()
 
 		// Draw ball
 		{
-			XMMATRIX world = Ball_GetWorldMatrix();
+			XMMATRIX world = Light_GetWorldMatrix();
 			Shader_SetWorldMatrix(world);
 			Shader_SetMatrix(world * lightViewProj);
-			Ball_DrawRaw(world, world * lightViewProj);
+			Light_DrawRaw(world, world * lightViewProj);
 		}
 
 		// Draw field
