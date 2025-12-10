@@ -72,7 +72,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player3D.Model = ModelLoad("asset\\model\\Test_man_stand.fbx");
+	g_Player3D.Model = ModelLoad("asset\\model\\sanae.pmx");
 
 	Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
 	FirstRotation = g_Player3D.Rotation = XMFLOAT3(-90.0f, 180.0f, 0.0f);
