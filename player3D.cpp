@@ -13,17 +13,17 @@
 //=========================================================================================================
 
 //=========================================================================================================
-// �O���[�o���ϐ�
+// グローバル変数
 //=========================================================================================================
 PLAYER3D g_Player3D;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 float g_StopTime = 0.0f;
 
-// ���̓x�N�g��
+// 入力ベクトル
 XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 
-//���Z�b�g�p
+// リセット用
 XMFLOAT3		Firstposition;
 XMFLOAT3		FirstRotation;
 XMFLOAT3		FirstScaling;
@@ -33,26 +33,26 @@ PLAYER3D_STATE	FirstState;
 float			FirstStopTime;
 XMVECTOR		FirstQuaternion;
 
-//�v���C���[�X�e�[�^�X
-float moveSpeed = 0.005f;			//�ړ����x�i���ǂ������ǁj
-float maxMoveSpeed = 1.0f;			//�ő�ړ����x�i�����������ǂ������ǁj
-float maxGravity = -0.25f;			//�ő嗎�����x�i������������������ǁj
-float jumpPower = 0.175f;			//�W�����v�́i�����Ղ�傭�j
-bool isGround = false;				//�ڒn����i�������͂�Ă��j
+// プレイヤーステータス
+float moveSpeed = 0.005f;			//移動速度
+float maxMoveSpeed = 1.0f;			//最大移動速度
+float maxGravity = -0.25f;			//最大落下速度
+float jumpPower = 0.175f;			//ジャンプ力
+bool isGround = false;				//接地判定
 
-//�L�[�{�[�h��`�i�Ă����j
-//�ړ��i���ǂ��j
-static const auto UpKey = KK_W;			//�O�i�܂��j
-static const auto RightKey = KK_D;		//�E�i�݂��j
-static const auto DownKey = KK_S;		//��i������j
-static const auto LeftKey = KK_A;		//���i�Ђ���j
-//�s���i�����ǂ��j
-static const auto JumpKey = KK_SPACE;	//�W�����v
-static const auto ActionKey = KK_F;		//�A�N�V����
-static const auto ChangeKey = KK_F;		//�e�ϐg�i�����ւ񂵂�j
-//���̑��i���̂��j
-static const auto ResetKey = KK_R;		//���Z�b�g
-static const auto MenuKey = KK_ESCAPE;	//�|�[�Y���j���[
+// キーボード定義
+// 移動
+static const auto UpKey = KK_W;			//前進
+static const auto RightKey = KK_D;		//右移動
+static const auto DownKey = KK_S;		//後退
+static const auto LeftKey = KK_A;		//左移動
+// 行動
+static const auto JumpKey = KK_SPACE;	//ジャンプ
+static const auto ActionKey = KK_F;		//アクション
+static const auto ChangeKey = KK_F;		//影変身
+// その他
+static const auto ResetKey = KK_R;		//リセット
+static const auto MenuKey = KK_ESCAPE;	//終了
 
 static bool debugMode = TRUE;
 static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
@@ -63,11 +63,11 @@ static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
 
 
 //=========================================================================================================
-//����������
+// 初期化処理
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// �f�o�C�X�ƃf�o�C�X�R���e�L�X�g�̕ۑ�
+	// デバイスとデバイスコンテキストの保存
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
@@ -85,7 +85,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 }
 
 //=========================================================================================================
-//�I������
+// 終了処理
 //=========================================================================================================
 void Player3D_Finalize(void)
 {
@@ -93,19 +93,19 @@ void Player3D_Finalize(void)
 }
 
 //=========================================================================================================
-//�X�V����
+// 更新処理
 //=========================================================================================================
 void Player3D_Update()
 {
-	Player3D_Respawn();	//���X�|�[��
+	Player3D_Respawn();	//リスポーン
 
-	//�v���C���[����
-	Player3D_Move();	//�ړ�
-	Player3D_Jump();	//�W�����v
-	Player3D_Change();	//�e�ϐg
-	Player3D_Action();	//�A�N�V����
+	// プレイヤー操作
+	Player3D_Move();	//移動
+	Player3D_Jump();	//ジャンプ
+	Player3D_Change();	//影変身
+	Player3D_Action();	//アクション
 
-	Player3D_Gravity();	//�d�͏���
+	Player3D_Gravity();	//重力処理
 
 
 	switch (g_Player3D.state)
@@ -132,7 +132,7 @@ void Player3D_Update()
 }
 
 //=========================================================================================================
-//�`�揈��
+// 描画処理
 //=========================================================================================================
 void Player3D_Draw(void)
 {
@@ -178,16 +178,16 @@ void Player3D_Draw(void)
 	XMMATRIX projection = GetProjectionMatrix();
 	XMMATRIX wvp = world * view * projection;
 
-	//�V�F�[�_�[�֍s����Z�b�g
+	// 変換行列を頂点シェーダへセット
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 
-	//モデルの描画リクエスト
+	// モデルの描画リクエスト
 	ModelDraw(g_Player3D.Model);
 }
 
 //=========================================================================================================
-// �Q�b�^�[
+// ゲッター
 //=========================================================================================================
 XMFLOAT3 GetPlayer3DPositon()
 {
@@ -195,12 +195,12 @@ XMFLOAT3 GetPlayer3DPositon()
 }
 
 //=========================================================================================================
-//����
+// 処理
 //=========================================================================================================
 
 void Player3D_Gravity()
 {
-	// ���E�c�E���s���̉��Z�i�������W�b�N�ێ��j
+	// 横・縦・奥行きの加算
 	if (g_Player3D.Velocity.x >= maxMoveSpeed)
 	{
 		g_Player3D.Velocity.x = maxMoveSpeed;
@@ -228,19 +228,19 @@ void Player3D_Gravity()
 		g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
 	}
 
-	//���C�ɂ�錸��
+	// 摩擦による減速
 	g_Player3D.Velocity.x *= 0.925f;
 	//g_Player3D.Velocity.y *= 0.98f;
 	g_Player3D.Velocity.z *= 0.925f;
 
-	// ���W�ɑ��x�����Z
+	// 座標に速度を加算
 	g_Player3D.Position.x += g_Player3D.Velocity.x;
 	g_Player3D.Position.y += g_Player3D.Velocity.y;
 	g_Player3D.Position.z += g_Player3D.Velocity.z;
 
 
 
-	// �Î~�`�F�b�N
+	// 静止チェック
 	float len = (g_Player3D.Velocity.x * g_Player3D.Velocity.x + g_Player3D.Velocity.y * g_Player3D.Velocity.y + g_Player3D.Velocity.z * g_Player3D.Velocity.z);
 	if (len <= 0.0002f)
 	{
@@ -258,7 +258,7 @@ void Player3D_Gravity()
 
 void Player3D_Respawn()
 {
-	//�����`�F�b�N
+	// 落下チェック
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Reset();
@@ -272,7 +272,7 @@ void Player3D_Respawn()
 
 void Player3D_Move()
 {
-	// �O�t���[���̓��͂����Z�b�g�i�L�[�𗣂����Ƃ��ɈȑO�̓��͂��c��Ȃ��悤�ɂ���B���ꂪ�Ȃ��ƈ�x�������炻�̕����ɓ���������j
+	// 前フレームの入力をリセット（キーを離したときに以前の入力が残らないようにする）
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (Keyboard_IsKeyDown(UpKey))    inputDir.z += +1.0f;
@@ -281,46 +281,46 @@ void Player3D_Move()
 	if (Keyboard_IsKeyDown(LeftKey))  inputDir.x += -1.0f;
 
 
-	// �����v�Z
+	// 長さ計算
 	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
 	if (len > 0.0001f)
 	{
-		// ���K���x�N�g�� �~ ����
+		// 正規化ベクトル × 加速
 		inputDir.x /= len;
 		inputDir.z /= len;
 		g_Player3D.Velocity.x += inputDir.x * moveSpeed;
 		g_Player3D.Velocity.z += inputDir.z * moveSpeed;
 
-		// --- ���͂�����ꍇ�ɂ̂݌������X�V ---
-		float targetYawRad = atan2f(inputDir.x, inputDir.z); // (x,z) -> �O���� Z �Ƃ����p�x
+		// 入力がある場合にのみ向きを更新
+		float targetYawRad = atan2f(inputDir.x, inputDir.z); //(x,z) -> 前方を Z とした角度
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
 
-		// ���f���̏��������ɍ��킹��I�t�Z�b�g�i�K�v�Ȃ璲���j
+		// モデルの初期向きに合わせるオフセット（必要なら調整）
 		const float yawOffset = FirstRotation.y;
 		targetYawDeg += yawOffset;
 
-		// �X���[�Y��]�i�p�x�����ŒZ�o�H�ŋ��߂ĕ�ԁj
+		// スムーズ回転（角度差を最短経路で求めて補間）
 		float currentYaw = g_Player3D.Rotation.y;
 		float delta = targetYawDeg - currentYaw;
 		while (delta > 180.0f) delta -= 360.0f;
 		while (delta < -180.0f) delta += 360.0f;
 
-		const float rotateLerp = 0.2f; // 0..1�i1�ő�����]�j
+		const float rotateLerp = 0.2f; //0..1（1で即時回転）
 		g_Player3D.Rotation.y = currentYaw + delta * rotateLerp;
 	}
-	// ���͖����̂Ƃ��͉�]��ύX���Ȃ��i�Ō�Ɍ����Ă���������ێ��j
+	// 入力無しのときは回転を変更しない（最後に向いていた方向を保持）
 }
 
 void Player3D_Jump()
 {
 	if (Keyboard_IsKeyDownTrigger(JumpKey))
 	{
-		g_Player3D.Velocity.y += jumpPower;// �e�X�g
+		g_Player3D.Velocity.y += jumpPower;//テスト
 		if (isGround)
 		{
-			g_Player3D.Velocity.y += jumpPower;// ������ɏ�����^����
-			// �󒆂ɂ����Ԃ�
-			//g_Player3D.state = PLAYER3D_STATE_FALL;
+			g_Player3D.Velocity.y += jumpPower;//上向きに初速を与える
+			// 空中にいる状態へ
+			// g_Player3D.state = PLAYER3D_STATE_FALL;
 		}
 	}
 }
