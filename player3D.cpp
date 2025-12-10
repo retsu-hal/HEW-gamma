@@ -3,7 +3,10 @@
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
-#include "debug.h"// デバッグ用
+
+//=========================================================================================================
+// デバッグ用
+#include "debug.h"
 
 //=========================================================================================================
 // マクロ定義
@@ -147,7 +150,7 @@ void Player3D_Draw(void)
 		ImGui::End();
 
 	}
-
+	//???[???h?s???
 	XMMATRIX scale = XMMatrixScaling
 	(
 		g_Player3D.Scaling.x,

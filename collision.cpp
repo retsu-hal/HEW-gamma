@@ -8,7 +8,7 @@
 using namespace DirectX;
 
 //=========================================================================================================
-// ƒ{[ƒ‹‚ÆƒtƒB[ƒ‹ƒh‚Ì“–‚½‚è”»’è
+// ãƒœãƒ¼ãƒ«ã¨ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã®å½“ãŸã‚Šåˆ¤å®š
 //=========================================================================================================
 
 
@@ -22,25 +22,25 @@ int Player3DField_Collision()
 
     for (size_t i = 0; i < fieldSize; ++i)
     {
-        // CSV Type’l (0:” , 1:OBJ_1...)
-        if (Map[i].no != FIELD_GROUND) continue; // ” ˆÈŠO‚ÍƒXƒLƒbƒvi‰æ‘œ‚ÌTypeƒJƒ‰ƒ€—˜—pj
+        // CSV Typeå€¤ (0:ç®±, 1:OBJ_1...)
+        if (Map[i].no != FIELD_GROUND) continue; // ç®±ä»¥å¤–ã¯ã‚¹ã‚­ãƒƒãƒ—ï¼ˆç”»åƒã®Typeã‚«ãƒ©ãƒ åˆ©ç”¨ï¼‰
 
         float BoxTop = Map[i].pos.y + BOX_RADIUS;
 
 
-		// •Ç‚Æ‚Ì“–‚½‚è”»’è
+		// å£ã¨ã®å½“ãŸã‚Šåˆ¤å®š
 		if (Map[i].pos.y - BOX_RADIUS < player3D->Position.y && player3D->Position.y < BoxTop - 0.1f)
 		{
 			if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
 			{
 				if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x + PLAYER3D_RADIUS && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
-				{//-X–Ê”»’è
+				{//-Xé¢åˆ¤å®š
 					player3D->Position.x += (Map[i].pos.x - BOX_RADIUS) - (player3D->Position.x + PLAYER3D_RADIUS);
 					player3D->Velocity.x *= -COE;
 					hit = HIT_WALL_NegX;
 				}
 				else if (Map[i].pos.x + BOX_RADIUS > player3D->Position.x - PLAYER3D_RADIUS && player3D->Position.x > Map[i].pos.x + BOX_RADIUS)
-				{//+X–Ê”»’è
+				{//+Xé¢åˆ¤å®š
 					player3D->Position.x += (Map[i].pos.x + BOX_RADIUS) - (player3D->Position.x - PLAYER3D_RADIUS);
 					player3D->Velocity.x *= -COE;
 					hit = HIT_WALL_PlusX;
@@ -49,20 +49,20 @@ int Player3DField_Collision()
 			else if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
 			{
 				if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z + PLAYER3D_RADIUS && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
-				{//-Z–Ê”»’è
+				{//-Zé¢åˆ¤å®š
 					player3D->Position.z += (Map[i].pos.z - BOX_RADIUS) - (player3D->Position.z + PLAYER3D_RADIUS);
 					player3D->Velocity.z *= -COE;
 					hit = HIT_WALL_NegZ;
 				}
 				else if (Map[i].pos.z + BOX_RADIUS > player3D->Position.z - PLAYER3D_RADIUS && player3D->Position.z > Map[i].pos.z + BOX_RADIUS)
-				{//+Z–Ê”»’è
+				{//+Zé¢åˆ¤å®š
 					player3D->Position.z += (Map[i].pos.z + BOX_RADIUS) - (player3D->Position.z - PLAYER3D_RADIUS);
 					player3D->Velocity.z *= -COE;
 					hit = HIT_WALL_PlusZ;
 				}
 			}
 		}
-		// °‚Æ‚Ì“–‚½‚è”»’è
+		// åºŠã¨ã®å½“ãŸã‚Šåˆ¤å®š
 		else
 		{
 			if ((Map[i].pos.z - BOX_RADIUS) < player3D->Position.z && player3D->Position.z < (Map[i].pos.z + BOX_RADIUS))
@@ -89,7 +89,7 @@ int Player3DField_Collision()
 }
 
 
-struct ScreenPoint// ƒXƒNƒŠ[ƒ“À•W
+struct ScreenPoint// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™
 {
 	ImVec2 pos;
 	bool   valid;
@@ -134,7 +134,7 @@ static ScreenPoint WorldToScreenSafe(const XMFLOAT3& pWS)// World Space -> Scree
 }
 
 static void DebugDrawAABB(const XMFLOAT3& center,
-	const XMFLOAT3& half, ImU32 color) {// AABB‚ğƒfƒoƒbƒO•`‰æ
+	const XMFLOAT3& half, ImU32 color) {// AABBã‚’ãƒ‡ãƒãƒƒã‚°æç”»
 
 	ImDrawList* draw = ImGui::GetBackgroundDrawList();
 
@@ -175,7 +175,7 @@ static void DebugDrawAABB(const XMFLOAT3& center,
 
 
 static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
-	const XMFLOAT3& c1, const XMFLOAT3& h1) {// AABB“¯m“–‚½‚è”»’è
+	const XMFLOAT3& c1, const XMFLOAT3& h1) {// AABBåŒå£«å½“ãŸã‚Šåˆ¤å®š
 
 	if (fabsf(c0.x - c1.x) > (h0.x + h1.x)) return false;
 	if (fabsf(c0.y - c1.y) > (h0.y + h1.y)) return false;
@@ -183,7 +183,7 @@ static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 	return true;
 }
 
-void Collision_DebugDraw() {// “–‚½‚è”»’è‚ÌƒfƒoƒbƒO•`‰æ
+void Collision_DebugDraw() {// å½“ãŸã‚Šåˆ¤å®šã®ãƒ‡ãƒãƒƒã‚°æç”»
 
 	PLAYER3D* player = GetPlayer3D();
 	MAPDATA* map = GetFieldMap();
