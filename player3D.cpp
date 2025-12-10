@@ -62,62 +62,6 @@ static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
 
 
 //=========================================================================================================
-<<<<<<< HEAD
-// 初期化処理
-//=========================================================================================================
-void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
-{
-	g_pDevice = pDevice;
-	g_pContext = pContext;
-
-	g_player3D.Model= ModelLoad("asset\\model\\Test_man_stand.fbx");
-	g_player3D.Position = XMFLOAT3(0.0f,1.2f,0.0f);
-	g_player3D.Rotation = XMFLOAT3(-90.0f,0.0f,0.0f);
-	g_player3D.Scaling = XMFLOAT3(0.01f,0.01f,0.01f);
-	g_player3D.Velocity = XMFLOAT3(0.0f,0.0f,0.0f);
-	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_player3D.state = PLAYER3D_MOVE;
-	g_StopTime = 0.0f;
-	g_player3D.Quaternion = XMQuaternionIdentity();
-	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-}
-
-//=========================================================================================================
-// 終了処理
-//=========================================================================================================
-void Player3D_Finalize()
-{
-	ModelRelease(g_player3D.Model);
-}
-
-//=========================================================================================================
-// 更新処理
-//=========================================================================================================
-void Player3D_Update()
-{	
-	switch (g_player3D.state)
-
-	{
-	case PLAYER3D_IDLE:
-		Player3D_Idle();
-		break;
-	case PLAYER3D_MOVE:
-		Player3D_Move();
-		break;
-	case PLAYER3D_RESPAWN:
-		Player3D_Respawn();
-		Camera_Initialize();
-		break;
-	}
-
-}
-
-
-//=========================================================================================================
-// 描画処理
-//=========================================================================================================
-void Player3D_Draw()
-=======
 //初期化処理
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
@@ -190,47 +134,23 @@ void Player3D_Update()
 //描画処理
 //=========================================================================================================
 void Player3D_Draw(void)
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 {
 	if (debugMode)
 	{
-
-
-		ImGui::Begin("Debug - CHEN");
+		ImGui::Begin("Debug - han");
 		if (ImGui::TreeNode("Player3D.cpp"))
 		{
-<<<<<<< HEAD
-			ImGui::Text("PosX: %.2f", g_player3D.Position.x);
-			ImGui::Text("PosY: %.2f", g_player3D.Position.y);
-			ImGui::Text("PosZ: %.2f", g_player3D.Position.z);
-=======
 			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
 			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
 			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 			ImGui::TreePop();
 		}
 		ImGui::End();
 
-<<<<<<< HEAD
-=======
-		//DebugDrawDetectBox();
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 	}
 	//ワールド行列作成
 	XMMATRIX scale = XMMatrixScaling
 	(
-<<<<<<< HEAD
-		g_player3D.Scaling.x,
-		g_player3D.Scaling.y,
-		g_player3D.Scaling.z);
-
-	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
-	(
-		XMConvertToRadians(g_player3D.Rotation.x),
-		XMConvertToRadians(g_player3D.Rotation.y),
-		XMConvertToRadians(g_player3D.Rotation.z)
-=======
 		g_Player3D.Scaling.x,
 		g_Player3D.Scaling.y,
 		g_Player3D.Scaling.z);
@@ -240,20 +160,14 @@ void Player3D_Draw(void)
 		XMConvertToRadians(g_Player3D.Rotation.x),
 		XMConvertToRadians(g_Player3D.Rotation.y),
 		XMConvertToRadians(g_Player3D.Rotation.z)
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
+
 	);
 
 	XMMATRIX translation = XMMatrixTranslation
 	(
-<<<<<<< HEAD
-		g_player3D.Position.x,
-		g_player3D.Position.y,
-		g_player3D.Position.z
-=======
 		g_Player3D.Position.x,
 		g_Player3D.Position.y,
 		g_Player3D.Position.z
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 	);
 
 	XMMATRIX world = scale * rotation * translation;
@@ -268,11 +182,7 @@ void Player3D_Draw(void)
 	Shader_SetMatrix(wvp);
 
 	//モデルの描画リクエスト
-<<<<<<< HEAD
-	ModelDraw(g_player3D.Model);
-=======
 	ModelDraw(g_Player3D.Model);
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 }
 
 //=========================================================================================================
@@ -280,93 +190,6 @@ void Player3D_Draw(void)
 //=========================================================================================================
 XMFLOAT3 GetPlayer3DPositon()
 {
-<<<<<<< HEAD
-	return g_player3D.Position;
-}
-
-//=========================================================================================================
-// stateごとの処理（Idle状態）
-//=========================================================================================================
-void Player3D_Idle()
-{
-	g_player3D.state = PLAYER3D_MOVE;
-}
-
-
-//=========================================================================================================
-// stateごとの処理（Move状態）
-//=========================================================================================================
-void Player3D_Move()
-{
-	g_player3D.Velocity.x += g_player3D.Acceleration.x; //重力
-	g_player3D.Velocity.y += g_player3D.Acceleration.y; //重力
-	g_player3D.Velocity.z += g_player3D.Acceleration.z; //重力
-
-	g_player3D.Position.x += g_player3D.Velocity.x;
-	g_player3D.Position.y += g_player3D.Velocity.y;
-	g_player3D.Position.z += g_player3D.Velocity.z;
-
-	g_player3D.Velocity.x *= 0.98f;		//好みで減衰させる
-	//g_player3D.Velocity.y *= 0.98f;		//好みで減衰させる
-	g_player3D.Velocity.z *= 0.98f;		//好みで減衰させる
-	
-	XMFLOAT3 camPos = GetCameraPosition();
-	XMFLOAT3 camAt = GetCameraAtPosition();
-
-	// カメラの前方向ベクトル（正規化）
-	XMFLOAT3 forward = { camAt.x - camPos.x,	0.0f, camAt.z - camPos.z };
-	float flen = sqrtf(forward.x * forward.x + forward.z * forward.z);
-	if (flen > 0.0001f) {
-		forward.x /= flen;
-		forward.z /= flen;
-	}
-	// カメラの右方向ベクトル
-	XMFLOAT3 right = { forward.z, 0.0f, -forward.x };
-	if (Keyboard_IsKeyDown(UpKey))
-	{
-		g_player3D.Position.x += forward.x * moveSpeed;
-		g_player3D.Position.z += forward.z * moveSpeed;
-
-	}
-	if (Keyboard_IsKeyDown(RightKey))
-	{
-		g_player3D.Position.x += right.x * moveSpeed;
-		g_player3D.Position.z += right.z * moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(DownKey))
-	{
-		g_player3D.Position.x -= forward.x * moveSpeed;
-		g_player3D.Position.z -= forward.z * moveSpeed;
-	}
-	if (Keyboard_IsKeyDown(LeftKey))
-	{
-		g_player3D.Position.x -= right.x * moveSpeed;
-		g_player3D.Position.z -= right.z * moveSpeed;
-	}
-	float hit = Player3DField_Collision();
-	//落下チェック
-	if (g_player3D.Position.y < -10.0f)
-	{
-		g_player3D.state = PLAYER3D_RESPAWN;
-		return;
-	}
-}
-
-//=========================================================================================================
-// stateごとの処理（Respawn状態）
-//=========================================================================================================
-void Player3D_Respawn()
-{
-	g_player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
-	g_player3D.Rotation = XMFLOAT3(-90.0f, 0.0f, 0.0f);
-	g_player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
-	g_player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_player3D.state =PLAYER3D_MOVE;
-	g_StopTime = 0.0f;
-	g_player3D.Quaternion = XMQuaternionIdentity();
-	g_player3D.Axis = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-=======
 	return g_Player3D.Position;
 }
 
@@ -513,7 +336,6 @@ void Player3D_Action()
 
 void Player3D_Reset()
 {
-
 	g_Player3D.Position = Firstposition;
 	g_Player3D.Rotation = FirstRotation;
 	g_Player3D.Scaling = FirstScaling;
@@ -522,104 +344,14 @@ void Player3D_Reset()
 	g_Player3D.state = FirstState;
 	g_StopTime = FirstStopTime;
 	g_Player3D.Quaternion = FirstQuaternion;
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 }
 
 PLAYER3D* GetPlayer3D()
 {
-<<<<<<< HEAD
-	return &g_player3D;
-=======
 	return &g_Player3D;
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 }
 
 XMFLOAT3 Player3D_GetDetectHalfSize()
 {
 	return g_DetectHalfSize;
-<<<<<<< HEAD
-=======
-}
-
-bool Player3D_IsNearPoint(const XMFLOAT3& point)
-{
-	const XMFLOAT3& c = g_Player3D.Position;
-
-	if (fabsf(point.x - c.x) > g_DetectHalfSize.x) return false;
-	if (fabsf(point.y - c.y) > g_DetectHalfSize.y) return false;
-	if (fabsf(point.z - c.z) > g_DetectHalfSize.z) return false;
-
-	return true;
-}
-
-static ImVec2 WorldToScreen(const XMFLOAT3& p)
-{
-	using namespace DirectX;
-
-	float bbWidth = (float)Direct3D_GetBackBufferWidth();
-	float bbHeight = (float)Direct3D_GetBackBufferHeight();
-
-	XMMATRIX view = GetViewMatrix();
-	XMMATRIX proj = GetProjectionMatrix();
-	XMMATRIX vp = XMMatrixMultiply(view, proj);
-
-
-	XMVECTOR v = XMVectorSet(p.x, p.y, p.z, 1.0f);
-	v = XMVector3TransformCoord(v, vp);
-
-	XMFLOAT3 ndc;
-	XMStoreFloat3(&ndc, v);
-
-
-	float x_bb = (ndc.x * 0.5f + 0.5f) * bbWidth;
-	float y_bb = (-ndc.y * 0.5f + 0.5f) * bbHeight;
-
-
-	ImGuiIO& io = ImGui::GetIO();
-	float x_imgui = x_bb / bbWidth * io.DisplaySize.x;
-	float y_imgui = y_bb / bbHeight * io.DisplaySize.y;
-
-	return ImVec2(x_imgui, y_imgui);
-}
-
-
-static void DebugDrawDetectBox()
-{
-	using namespace DirectX;
-
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-	const XMFLOAT3& c = g_Player3D.Position;
-	const XMFLOAT3& h = g_DetectHalfSize;
-
-
-	XMFLOAT3 corners[8] =
-	{
-		{c.x - h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y + h.y, c.z + h.z},
-		{c.x - h.x, c.y + h.y, c.z + h.z},
-	};
-
-	ImVec2 pts[8];
-	for (int i = 0; i < 8; ++i)
-		pts[i] = WorldToScreen(corners[i]);
-
-	ImU32 col = IM_COL32(0, 255, 0, 255);
-
-	auto Line = [&](int a, int b)
-		{
-			draw->AddLine(pts[a], pts[b], col, 1.0f);
-		};
-
-
-	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
-
-	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
-
-	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
->>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 }
