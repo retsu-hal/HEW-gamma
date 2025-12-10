@@ -1,18 +1,127 @@
-﻿  Collision.cpp
-F:\code\hew\Collision.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-F:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+﻿  compilation object save succeeded; see E:\code\hew\shader_pixel_2d.cso
+  compilation object save succeeded; see E:\code\hew\shader_vertex_2d.cso
+  Audio.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“Audio.cpp”)
+  
+  Collision.cpp
+E:\code\hew\Collision.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
   (编译源文件“Collision.cpp”)
   
-F:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
   (编译源文件“Collision.cpp”)
   
-F:\code\hew\Collision.cpp(28,3): warning C4065: switch 语句包含“default”但是未包含“case”标签
+E:\code\hew\Collision.cpp(28,3): warning C4065: switch 语句包含“default”但是未包含“case”标签
+  Player3D.cpp
+E:\code\hew\Player3D.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“Player3D.cpp”)
+  
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“Player3D.cpp”)
+  
+  Polygon3D.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“Polygon3D.cpp”)
+  
+  Result.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“Result.cpp”)
+  
+E:\code\hew\Result.cpp(32,10): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+E:\code\hew\Result.cpp(57,11): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+  Trail.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“Trail.cpp”)
+  
+  camera.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“camera.cpp”)
+  
+E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“camera.cpp”)
+  
+  debug_ostream.cpp
+  direct3d.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“direct3d.cpp”)
+  
+  effect.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“effect.cpp”)
+  
+  fade.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“fade.cpp”)
+  
+E:\code\hew\fade.cpp(82,19): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+E:\code\hew\fade.cpp(137,17): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+  field.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“field.cpp”)
+  
   game.cpp
-F:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
   (编译源文件“game.cpp”)
   
-F:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
   (编译源文件“game.cpp”)
   
+  imgui_impl_dx11.cpp
+  imgui_impl_win32.cpp
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
   正在生成代码...
-  base.vcxproj -> F:\code\hew\x64\Debug\base.exe
+  正在编译...
+  keyboard.cpp
+  main.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“main.cpp”)
+  
+E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+  (编译源文件“main.cpp”)
+  
+E:\code\hew\main.cpp(248,7): warning C4101: “hdc”: 未引用的局部变量
+E:\code\hew\main.cpp(246,10): warning C4101: “hbrWhite”: 未引用的局部变量
+E:\code\hew\main.cpp(249,14): warning C4101: “ps”: 未引用的局部变量
+E:\code\hew\main.cpp(246,20): warning C4101: “hbrGray”: 未引用的局部变量
+  manager.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“manager.cpp”)
+  
+  model.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“model.cpp”)
+  
+E:\code\hew\model.cpp(96,19): warning C4018: “<”: 有符号/无符号不匹配
+  mouse.cpp
+  score.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“score.cpp”)
+  
+  shader.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“shader.cpp”)
+  
+  sprite.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“sprite.cpp”)
+  
+  title.cpp
+E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+  (编译源文件“title.cpp”)
+  
+E:\code\hew\title.cpp(38,10): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+E:\code\hew\title.cpp(65,11): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+E:\code\hew\title.cpp(72,11): warning C4244: “参数”: 从“float”转换到“int”，可能丢失数据
+  正在生成代码...
+DirectXTex_Debug.lib(BC.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(BC.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
+DirectXTex_Debug.lib(BC4BC5.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(BC4BC5.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
+DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(BC6HBC7.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
+DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexConvert.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
+DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexMipMaps.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
+  base.vcxproj -> E:\code\hew\x64\Debug\base.exe
