@@ -46,6 +46,7 @@ void	Manager_Finalize()
 //=========================================================================================================
 void	Manager_Update()
 {
+
 	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
 	{
 		case SCENE_NONE:
@@ -63,6 +64,7 @@ void	Manager_Update()
 			break;
 	}
 
+
 	Fade_Update();
 
 }
@@ -72,10 +74,6 @@ void	Manager_Update()
 //=========================================================================================================
 void	Manager_Draw()
 { 
-	ImGui_ImplWin32_NewFrame();
-	ImGui_ImplDX11_NewFrame();
-	ImGui::NewFrame();
-
 	switch (g_Scene)	//現在シーンの描画関数を呼び出す
 	{
 		case SCENE_NONE:
@@ -92,9 +90,6 @@ void	Manager_Draw()
 		default:
 			break;
 	}
-
-	ImGui::Render();
-	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
 	Fade_Draw();
 }
