@@ -2,27 +2,34 @@
 #include	"sprite.h"
 #include	"Game.h"
 #include	"keyboard.h"
-#include "Polygon3D.h"
+#include	"Polygon3D.h"
 #include	"Player3D.h"
-#include	"Block.h"
+#include	"LightSource.h"
 #include	"field.h"
 #include	"Effect.h"
 #include	"score.h"
 #include	"Audio.h"
-#include "camera.h"
-#include"direct3d.h"
+#include	"camera.h"
+#include	"direct3d.h"
+
 
 //=========================================================================================================
 //グローバル変数
 //=========================================================================================================
 static	int		g_BgmID = NULL;	//サウンド管理ID
-LIGHTOBJECT Light;
+LIGHTOBJECT g_BallLight;
+
+static ID3D11Device* g_pDevice = nullptr;
+static ID3D11DeviceContext* g_pContext = nullptr;
 
 //=========================================================================================================
 //初期化処理
 //=========================================================================================================
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
+	g_pDevice = pDevice;
+	g_pContext = pContext;
+
 	/*
 	//Player_Initialize(pDevice, pContext);
 	//Block_Initialize(pDevice, pContext);
@@ -39,18 +46,13 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	field_Initialize(pDevice, pContext);
 	Camera_Initialize();
 
-	//ライト初期化
+	// Initialize the ball's light source
+	g_BallLight.SetEnable(true);
 	XMFLOAT4 para;
-	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);		//環境光の色
-	Light.SetAmbient(para);
-	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);		//光の色
-	Light.SetDiffuse(para);
-	para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);		//光の方向
-	float len = sqrtf(para.x * para.x + para.y * para.y + para.z * para.z);
-	para.x /= len;
-	para.y /= len;
-	para.z /= len;
-	Light.SetDirection(para);		//光の方向（正規化済）
+	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	g_BallLight.SetAmbient(para);
+	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+	g_BallLight.SetDiffuse(para);
 }
 //=========================================================================================================
 //終了処理
@@ -78,6 +80,20 @@ void Game_Finalize()
 //=========================================================================================================
 void Game_Update()
 {
+	//更新処理
+	Light_Update();
+
+	// Update ball light position
+	XMFLOAT3 LightPos = GetLight_Position();
+	g_BallLight.SetEnable(true);
+	g_BallLight.SetDirection(XMFLOAT4(0, 0, 0, 0)); // No fixed direction (omnidirectional)
+	g_BallLight.Light.Direction = XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f); // Set light position
+
+	// Update global shadow light position to match ball
+	//g_ShadowLightPos = LightPos;
+	float shadowIntensity = 1.0f; // Blend value: higher means stronger light influence.
+	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
+
 	Camera_Update();
 	field_Update();
 
@@ -96,20 +112,72 @@ void Game_Update()
 //=========================================================================================================
 void Game_Draw()
 { 
-	//３D描画
-	Light.SetEnable(TRUE);					//ライティングON
-	Shader_SetLight(Light.Light);		//ライト構造体をシェーダーにセット
-	SetDepthTest(TRUE);
-
 	Camera_Draw();		//最初に呼ぶ！
 
+	//３D描画
+	g_BallLight.SetEnable(TRUE);					//ライティングON
+	Shader_SetLight(g_BallLight.Light);		//ライト構造体をシェーダーにセット
+	SetDepthTest(TRUE);
 
-	Player3D_Draw();
-	field_Draw();
+	// Dynamic light position (can be fixed or move based on puzzle state)
+	XMFLOAT3 lightPos = g_ShadowLightPos;
+	float lightRadius = g_ShadowLightRadius;
+
+	// ------- OMNIDIRECTIONAL SHADOW PASS (6 cubemap faces) -------
+
+	for (int face = 0; face < 6; face++)
+	{
+		Direct3D_BeginShadowPass(face);
+
+		Shader_Begin();
+		// Set shadow pass mode = 1.0 (pixel shader will output linear depth)
+		Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 1.0f);
+
+		XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, lightPos, lightRadius);
+		Shader_SetShadowMatrix(lightViewProj);
+
+		// Draw ball
+		{
+			XMMATRIX world = Light_GetWorldMatrix();
+			Shader_SetWorldMatrix(world);
+			Shader_SetMatrix(world * lightViewProj);
+			Light_DrawRaw(world, world * lightViewProj);
+		}
+
+		// Draw field
+		{
+			Field_DrawShadowMap(lightViewProj);
+		}
+	}
+
+	Direct3D_EndShadowPass();
+	
+	// ------- MAIN CAMERA PASS -------
+	Shader_Begin();
+
+	Shader_SetLight(g_BallLight.Light);
+
+	// Shadow resources for pixel shader
+	Shader_SetShadowMap(g_pShadowCubemapSRV);
+	Shader_SetShadowSampler(g_pShadowSamplerState);
+	Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 0.0f);
+
+	//Player
+	{
+		Player3D_Draw();
+	}
+	// Draw ball (visible)
+	{
+		//Ball_Draw();
+	}
+	// Draw field (visible)
+	{
+		field_Draw();
+	}
 
 	//２D描画
-	Light.SetEnable(FALSE);					//ライティングOFF
-	Shader_SetLight(Light.Light);		//ライト構造体をシェーダーにセット
+	g_BallLight.SetEnable(FALSE);					//ライティングOFF
+	Shader_SetLight(g_BallLight.Light);		//ライト構造体をシェーダーにセット
 	SetDepthTest(FALSE);
 
 	
