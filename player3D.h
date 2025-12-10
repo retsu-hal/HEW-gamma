@@ -59,7 +59,7 @@ void Player3D_Jump();
 void Player3D_Change();
 void Player3D_Action();
 void Player3D_Reset();
-void Player3D_Respown();
+void Player3D_Respawn();
 
 PLAYER3D* GetPlayer3D();
 
@@ -71,7 +71,6 @@ PLAYER3D* GetPlayer3D();
 
 bool     Player3D_IsNearPoint(const XMFLOAT3& point);
 XMFLOAT3 Player3D_GetDetectHalfSize();
-void Player3D_Respawn();
 PLAYER3D* GetPlayer3D();
 
 
