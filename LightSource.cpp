@@ -6,6 +6,9 @@
 
 #include"Collision.h"
 
+#include "debug.h"
+static bool debugMode = TRUE;
+
 LightSource g_Light;
 
 //グローバル変数
@@ -55,6 +58,20 @@ void Light_Update(void)
 }
 void Light_Draw(void)
 {
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("LightSource.cpp"))
+		{
+			ImGui::Text("velo: %.2f,%.2f,%.2f", g_Light.m_velo.x, g_Light.m_velo.y, g_Light.m_velo.z);
+			ImGui::Text("Pos: %.2f,%.2f,%.2f", g_Light.m_position);
+			ImGui::TreePop();
+		}
+		ImGui::End();
+	}
+
+
+
 	//シェーダーを描画パイプライン設定
 	Shader_Begin();
 

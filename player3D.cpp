@@ -124,7 +124,6 @@ void Player3D_Draw(void)
 			ImGui::TreePop();
 		}
 		ImGui::End();
-
 	}
 
 	XMMATRIX scale = XMMatrixScaling

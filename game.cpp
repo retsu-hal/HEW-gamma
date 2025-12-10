@@ -78,8 +78,9 @@ void Game_Update()
 
 void Game_Draw()
 { 
-	Camera_Draw();
 
+	Camera_Draw();
+	Light_Draw();
 
 	g_BallLight.SetEnable(TRUE);
 	Shader_SetLight(g_BallLight.Light);

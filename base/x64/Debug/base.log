@@ -1,60 +1,8 @@
-﻿  Collision.cpp
-E:\code\hew\Collision.cpp(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“Collision.cpp”)
-  
-E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Collision.cpp”)
-  
-  LightSource.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“LightSource.cpp”)
-  
-E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“LightSource.cpp”)
-  
-  Player3D.cpp
-E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“Player3D.cpp”)
-  
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“Player3D.cpp”)
-  
-  camera.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“camera.cpp”)
-  
-E:\code\hew\player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“camera.cpp”)
-  
-  game.cpp
+﻿  game.cpp
 E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
   (编译源文件“game.cpp”)
   
 E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
   (编译源文件“game.cpp”)
   
-  main.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“main.cpp”)
-  
-E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“main.cpp”)
-  
-E:\code\hew\main.cpp(248,7): warning C4101: “hdc”: 未引用的局部变量
-E:\code\hew\main.cpp(246,10): warning C4101: “hbrWhite”: 未引用的局部变量
-E:\code\hew\main.cpp(249,14): warning C4101: “ps”: 未引用的局部变量
-E:\code\hew\main.cpp(246,20): warning C4101: “hbrGray”: 未引用的局部变量
-  正在生成代码...
-  LINK : 没有找到 E:\code\hew\x64\Debug\base.exe 或上一个增量?接没有生成它；正在?行完全?接
-DirectXTex_Debug.lib(DirectXTexImage.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexImage.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(DirectXTexWIC.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexWIC.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(DirectXTexD3D11.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexD3D11.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(DirectXTexUtil.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexUtil.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexConvert.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(DirectXTexCompress.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexCompress.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexMipMaps.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(BC.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(BC.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(BC4BC5.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(BC4BC5.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
-DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(BC6HBC7.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中?找)；正在?接?象，如同没有??信息一?
   base.vcxproj -> E:\code\hew\x64\Debug\base.exe
