@@ -6,22 +6,22 @@
 #include "model.h"
 
 //=========================================================================================================
-// ãƒžã‚¯ãƒ­å®šç¾©
+// ƒ}ƒNƒ’è‹`
 //=========================================================================================================
-#define PLAYER3D_RADIUS (0.2f)			//åŠå¾„
+#define PLAYER3D_RADIUS (0.2f)			//”¼Œa
 
 //=========================================================================================================
-// æ§‹é€ ä½“
+// \‘¢‘Ì
 //=========================================================================================================
-//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚¹ãƒ†ãƒ¼ãƒˆ
+//ƒvƒŒƒCƒ„[ƒXƒe[ƒg
 enum PLAYER3D_STATE
 {
 
-	PLAYER3D_STATE_IDLE = 0,	//ä½•ã‚‚ã—ãªã„
-	PLAYER3D_STATE_MOVE,		//ç§»å‹•ä¸­
-	PLAYER3D_STATE_FALL,		//è½ä¸‹ä¸­
-	PLAYER3D_STATE_UP,			//ä¸Šæ˜‡ä¸­
-	PLAYER3D_STATE_ACTION,		//ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ä¸­
+	PLAYER3D_STATE_IDLE = 0,	//‰½‚à‚µ‚È‚¢
+	PLAYER3D_STATE_MOVE,		//ˆÚ“®’†
+	PLAYER3D_STATE_FALL,		//—Ž‰º’†
+	PLAYER3D_STATE_UP,			//ã¸’†
+	PLAYER3D_STATE_ACTION,		//ƒAƒNƒVƒ‡ƒ“’†
 
 
 	PLAYER3D_STATE_MAX,
@@ -30,19 +30,19 @@ enum PLAYER3D_STATE
 class PLAYER3D
 {
 public:
-	XMFLOAT3 Position;			//åº§æ¨™
-	XMFLOAT3 Rotation;			//å›žè»¢
-	XMFLOAT3 Scaling;			//ã‚µã‚¤ã‚º
-	XMFLOAT3 Velocity;			//æ–¹å‘
+	XMFLOAT3 Position;			//À•W
+	XMFLOAT3 Rotation;			//‰ñ“]
+	XMFLOAT3 Scaling;			//ƒTƒCƒY
+	XMFLOAT3 Velocity;			//•ûŒü
 	XMFLOAT3 Acceleration;		//
-	PLAYER3D_STATE state;		//çŠ¶æ…‹
-	MODEL* Model;				//ãƒ¢ãƒ‡ãƒ«ãƒ‡ãƒ¼ã‚¿
+	PLAYER3D_STATE state;		//ó‘Ô
+	MODEL* Model;				//ƒ‚ƒfƒ‹ƒf[ƒ^
 	XMVECTOR Quaternion;		//
 
 };
 
 //=========================================================================================================
-// ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€
+// ƒvƒƒgƒ^ƒCƒvéŒ¾
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Player3D_Finalize(void);
