@@ -230,10 +230,13 @@ static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
 std::vector<MAPDATA> g_MapData; 
 MODEL* Model[FIELD_MAX] = { NULL };
 
+
+//=========================================================================================================
 // 初期化
+//=========================================================================================================
 void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// 必要ならここでg_MapData.clear();
+
 	LoadMapFromCSV("Asset\\MapData\\map_testdata.csv");
 
 	g_pDevice = pDevice;
@@ -246,23 +249,28 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	for (int i = 0; i < FIELD_MAX; i++) {
+	for (size_t i = 0; i < g_MapData.size(); ++i)
+	{
 		switch (i) {
-		case FIELD_BOX:
+		case FIELD_GROUND:
 			CreateBox();
 			break;
-		case FIELD_OBJ_1:
-			Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\tree.fbx");
+		case FIELD_WALL:
+			Model[FIELD_WALL] = ModelLoad("asset\\model\\tree.fbx");
 			break;
 			// 他のOBJタイプも必要なら追加
 		}
 	}
 }
 
+
+//=========================================================================================================
 // 終了
+//=========================================================================================================
 void field_Finalize(void)
 {
-	for (int i = 0; i < FIELD_MAX; i++) {
+	for (int i = 0; i < FIELD_MAX; i++)
+	{
 		if (Model[i] != NULL) {
 			ModelRelease(Model[i]);
 			Model[i] = NULL;
@@ -273,12 +281,16 @@ void field_Finalize(void)
 	SAFE_RELEASE(g_Texture);
 }
 
+//=========================================================================================================
 // 更新
+//=========================================================================================================
 void field_Update(void)
 {
 }
 
+//=========================================================================================================
 // 描画
+//=========================================================================================================
 void field_Draw(void)
 {
 	Shader_Begin();
@@ -304,14 +316,16 @@ void field_Draw(void)
 		g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		if (g_MapData[i].no == FIELD_BOX)
+		if (g_MapData[i].no == FIELD_GROUND)
 			g_pContext->DrawIndexed(6 * 6, 0, 0);
 		else if (Model[g_MapData[i].no])
 			ModelDraw(Model[g_MapData[i].no]);
 	}
 }
 
+//=========================================================================================================
 // Box作成
+//=========================================================================================================
 void CreateBox()
 {
 	// 頂点バッファ
@@ -369,7 +383,7 @@ void Field_DrawShadowMap(const XMMATRIX& lightViewProj)
 		Shader_SetWorldMatrix(world);
 		Shader_SetMatrix(world * lightViewProj);
 
-		if (g_MapData[i].no == FIELD_BOX) {
+		if (g_MapData[i].no == FIELD_GROUND) {
 			UINT stride = sizeof(Vertex3D);
 			UINT offset = 0;
 			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
@@ -382,7 +396,9 @@ void Field_DrawShadowMap(const XMMATRIX& lightViewProj)
 	}
 }
 
+//=========================================================================================================
 // CSVロード
+//=========================================================================================================
 void LoadMapFromCSV(const char* filename)
 {
 	std::cout << "Loaded field count: " << g_MapData.size() << std::endl;

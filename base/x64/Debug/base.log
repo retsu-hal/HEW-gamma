@@ -1,1 +1,6 @@
-﻿  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
+﻿  field.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'field.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\field.cpp(382,41): warning C4267: '引数': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
