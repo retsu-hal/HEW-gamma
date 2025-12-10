@@ -17,8 +17,8 @@ using namespace DirectX;
 //=========================================================================================================
 enum FIELD
 {
-    FIELD_BOX = 0,
-    FIELD_OBJ_1,
+    FIELD_GROUND = 0,
+    FIELD_WALL,
     FIELD_OBJ_2,
     FIELD_OBJ_3,
     FIELD_OBJ_4,

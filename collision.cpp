@@ -12,7 +12,7 @@ int Player3DField_Collision()
     for (size_t i = 0; i < fieldSize; ++i)
     {
         // CSV Type値 (0:箱, 1:OBJ_1...)
-        if (Map[i].no != FIELD_BOX) continue; // 箱以外はスキップ（画像のTypeカラム利用）
+        if (Map[i].no != FIELD_GROUND) continue; // 箱以外はスキップ（画像のTypeカラム利用）
 
         float BoxTop = Map[i].pos.y + BOX_RADIUS;
 
