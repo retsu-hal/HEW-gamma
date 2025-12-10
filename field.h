@@ -2,31 +2,38 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
-#include"direct3d.h"
-#include"sprite.h"
-#include"shader.h"
+#include "direct3d.h"
+#include "sprite.h"
+#include "shader.h"
+#include <vector>
 using namespace DirectX;
-//=========================================================================================================
-// マクロ定義
-//=========================================================================================================
-#define BOX_RADIUS (0.5f)		//半径
 
 //=========================================================================================================
-// 構造体定義・定義
+// マクロ
+//=========================================================================================================
+#define BOX_RADIUS (0.5f)
+//=========================================================================================================
+// 構造体
 //=========================================================================================================
 enum FIELD
 {
-	FIELD_BOX=0,
-	FIELD_OBT_0,
-	FIELD_MAX,
+    FIELD_GROUND = 0,
+    FIELD_WALL,
+    FIELD_OBJ_2,
+    FIELD_OBJ_3,
+    FIELD_OBJ_4,
+    FIELD_MAX,
 };
 
 class MAPDATA
 {
 public:
-	XMFLOAT3 pos;	//座標
-	FIELD no;			//種類
+    XMFLOAT3 pos;    //位置
+    FIELD no;        //種類
 };
+
+// グローバルなフィールドデータ配列
+extern std::vector<MAPDATA> g_MapData;
 
 //=========================================================================================================
 // プロトタイプ宣言
@@ -37,4 +44,8 @@ void field_Update(void);
 void field_Draw(void);
 void CreateBox(void);
 MAPDATA* GetFieldMap(void);
+size_t GetFieldMapSize(void);
 
+XMMATRIX Field_GetWorldMatrix(int i);
+void Field_DrawShadowMap(const XMMATRIX& lightViewProj);
+void LoadMapFromCSV(const char* filename);

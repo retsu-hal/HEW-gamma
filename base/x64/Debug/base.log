@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿  compilation object save succeeded; see E:\code\hew\shader_pixel_2d.cso
   compilation object save succeeded; see E:\code\hew\shader_vertex_2d.cso
   Audio.cpp
@@ -125,3 +126,11 @@ DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: 未找到 PDB“DirectXTex.
 DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexConvert.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
 DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: 未找到 PDB“DirectXTex.pdb”(使用“DirectXTex_Debug.lib(DirectXTexMipMaps.obj)”或在“E:\code\hew\x64\Debug\DirectXTex.pdb”中寻找)；正在链接对象，如同没有调试信息一样
   base.vcxproj -> E:\code\hew\x64\Debug\base.exe
+=======
+﻿  field.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'field.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\field.cpp(382,41): warning C4267: '引数': 'size_t' から 'int' に変換しました。データが失われているかもしれません。
+  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
+>>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0

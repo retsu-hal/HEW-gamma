@@ -2,59 +2,62 @@
 #include	"sprite.h"
 #include	"Game.h"
 #include	"keyboard.h"
-#include "Polygon3D.h"
+#include	"Polygon3D.h"
 #include	"Player3D.h"
+#include	"LightSource.h"
 #include	"field.h"
 #include	"Effect.h"
 #include	"score.h"
 #include	"Audio.h"
-#include "camera.h"
-#include"direct3d.h"
+#include	"camera.h"
+#include	"direct3d.h"
+
 
 #include "Collision.h"
 
 //=========================================================================================================
-//ƒOƒ[ƒoƒ‹•Ï”
+//ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
-static	int		g_BgmID = NULL;	//ƒTƒEƒ“ƒhŠÇ—ID
-LIGHTOBJECT Light;
+static	int		g_BgmID = NULL;	//ã‚µã‚¦ãƒ³ãƒ‰ç®¡ç†ID
+LIGHTOBJECT g_BallLight;
+
+static ID3D11Device* g_pDevice = nullptr;
+static ID3D11DeviceContext* g_pContext = nullptr;
 
 //=========================================================================================================
-//‰Šú‰»ˆ—
+//åˆæœŸåŒ–å‡¦ç†
 //=========================================================================================================
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
+	g_pDevice = pDevice;
+	g_pContext = pContext;
+
 	/*
 	//Player_Initialize(pDevice, pContext);
 	//Block_Initialize(pDevice, pContext);
 	//Effect_Initialize(pDevice, pContext);
 	//Score_Initialize(pDevice, pContext);
 	//Polygon3D_Initialize(pDevice, pContext);
-	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//ƒTƒEƒ“ƒhƒ[ƒh
-	//PlayAudio(g_BgmID, true);	//Ä¶ŠJniƒ‹[ƒv‚ ‚èj
-	//PlayAudio(g_BgmID);			//Ä¶ŠJniƒ‹[ƒv‚È‚µj
-	//PlayAudio(g_BgmID, false);	//Ä¶ŠJniƒ‹[ƒv‚È‚µj
+	//g_BgmID = LoadAudio("asset\\Audio\\bgm.wav");	//ã‚µã‚¦ãƒ³ãƒ‰ãƒ­ãƒ¼ãƒ‰
+	//PlayAudio(g_BgmID, true);	//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ã‚ã‚Šï¼‰
+	//PlayAudio(g_BgmID);			//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ãªã—ï¼‰
+	//PlayAudio(g_BgmID, false);	//å†ç”Ÿé–‹å§‹ï¼ˆãƒ«ãƒ¼ãƒ—ãªã—ï¼‰
 	*/
 	Player3D_Initialize(pDevice, pContext);
 
 	field_Initialize(pDevice, pContext);
 	Camera_Initialize();
 
-	//ƒ‰ƒCƒg‰Šú‰»
+	// Initialize the ball's light source
+	g_BallLight.SetEnable(true);
 	XMFLOAT4 para;
-	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);		//ŠÂ‹«Œõ‚ÌF
-	Light.SetAmbient(para);
-	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);		//Œõ‚ÌF
-	Light.SetDiffuse(para);
-	para = XMFLOAT4(0.5f, -1.0f, 0.0f, 1.0f);		//Œõ‚Ì•ûŒü
-	float len = sqrtf(para.x * para.x + para.y * para.y + para.z * para.z);
-	para.x /= len;
-	para.y /= len;
-	para.z /= len;
-	Light.SetDirection(para);		//Œõ‚Ì•ûŒüi³‹K‰»Ïj
+	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	g_BallLight.SetAmbient(para);
+	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+	g_BallLight.SetDiffuse(para);
 }
 //=========================================================================================================
-//I—¹ˆ—
+//çµ‚äº†å‡¦ç†
 //=========================================================================================================
 void Game_Finalize()
 {
@@ -70,17 +73,32 @@ void Game_Finalize()
 	
 	//Effect_Finalize();
 	//Score_Finalize();	
-	//UnloadAudio(g_BgmID);//ƒTƒEƒ“ƒh‚Ì‰ğ•ú
+	//UnloadAudio(g_BgmID);//ã‚µã‚¦ãƒ³ãƒ‰ã®è§£æ”¾
 	*/
 }
 
 //=========================================================================================================
-//XVˆ—
+//æ›´æ–°å‡¦ç†
 //=========================================================================================================
 void Game_Update()
 {
+	//æ›´æ–°å‡¦ç†
+	Light_Update();
+
+	// Update ball light position
+	XMFLOAT3 LightPos = GetLight_Position();
+	g_BallLight.SetEnable(true);
+	g_BallLight.SetDirection(XMFLOAT4(0, 0, 0, 0)); // No fixed direction (omnidirectional)
+	g_BallLight.Light.Direction = XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f); // Set light position
+
+	// Update global shadow light position to match ball
+	//g_ShadowLightPos = LightPos;
+	float shadowIntensity = 1.0f; // Blend value: higher means stronger light influence.
+	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
+
 	Camera_Update();
 	field_Update();
+
 	Player3D_Update();
 
 	/*
@@ -92,26 +110,87 @@ void Game_Update()
 }
 
 //=========================================================================================================
-//•`‰æˆ—
+//æç”»å‡¦ç†
 //=========================================================================================================
 void Game_Draw()
 { 
-	//‚RD•`‰æ
-	Light.SetEnable(TRUE);					//ƒ‰ƒCƒeƒBƒ“ƒOON
-	Shader_SetLight(Light.Light);		//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÉƒZƒbƒg
+	Camera_Draw();		//æœ€åˆã«å‘¼ã¶ï¼
+
+	//ï¼“Dæç”»
+	g_BallLight.SetEnable(TRUE);					//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°ON
+	Shader_SetLight(g_BallLight.Light);		//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«ã‚»ãƒƒãƒˆ
 	SetDepthTest(TRUE);
 
-	Camera_Draw();		//Å‰‚ÉŒÄ‚ÔI
-	field_Draw();
-	Player3D_Draw();
+	// Dynamic light position (can be fixed or move based on puzzle state)
+	XMFLOAT3 lightPos = g_ShadowLightPos;
+	float lightRadius = g_ShadowLightRadius;
 
+<<<<<<< HEAD
 	Collision_DebugDraw();
 
 	//‚QD•`‰æ
 	Light.SetEnable(FALSE);					//ƒ‰ƒCƒeƒBƒ“ƒOOFF
 	Shader_SetLight(Light.Light);		//ƒ‰ƒCƒg\‘¢‘Ì‚ğƒVƒF[ƒ_[‚ÉƒZƒbƒg
+=======
+	// ------- OMNIDIRECTIONAL SHADOW PASS (6 cubemap faces) -------
+
+	for (int face = 0; face < 6; face++)
+	{
+		Direct3D_BeginShadowPass(face);
+
+		Shader_Begin();
+		// Set shadow pass mode = 1.0 (pixel shader will output linear depth)
+		Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 1.0f);
+
+		XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, lightPos, lightRadius);
+		Shader_SetShadowMatrix(lightViewProj);
+
+		// Draw ball
+		{
+			XMMATRIX world = Light_GetWorldMatrix();
+			Shader_SetWorldMatrix(world);
+			Shader_SetMatrix(world * lightViewProj);
+			Light_DrawRaw(world, world * lightViewProj);
+		}
+
+		// Draw field
+		{
+			Field_DrawShadowMap(lightViewProj);
+		}
+	}
+
+	Direct3D_EndShadowPass();
+	
+	// ------- MAIN CAMERA PASS -------
+	Shader_Begin();
+
+	Shader_SetLight(g_BallLight.Light);
+
+	// Shadow resources for pixel shader
+	Shader_SetShadowMap(g_pShadowCubemapSRV);
+	Shader_SetShadowSampler(g_pShadowSamplerState);
+	Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 0.0f);
+
+	//Player
+	{
+		Player3D_Draw();
+	}
+	// Draw ball (visible)
+	{
+		//Ball_Draw();
+	}
+	// Draw field (visible)
+	{
+		field_Draw();
+	}
+
+	//ï¼’Dæç”»
+	g_BallLight.SetEnable(FALSE);					//ãƒ©ã‚¤ãƒ†ã‚£ãƒ³ã‚°OFF
+	Shader_SetLight(g_BallLight.Light);		//ãƒ©ã‚¤ãƒˆæ§‹é€ ä½“ã‚’ã‚·ã‚§ãƒ¼ãƒ€ãƒ¼ã«ã‚»ãƒƒãƒˆ
+>>>>>>> 73db079adbbd2c5bc2d828804b3c84a05ea683c0
 	SetDepthTest(FALSE);
 
+	
 
 
 	/*
