@@ -31,7 +31,7 @@ enum PLAYER_STATE
 XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 
 
-// リセット用
+// 初期位置
 XMFLOAT3		Firstposition;
 XMFLOAT3		FirstRotation;
 XMFLOAT3		FirstScaling;
@@ -62,27 +62,24 @@ if ()
 	static auto ChangeKey = KK_F;		//影変身
 	// その他
 	static auto ResetKey = KK_R;		//リセット
-	static auto MenuKey = KK_ESCAPE;	//終了
+	static auto MenuKey = KK_ESCAPE;	//ポーズメニュー
 }
 else
 {// コントローラー定義
 	// 移動
 	//スティック操作はcppに記載
-	static const auto UpKey = KK_W;		//前進
-	static const auto RightKey = KK_D;	//右移動
-	static const auto DownKey = KK_S;	//後退
-	static const auto LeftKey = KK_A;	//左移動
-
-
+	static const auto UpKey = XINPUT_GAMEPAD_DPAD_UP;		//前進
+	static const auto RightKey = XINPUT_GAMEPAD_DPAD_DOWN;	//右移動
+	static const auto DownKey = XINPUT_GAMEPAD_DPAD_LEFT;	//後退
+	static const auto LeftKey = XINPUT_GAMEPAD_DPAD_RIGHT;	//左移動
 	// 行動
-	static auto JumpKey = XINPUT_GAMEPAD_B;		//ジャンプ
-	static auto ActionKey = XINPUT_GAMEPAD_START;		//アクション
-	static auto ChangeKey = XINPUT_GAMEPAD_;		//影変身
+	static auto JumpKey = XINPUT_GAMEPAD_A;					//ジャンプ
+	static auto ActionKey = XINPUT_GAMEPAD_B;				//アクション
+	static auto ChangeKey = XINPUT_GAMEPAD_B;				//影変身
 	// その他
-	static auto ResetKey = XINPUT_GAMEPAD_;		//リセット
-	static auto MenuKey = XINPUT_GAMEPAD_;	//終了
+	static auto ResetKey = XINPUT_GAMEPAD_BACK;				//リセット
+	static auto MenuKey = XINPUT_GAMEPAD_START;				//ポーズメニュー
 }
-
 
 
 //デバッグモード
