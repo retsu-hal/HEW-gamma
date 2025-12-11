@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Keyboard.h"
+#include "controller.h"
 #include "direct3d.h"
 
 // プレイヤー変身フラグ
@@ -48,20 +49,40 @@ float maxGravity = -0.25f;			//最大落下速度
 float jumpPower = 0.175f;			//ジャンプ力
 bool isGround = false;				//接地判定
 
+if ()
+{// キーボード定義
+	// 移動
+	static const auto UpKey = KK_W;		//前進
+	static const auto RightKey = KK_D;	//右移動
+	static const auto DownKey = KK_S;	//後退
+	static const auto LeftKey = KK_A;	//左移動
+	// 行動
+	static auto JumpKey = KK_SPACE;		//ジャンプ
+	static auto ActionKey = KK_F;		//アクション
+	static auto ChangeKey = KK_F;		//影変身
+	// その他
+	static auto ResetKey = KK_R;		//リセット
+	static auto MenuKey = KK_ESCAPE;	//終了
+}
+else
+{// コントローラー定義
+	// 移動
+	//スティック操作はcppに記載
+	static const auto UpKey = KK_W;		//前進
+	static const auto RightKey = KK_D;	//右移動
+	static const auto DownKey = KK_S;	//後退
+	static const auto LeftKey = KK_A;	//左移動
 
-// キーボード定義
-// 移動
-static const auto UpKey = KK_W;			//前進
-static const auto RightKey = KK_D;		//右移動
-static const auto DownKey = KK_S;		//後退
-static const auto LeftKey = KK_A;		//左移動
-// 行動
-static const auto JumpKey = KK_SPACE;	//ジャンプ
-static const auto ActionKey = KK_F;		//アクション
-static const auto ChangeKey = KK_F;		//影変身
-// その他
-static const auto ResetKey = KK_R;		//リセット
-static const auto MenuKey = KK_ESCAPE;	//終了
+
+	// 行動
+	static auto JumpKey = XINPUT_GAMEPAD_B;		//ジャンプ
+	static auto ActionKey = XINPUT_GAMEPAD_START;		//アクション
+	static auto ChangeKey = XINPUT_GAMEPAD_;		//影変身
+	// その他
+	static auto ResetKey = XINPUT_GAMEPAD_;		//リセット
+	static auto MenuKey = XINPUT_GAMEPAD_;	//終了
+}
+
 
 
 //デバッグモード
