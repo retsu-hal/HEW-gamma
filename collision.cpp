@@ -16,14 +16,11 @@ int Player3DField_Collision()
 {
     int hit = HIT_NONE;
     PLAYER3D* player3D = GetPlayer3D();
-    MAPDATA* Map = GetFieldMap();
-    size_t fieldSize = GetFieldMapSize();
-    if (!Map || fieldSize == 0) return hit;
+	std::vector<MAPDATA>& Map = GetFieldMap();
+    if (Map.size() == 0) return hit;
 
-    for (size_t i = 0; i < fieldSize; ++i)
+    for (size_t i = 0; i < Map.size(); ++i)
     {
-        // CSV Type値 (0:箱, 1:OBJ_1...)
-        if (Map[i].no != FIELD_GROUND) continue; // 箱以外はスキップ（画像のTypeカラム利用）
 
         float BoxTop = Map[i].pos.y + BOX_RADIUS;
 
@@ -186,8 +183,7 @@ static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 void Collision_DebugDraw() {// 当たり判定のデバッグ描画
 
 	PLAYER3D* player = GetPlayer3D();
-	MAPDATA* map = GetFieldMap();
-
+	std::vector<MAPDATA>& Map = GetFieldMap();
 
 	XMFLOAT3 playerHalf = Player3D_GetDetectHalfSize();
 	XMFLOAT3 playerC = player->Position;
