@@ -53,13 +53,12 @@ XMFLOAT3 GetPlayer3DPositon();
 
 void Player3D_Gravity();
 void Player3D_Move();
-
-
 void Player3D_Jump();
 void Player3D_Change();
 void Player3D_Action();
 void Player3D_Reset();
 void Player3D_Respawn();
+void Player3D_Fall();
 
 PLAYER3D* GetPlayer3D();
 

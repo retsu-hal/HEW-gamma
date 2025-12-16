@@ -1,7 +1,6 @@
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\Audio.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\Audio.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\camera.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\camera.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\Collision.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\Collision.obj
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\controller.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\controller.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\debug_ostream.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\debug_ostream.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\direct3d.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\effect.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\effect.obj
@@ -19,7 +18,6 @@ C:\Users\retsu\Documents\2025_hal\HEW-gamma\keyboard.cpp;C:\Users\retsu\Document
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\LightSource.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\LightSource.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\main.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\main.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\manager.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\manager.obj
-C:\Users\retsu\Documents\2025_hal\HEW-gamma\memo.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\memo.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\model.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\model.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\mouse.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\mouse.obj
 C:\Users\retsu\Documents\2025_hal\HEW-gamma\Player3D.cpp;C:\Users\retsu\Documents\2025_hal\HEW-gamma\base\x64\Debug\Player3D.obj

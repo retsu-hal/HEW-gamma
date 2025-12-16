@@ -5,8 +5,6 @@
 #include "fade.h"
 #include "shader.h"
 #include "mouse.h"
-#include "controller.h"
-#include "debug.h"
 
 //=========================================================================================================
 // 構造体宣言
@@ -19,9 +17,6 @@ static Mouse_State ms{};
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-
-// 追加：タイトル用コントローラ（インデックス0）
-static Controller g_Controller;
 
 //=========================================================================================================
 //初期化処理
@@ -59,11 +54,7 @@ void Title_Finalize()
 //=========================================================================================================
 void Title_Update()
 { 
-	//マウス入力取得
 	Mouse_GetState(&ms);
-
-	//コントローラー入力取得
-	g_Controller.Update();
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
@@ -80,13 +71,6 @@ void Title_Update()
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
 	}
-
-	if ((g_Controller.IsButtonPressed(XINPUT_GAMEPAD_START) || g_Controller.IsButtonPressed(XINPUT_GAMEPAD_A))&& (GetFadeState() == FADE_NONE))
-	{
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
-
 }
 //=========================================================================================================
 //描画処理
