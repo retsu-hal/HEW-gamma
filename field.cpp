@@ -390,25 +390,16 @@ XMMATRIX Field_GetWorldMatrix(int i)
 	return ScalingMatrix * RotationMatrix * TranslationMatrix;
 }
 
-void Field_DrawShadowMap(const XMMATRIX& lightViewProj)
+void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 {
-	for (size_t i = 0; i < g_MapData.size(); ++i)
-	{
-		XMMATRIX world = Field_GetWorldMatrix((int)i);
-		Shader_SetWorldMatrix(world);
-		Shader_SetMatrix(world * lightViewProj);
+	Shader_SetWorldMatrix(world);
+	Shader_SetMatrix(matrix);
 
-		if (g_MapData[i].no == FIELD_GROUND) {
-			UINT stride = sizeof(Vertex3D);
-			UINT offset = 0;
-			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
-			g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-			g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			g_pContext->DrawIndexed(6 * 6, 0, 0);
-		}
-		else if (Model[g_MapData[i].no])
-			ModelDraw(Model[g_MapData[i].no]);
-	}
+	if (g_MapData[i].no == FIELD_GROUND)
+		return; // skip shadow
+	else if (Model[g_MapData[i].no])
+		ModelDraw(Model[g_MapData[i].no]);
+
 }
 
 //=========================================================================================================

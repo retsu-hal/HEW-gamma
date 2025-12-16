@@ -30,7 +30,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Player3D_Initialize(pDevice, pContext);
 
 	field_Initialize(pDevice, pContext);
+	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
+	
 
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(true);
@@ -46,6 +48,7 @@ void Game_Finalize()
 {
 	field_Finalize();
 	Polygon3D_Finalize();
+	Light_Finalize();
 	Camera_Finalize();
 	
 	Player3D_Finalize();
@@ -63,7 +66,7 @@ void Game_Update()
 	g_BallLight.SetDirection(XMFLOAT4(0, 0, 0, 0));
 	g_BallLight.Light.Direction = XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f);
 
-
+	g_ShadowLightPos = LightPos;
 	float shadowIntensity = 1.0f;
 	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
 
@@ -112,7 +115,24 @@ void Game_Draw()
 
 
 		{
-			Field_DrawShadowMap(lightViewProj);
+			std::vector<MAPDATA>& Map = GetFieldMap();
+			float maxShadowDist = g_ShadowLightRadius;
+
+			for (size_t i = 0; i < Map.size(); ++i)
+			{
+				XMFLOAT3 objPos = Map[i].pos;
+
+				XMVECTOR v = XMLoadFloat3(&objPos) - XMLoadFloat3(&lightPos);
+				float distSq = XMVectorGetX(XMVector3LengthSq(v));
+
+				if (distSq > maxShadowDist * maxShadowDist)
+					continue; // skip shadow draw
+
+				XMMATRIX world = Field_GetWorldMatrix((int)i);
+				//Shader_SetWorldMatrix(world);
+				//Shader_SetMatrix(world * lightViewProj);
+				Field_DrawShadowMap(world, world * lightViewProj, (int)i);
+			}
 		}
 	}
 
@@ -134,6 +154,9 @@ void Game_Draw()
 	}
 	{
 		field_Draw();
+	}
+	{
+		Light_Draw();
 	}
 
 	Collision_DebugDraw();
