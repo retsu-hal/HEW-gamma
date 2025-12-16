@@ -245,7 +245,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	// テクスチャ
 	TexMetadata metadata;
 	ScratchImage image;
-	LoadFromWICFile(L"Asset\\Texture\\block_field.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"Asset\\Texture\\shiro.jpg", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
