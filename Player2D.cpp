@@ -1,4 +1,4 @@
-#include "Player2D.h"
+/*#include "Player2D.h"
 #include "keyboard.h"
 #include "Camera.h"
 #include "shader.h"
@@ -424,4 +424,4 @@ static void DebugDrawDetectBox()
 	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
 
 	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
-}
+}*/

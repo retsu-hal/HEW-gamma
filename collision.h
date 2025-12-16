@@ -35,3 +35,9 @@ int Player3DField_Collision();
 
 void Collision_DebugDraw();
 
+bool Collision_RayToField(
+	const XMFLOAT3& start,
+	const XMFLOAT3& dir,
+	float maxDist,
+	float* hitY
+);

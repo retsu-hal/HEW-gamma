@@ -2,7 +2,11 @@
 
 #include "Keyboard.h"
 #include "controller.h"
+#include "Input.h"
 #include "direct3d.h"
+
+// コントローラー
+extern Controller gPad;
 
 // プレイヤー変身フラグ
 //  true: 2D状態
@@ -49,38 +53,41 @@ float maxGravity = -0.25f;			//最大落下速度
 float jumpPower = 0.175f;			//ジャンプ力
 bool isGround = false;				//接地判定
 
-if ()
-{// キーボード定義
-	// 移動
-	static const auto UpKey = KK_W;		//前進
-	static const auto RightKey = KK_D;	//右移動
-	static const auto DownKey = KK_S;	//後退
-	static const auto LeftKey = KK_A;	//左移動
-	// 行動
-	static auto JumpKey = KK_SPACE;		//ジャンプ
-	static auto ActionKey = KK_F;		//アクション
-	static auto ChangeKey = KK_F;		//影変身
-	// その他
-	static auto ResetKey = KK_R;		//リセット
-	static auto MenuKey = KK_ESCAPE;	//ポーズメニュー
+// 入力キー定義を関数化して宣言エラーを回避
+inline void DefineInputKeys()
+{
+	if (!gPad.IsConnected())
+	{ // キーボード定義
+		// 移動
+		static const auto UpKey = KK_W;		//前進
+		static const auto RightKey = KK_D;	//右移動
+		static const auto DownKey = KK_S;	//後退
+		static const auto LeftKey = KK_A;	//左移動
+		// 行動
+		static auto JumpKey = KK_SPACE;		//ジャンプ
+		static auto ActionKey = KK_F;		//アクション
+		static auto ChangeKey = KK_F;		//影変身
+		// その他
+		static auto ResetKey = KK_R;		//リセット
+		static auto MenuKey = KK_ESCAPE;	//ポーズメニュー
+	}
+	else
+	{ // コントローラー定義
+		// 移動
+		//スティック操作はcppに記載
+		static const auto UpKey = XINPUT_GAMEPAD_DPAD_UP;		//前進
+		static const auto RightKey = XINPUT_GAMEPAD_DPAD_DOWN;	//右移動
+		static const auto DownKey = XINPUT_GAMEPAD_DPAD_LEFT;	//後退
+		static const auto LeftKey = XINPUT_GAMEPAD_DPAD_RIGHT;	//左移動
+		// 行動
+		static auto JumpKey = XINPUT_GAMEPAD_A;					//ジャンプ
+		static auto ActionKey = XINPUT_GAMEPAD_B;				//アクション
+		static auto ChangeKey = XINPUT_GAMEPAD_B;				//影変身
+		// その他
+		static auto ResetKey = XINPUT_GAMEPAD_BACK;				//リセット
+		static auto MenuKey = XINPUT_GAMEPAD_START;				//ポーズメニュー
+	}
 }
-else
-{// コントローラー定義
-	// 移動
-	//スティック操作はcppに記載
-	static const auto UpKey = XINPUT_GAMEPAD_DPAD_UP;		//前進
-	static const auto RightKey = XINPUT_GAMEPAD_DPAD_DOWN;	//右移動
-	static const auto DownKey = XINPUT_GAMEPAD_DPAD_LEFT;	//後退
-	static const auto LeftKey = XINPUT_GAMEPAD_DPAD_RIGHT;	//左移動
-	// 行動
-	static auto JumpKey = XINPUT_GAMEPAD_A;					//ジャンプ
-	static auto ActionKey = XINPUT_GAMEPAD_B;				//アクション
-	static auto ChangeKey = XINPUT_GAMEPAD_B;				//影変身
-	// その他
-	static auto ResetKey = XINPUT_GAMEPAD_BACK;				//リセット
-	static auto MenuKey = XINPUT_GAMEPAD_START;				//ポーズメニュー
-}
-
 
 //デバッグモード
 static bool debugMode = TRUE;

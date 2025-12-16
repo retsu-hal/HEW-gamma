@@ -1,0 +1,4 @@
+#pragma once
+#include "Controller.h"
+
+extern Controller gPad;
