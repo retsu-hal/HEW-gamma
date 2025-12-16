@@ -1,8 +1,5 @@
-﻿  game.cpp
+﻿  Player3D.cpp
 E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“game.cpp”)
-  
-E:\code\hew\Player3D.h(1,1): warning C4819: 该文件包含不能在当前代码页(932)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-  (编译源文件“game.cpp”)
+  (编译源文件“Player3D.cpp”)
   
   base.vcxproj -> E:\code\hew\x64\Debug\base.exe

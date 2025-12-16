@@ -29,7 +29,6 @@ float moveSpeed = 0.005f;
 float maxMoveSpeed = 1.0f;
 float maxGravity = -0.25f;
 float jumpPower = 0.175f;
-bool isGround = false;
 
 static const auto UpKey = KK_W;
 static const auto RightKey = KK_D;
@@ -78,6 +77,7 @@ void Player3D_Finalize(void)
 
 void Player3D_Update()
 {
+
 	Player3D_Respawn();
 
 	Player3D_Move();
@@ -121,6 +121,7 @@ void Player3D_Draw(void)
 			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
 			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
 			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+			ImGui::Text("Gr: %s", g_Player3D.isGround ? "true" : "false");
 			ImGui::TreePop();
 		}
 		ImGui::End();
@@ -161,7 +162,7 @@ void Player3D_Draw(void)
 	ModelDraw(g_Player3D.Model);
 }
 
-XMFLOAT3 GetPlayer3DPositon()
+XMFLOAT3 GetPlayer3DPosition()
 {
 	return g_Player3D.Position;
 }
@@ -169,37 +170,25 @@ XMFLOAT3 GetPlayer3DPositon()
 void Player3D_Gravity()
 {
 
-	if (g_Player3D.Velocity.x >= maxMoveSpeed)
-	{
-		g_Player3D.Velocity.x = maxMoveSpeed;
-	}
-	else
-	{
-		g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
-	}
+	if (g_Player3D.Velocity.x >= maxMoveSpeed) g_Player3D.Velocity.x = maxMoveSpeed;
+	else g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 
-	if (g_Player3D.Velocity.y < maxGravity)
-	{
-		g_Player3D.Velocity.y = maxGravity;
-	}
-	else
-	{
-		g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
-	}
-
-	if (g_Player3D.Velocity.z >= maxMoveSpeed)
-	{
-		g_Player3D.Velocity.z = maxMoveSpeed;
-	}
-	else
-	{
-		g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
-	}
-
+	if (g_Player3D.Velocity.z >= maxMoveSpeed) g_Player3D.Velocity.z = maxMoveSpeed;
+	else g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
 
 	g_Player3D.Velocity.x *= 0.925f;
-
 	g_Player3D.Velocity.z *= 0.925f;
+
+	if (!g_Player3D.isGround)
+	{
+		if (g_Player3D.Velocity.y < maxGravity) g_Player3D.Velocity.y = maxGravity;
+		else g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
+	}
+	else
+	{
+		if (g_Player3D.Velocity.y < 0.0f)
+			g_Player3D.Velocity.y = 0.0f;
+	}
 
 
 	g_Player3D.Position.x += g_Player3D.Velocity.x;
@@ -255,16 +244,60 @@ void Player3D_Move()
 
 		inputDir.x /= len;
 		inputDir.z /= len;
-		g_Player3D.Velocity.x += inputDir.x * moveSpeed;
-		g_Player3D.Velocity.z += inputDir.z * moveSpeed;
 
-		float targetYawRad = atan2f(inputDir.x, inputDir.z);
+		// カメラの向きに合わせて移動方向を変換
+		XMFLOAT3 camPos = GetCameraPosition();
+		XMFLOAT3 camAt = GetCameraAtPosition();
+		XMFLOAT3 camFwd = XMFLOAT3(
+			camAt.x - camPos.x,
+			0.0f,
+			camAt.z - camPos.z
+		);// カメラの前方向ベクトル
+		float flen = sqrtf(camFwd.x * camFwd.x + camFwd.z * camFwd.z);
+		if (flen >1e-6f)
+		{
+			camFwd.x /= flen;
+			camFwd.z /= flen;
+		}
+		else
+		{
+			camFwd = XMFLOAT3(0.0f, 0.0f, 1.0f);
+		}
+
+		// カメラの右方向ベクトル
+		XMFLOAT3 camRight = XMFLOAT3(
+			camFwd.z,
+			0.0f,
+			-camFwd.x
+		);
+		float rlen = sqrtf(camRight.x * camRight.x + camRight.z * camRight.z);
+		if (rlen > 1e-6f) 
+		{ 
+			camRight.x /= rlen; 
+			camRight.z /= rlen; 
+		}
+
+		// 移動方向をワールド座標に変換
+		XMFLOAT3 moveWorld = XMFLOAT3(
+			camFwd.x * inputDir.z + camRight.x * inputDir.x,
+			0.0f,
+			camFwd.z * inputDir.z + camRight.z * inputDir.x
+		);
+		float mlen = sqrtf(moveWorld.x * moveWorld.x + moveWorld.z * moveWorld.z);
+		if (mlen > 1e-6f)
+		{
+			moveWorld.x /= mlen;
+			moveWorld.z /= mlen;
+		}
+
+		g_Player3D.Velocity.x += moveWorld.x * moveSpeed;
+		g_Player3D.Velocity.z += moveWorld.z * moveSpeed;
+
+		float targetYawRad = atan2f(moveWorld.x,moveWorld.z);
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
-
 
 		const float yawOffset = FirstRotation.y;
 		targetYawDeg += yawOffset;
-
 
 		float currentYaw = g_Player3D.Rotation.y;
 		float delta = targetYawDeg - currentYaw;
@@ -279,13 +312,11 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-	if (Keyboard_IsKeyDownTrigger(JumpKey))
+	if (Keyboard_IsKeyDownTrigger(JumpKey)&& g_Player3D.isGround)
 	{
-		g_Player3D.Velocity.y += jumpPower;
-		if (isGround)
-		{
-			g_Player3D.Velocity.y += jumpPower;
-		}
+		g_Player3D.Velocity.y = jumpPower;
+		g_Player3D.isGround = false;
+
 	}
 }
 

@@ -230,6 +230,11 @@ static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
 std::vector<MAPDATA> g_MapData; 
 MODEL* Model[FIELD_MAX] = { NULL };
 
+static void EnsureBoxCreated()
+{
+	if (g_VertexBuffer && g_IndexBuffer) return;
+	CreateBox();
+}
 
 //=========================================================================================================
 // 初期化
@@ -249,17 +254,17 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	for (size_t i = 0; i < g_MapData.size(); ++i)
-	{
-		switch (i) {
-		case FIELD_GROUND:
-			CreateBox();
-			break;
-		case FIELD_WALL:
-			Model[FIELD_WALL] = ModelLoad("asset\\model\\tree.fbx");
-			break;
-			// 他のOBJタイプも必要なら追加
-		}
+	bool hasGround = false;
+	bool hasWall = false;
+	for (const auto& m : g_MapData) {
+		if (m.no == FIELD_GROUND) hasGround = true;
+		if (m.no == FIELD_WALL)   hasWall = true;
+	}
+
+	if (hasGround) EnsureBoxCreated();
+
+	if (hasWall && !Model[FIELD_WALL]) {
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\tree.fbx");
 	}
 }
 
@@ -309,15 +314,20 @@ void field_Draw(void)
 		Shader_SetWorldMatrix(WorldMatrix);
 		Shader_SetMatrix(WVP);
 
-		g_pContext->PSSetShaderResources(0, 1, &g_Texture);
-		UINT stride = sizeof(Vertex3D);
-		UINT offset = 0;
-		g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
-		g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		
 
 		if (g_MapData[i].no == FIELD_GROUND)
+		{
+			g_pContext->PSSetShaderResources(0, 1, &g_Texture);
+			UINT stride = sizeof(Vertex3D);
+			UINT offset = 0;
+			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+			g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 			g_pContext->DrawIndexed(6 * 6, 0, 0);
+
+		}
 		else if (Model[g_MapData[i].no])
 			ModelDraw(Model[g_MapData[i].no]);
 	}
@@ -401,7 +411,6 @@ void Field_DrawShadowMap(const XMMATRIX& lightViewProj)
 //=========================================================================================================
 void LoadMapFromCSV(const char* filename)
 {
-	std::cout << "Loaded field count: " << g_MapData.size() << std::endl;
 	std::ifstream file(filename);
 	if (!file.is_open())
 	{
@@ -447,4 +456,7 @@ void LoadMapFromCSV(const char* filename)
 			continue; // 不正行はスキップ
 		}
 	}
+
+	std::cout << "Loaded field count: " << g_MapData.size() << std::endl;
+
 }

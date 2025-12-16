@@ -11,9 +11,11 @@
 #include	"Audio.h"
 #include	"camera.h"
 #include	"direct3d.h"
-
-
 #include "Collision.h"
+
+#include "debug.h"
+
+static bool debugMode = TRUE;
 
 static	int		g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
@@ -67,10 +69,10 @@ void Game_Update()
 	float shadowIntensity = 1.0f;
 	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
 
+	Player3D_Update();
 	Camera_Update();
 	field_Update();
 
-	Player3D_Update();
 
 
 }
@@ -87,7 +89,14 @@ void Game_Draw()
 	SetDepthTest(TRUE);
 
 
-	XMFLOAT3 lightPos = g_ShadowLightPos;
+	XMFLOAT3 lightPos = GetLight_Position();
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		ImGui::Text("Pos: %.2f,%.2f,%.2f", lightPos.x, lightPos.y, lightPos.z);
+		ImGui::End();
+	}
+
 	float lightRadius = g_ShadowLightRadius;
 
 

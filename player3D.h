@@ -6,22 +6,22 @@
 #include "model.h"
 
 //=========================================================================================================
-// „Éû„ÇØ„É≠ÂÆöÁæ©
+// É}ÉNÉçíËã`
 //=========================================================================================================
-#define PLAYER3D_RADIUS (0.2f)			//ÂçäÂæÑ
+#define PLAYER3D_RADIUS (0.2f)			//îºåa
 
 //=========================================================================================================
-// ÊßãÈÄ†‰Ωì
+// ç\ë¢ëÃ
 //=========================================================================================================
-//„Éó„É¨„Ç§„É§„Éº„Çπ„ÉÜ„Éº„Éà
+//ÉvÉåÉCÉÑÅ[ÉXÉeÅ[Ég
 enum PLAYER3D_STATE
 {
 
-	PLAYER3D_STATE_IDLE = 0,	//‰Ωï„ÇÇ„Åó„Å™„ÅÑ
-	PLAYER3D_STATE_MOVE,		//ÁßªÂãï‰∏≠
-	PLAYER3D_STATE_FALL,		//ËêΩ‰∏ã‰∏≠
-	PLAYER3D_STATE_UP,			//‰∏äÊòá‰∏≠
-	PLAYER3D_STATE_ACTION,		//„Ç¢„ÇØ„Ç∑„Éß„É≥‰∏≠
+	PLAYER3D_STATE_IDLE = 0,	//âΩÇ‡ÇµÇ»Ç¢
+	PLAYER3D_STATE_MOVE,		//à⁄ìÆíÜ
+	PLAYER3D_STATE_FALL,		//óéâ∫íÜ
+	PLAYER3D_STATE_UP,			//è„è∏íÜ
+	PLAYER3D_STATE_ACTION,		//ÉAÉNÉVÉáÉìíÜ
 
 
 	PLAYER3D_STATE_MAX,
@@ -30,26 +30,28 @@ enum PLAYER3D_STATE
 class PLAYER3D
 {
 public:
-	XMFLOAT3 Position;			//Â∫ßÊ®ô
-	XMFLOAT3 Rotation;			//ÂõûËª¢
-	XMFLOAT3 Scaling;			//„Çµ„Ç§„Ç∫
-	XMFLOAT3 Velocity;			//ÊñπÂêë
+	XMFLOAT3 Position;			//ç¿ïW
+	XMFLOAT3 Rotation;			//âÒì]
+	XMFLOAT3 Scaling;			//ÉTÉCÉY
+	XMFLOAT3 Velocity;			//ï˚å¸
 	XMFLOAT3 Acceleration;		//
-	PLAYER3D_STATE state;		//Áä∂ÊÖã
-	MODEL* Model;				//„É¢„Éá„É´„Éá„Éº„Çø
+	PLAYER3D_STATE state;		//èÛë‘
+	MODEL* Model;				//ÉÇÉfÉãÉfÅ[É^
 	XMVECTOR Quaternion;		//
+
+	bool isGround = false;             //ínñ Ç…Ç¢ÇÈÇ©Ç«Ç§Ç©
 
 };
 
 //=========================================================================================================
-// „Éó„É≠„Éà„Çø„Ç§„ÉóÂÆ£Ë®Ä
+// ÉvÉçÉgÉ^ÉCÉvêÈåæ
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void Player3D_Finalize(void);
 void Player3D_Update();
 void Player3D_Draw(void);
 
-XMFLOAT3 GetPlayer3DPositon();
+XMFLOAT3 GetPlayer3DPosition();
 
 void Player3D_Gravity();
 void Player3D_Move();
@@ -65,9 +67,9 @@ PLAYER3D* GetPlayer3D();
 
 
 
-#define PLAYER3D_DETECT_HALF_X (1.5f)
-#define PLAYER3D_DETECT_HALF_Y (1.0f)
-#define PLAYER3D_DETECT_HALF_Z (1.5f)
+#define PLAYER3D_DETECT_HALF_X (0.45f)
+#define PLAYER3D_DETECT_HALF_Y (0.9f)
+#define PLAYER3D_DETECT_HALF_Z (0.45f)
 
 XMFLOAT3 Player3D_GetDetectHalfSize();
 PLAYER3D* GetPlayer3D();
