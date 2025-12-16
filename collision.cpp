@@ -230,26 +230,26 @@ static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 
 void Collision_DebugDraw() {// 当たり判定のデバッグ描画
 
-	PLAYER3D* player = GetPlayer3D();
+	// プレイヤーのAABB描画
+	PLAYER3D* player = GetPlayer3D();// プレイヤー取得
 	if (!player) return;
-
 	XMFLOAT3 playerHalf = Player3D_GetDetectHalfSize();
 	XMFLOAT3 playerC = player->Position;
 	playerC.y += PLAYER_COLLISION_OFFSET_Y;
+	DebugDrawAABB(playerC, playerHalf, IM_COL32(0, 255, 0, 255));// プレイヤーのAABB描画
 
-	DebugDrawAABB(playerC, playerHalf, IM_COL32(0, 255, 0, 255));
 
-	MAPDATA* map = GetFieldMap();
-	size_t fieldSize = GetFieldMapSize();
-	if(!map || fieldSize == 0) return;
-
-	XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
-	for (size_t i = 0; i < fieldSize; ++i)
-	{
-		const XMFLOAT3& boxC = map[i].pos;
-		bool triggered = AABB_Intersect(playerC, playerHalf, boxC, boxHalf);
-		ImU32 col = triggered ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
-		DebugDrawAABB(boxC, boxHalf, col);
-	}
+	// フィールドのAABB描画
+	//MAPDATA* map = GetFieldMap();
+	//size_t fieldSize = GetFieldMapSize();
+	//if(!map || fieldSize == 0) return;
+	//XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
+	//for (size_t i = 0; i < fieldSize; ++i)
+	//{
+	//	const XMFLOAT3& boxC = map[i].pos;
+	//	bool triggered = AABB_Intersect(playerC, playerHalf, boxC, boxHalf);// 当たっているかどうか
+	//	ImU32 col = triggered ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);// 当たっているなら赤、そうでなければシアン
+	//	DebugDrawAABB(boxC, boxHalf, col);
+	//}
 
 }
