@@ -4,42 +4,22 @@
 #include "player3D.h"
 #include "debug.h"
 
-//=========================================================================================================
-// グローバル変数
-//=========================================================================================================
+
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
 static bool debugMode = TRUE;
 
 
-//マウス操作用変数
 Mouse_State ms{};
-float cSize = 1.0f;//カメラの感度調整用
+float cSize = 1.0f;
 
-//カメラ操作用変数
-static bool   gCamAnglesInit = false;//カメラ角度初期化フラグ
-static XMFLOAT3 gCamTarget = { 0, 0, 0 };//カメラ注視点
-static XMFLOAT3 gCamPos = { 0, 0, 0 };//カメラ位置
-static float gYawDeg = 180.0f;//カメラの水平回転角度
-static float gPitchDeg = 15.0f;//カメラの上下回転角度
-static float gDistance = 6.0f;//カメラと注視点の距離
-static const float kPitchMin = -75.0f;//カメラの上下限度角度
-static const float kPitchMax = 75.0f;
-static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//カメラ注視点オフセット
-static float gFollowLerp = 0.15f;//カメラ追従の速さ
+static bool   gCamAnglesInit = false;
+static float  gYawDeg = 0.0f;
+static float  gPitchDeg = 0.0f;
+static const float kPitchMin = -85.0f;
+static const float kPitchMax = 85.0f;
 
-static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
-{// 3Dベクトルの線形補間
-	return {
-		a.x + (b.x - a.x) * t,
-		a.y + (b.y - a.y) * t,
-		a.z + (b.z - a.z) * t
-	};
-}
 
-//=========================================================================================================
-// 初期化
-//=========================================================================================================
 void Camera_Initialize()
 {
 	CameraObject.Position = XMFLOAT3(0.0f, 5.0f, -5.0f);
@@ -53,33 +33,25 @@ void Camera_Initialize()
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 
-	g_PlayerPosOld = GetPlayer3DPosition();
+	g_PlayerPosOld = GetPlayer3DPositon();
 	
 	Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 }
 
 
-//=========================================================================================================
-// 終了処理
-//=========================================================================================================
 void Camera_Finalize()
 {
 	return;
 }
 
 
-//=========================================================================================================
-// 更新処理
-//=========================================================================================================
 void Camera_Update()
 {
-	cameraMouse_1();
+	Mouse();
 
 }
 
-//=========================================================================================================
-// 描画処理
-//=========================================================================================================
+
 void Camera_Draw()
 {
 	if (debugMode)
@@ -107,96 +79,68 @@ void Camera_Draw()
 	return;
 }
 
-//=========================================================================================================
-// 視野角
-//=========================================================================================================
+
 void SetCameraFov(float fov)
 {
 	CameraObject.Fov = fov;
 }
 
 
-//=========================================================================================================
-// アスペクト比
-//=========================================================================================================
 void SetCameraAspect(float asp)
 {
 	CameraObject.Aspect = asp;
 }
 
-//=========================================================================================================
-// クリップ距離
-//=========================================================================================================
+
 void SetCameraClip(float n, float f)
 {
 	CameraObject.NearClip = n;
 	CameraObject.FarClip = f;
 }
 
-//=========================================================================================================
-// カメラ位置
-//=========================================================================================================
+
 void SetCameraPosition(XMFLOAT3 pos)
 {
 	CameraObject.Position = pos;
 }
 
-//=========================================================================================================
-// カメラ注視点
-//=========================================================================================================
+
 void SetCameraAtPosition(XMFLOAT3 atpos )
 {
 	CameraObject.AtPosition = atpos;
 }
 
-//=========================================================================================================
-// カメラ上方向ベクトル
-//=========================================================================================================
+
 void SetCameraUpVector(XMFLOAT3 up)
 {
 	CameraObject.UpVector = up;
 }
 
-//=========================================================================================================
-// ビュー行列取得
-//=========================================================================================================
+
 XMMATRIX GetViewMatrix()
 {
 	return CameraObject.View;
 }
 
-//=========================================================================================================
-// プロジェクション行列取得
-//=========================================================================================================
+
 XMMATRIX GetProjectionMatrix()
 {
 	return CameraObject.Projection;
 }
 
-//=========================================================================================================
-// カメラ注視点取得
-//=========================================================================================================
+
 XMFLOAT3 GetCameraAtPosition()
 {
 	return CameraObject.AtPosition;
 }
 
-//=========================================================================================================
-// カメラ位置取得
-//=========================================================================================================
+
 XMFLOAT3 GetCameraPosition()
 {
 	return CameraObject.Position;
 }
 
-<<<<<<< HEAD
-void cameraMouse()
-=======
-//=========================================================================================================
-// マウス処理
-//=========================================================================================================
 void Mouse()
->>>>>>> f552419c5f8f677e4860fe53ddc46f1b35dd0386
 {
 		Mouse_GetState(&ms);
 
@@ -227,7 +171,7 @@ void Mouse()
 		}
 
 		XMFLOAT3 playerDelta = g_PlayerPosOld;
-		g_PlayerPosOld = GetPlayer3DPosition();
+		g_PlayerPosOld = GetPlayer3DPositon();
 		playerDelta.x = g_PlayerPosOld.x - playerDelta.x;
 		playerDelta.y = g_PlayerPosOld.y - playerDelta.y;
 		playerDelta.z = g_PlayerPosOld.z - playerDelta.z;
@@ -314,11 +258,11 @@ void Mouse()
 		CameraObject.AtPosition = at;
 	}
 
-void cameraKeyb()
+void Keyb()
 {
 
 	XMFLOAT3 pos = g_PlayerPosOld;
-	g_PlayerPosOld = GetPlayer3DPosition();
+	g_PlayerPosOld = GetPlayer3DPositon();
 
 
 	pos.x = g_PlayerPosOld.x - pos.x;
@@ -349,58 +293,4 @@ void cameraKeyb()
 	CameraObject.Position.x += CameraObject.AtPosition.x;
 	CameraObject.Position.z += CameraObject.AtPosition.z;
 
-}
-
-void cameraMouse_1()
-{
-	Mouse_State ms{};
-	Mouse_GetState(&ms);
-
-	static bool relativeMode = true;
-	bool suppressDelta = false;
-	{
-		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-			relativeMode = !relativeMode;
-			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}
-	}
-
-	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
-	{
-		const float sensYaw = 0.25f;
-		const float sensPitch = 0.25f;
-		gYawDeg -= ms.x * sensYaw;
-		gPitchDeg += ms.y * sensPitch;
-
-		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
-		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
-	}
-
-	XMFLOAT3 playerPos = GetPlayer3DPosition();
-	XMFLOAT3 desiredTarget = {
-		playerPos.x + gTargetOffset.x,
-		playerPos.y + gTargetOffset.y,
-		playerPos.z + gTargetOffset.z
-	};
-
-	float yaw = XMConvertToRadians(gYawDeg);
-	float pitch = XMConvertToRadians(gPitchDeg);
-
-	float cp = cosf(pitch), sp = sinf(pitch);
-	float cy = cosf(yaw), sy = sinf(yaw);
-
-	XMFLOAT3 back = { sy * cp, sp, cy * cp };
-	XMFLOAT3 desiredPos = {
-		desiredTarget.x - back.x * gDistance,
-		desiredTarget.y - back.y * gDistance,
-		desiredTarget.z - back.z * gDistance
-	};
-
-	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-	gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
-
-	CameraObject.AtPosition = gCamTarget;
-	CameraObject.Position = gCamPos;
-	CameraObject.UpVector = { 0, 1, 0 };
 }

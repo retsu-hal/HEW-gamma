@@ -42,5 +42,4 @@
 *.vs
 
 # Debug base directory/file
-base/
-base
+x64/

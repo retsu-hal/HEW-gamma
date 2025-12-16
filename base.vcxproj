@@ -138,6 +138,7 @@
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="controller.cpp" />
     <ClCompile Include="debug_ostream.cpp" />
     <ClCompile Include="direct3d.cpp" />
     <ClCompile Include="effect.cpp" />
@@ -151,10 +152,12 @@
     <ClCompile Include="imgui-docking\imgui_draw.cpp" />
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="manager.cpp" />
+    <ClCompile Include="memo.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
     <ClCompile Include="Player3D.cpp" />
@@ -170,6 +173,7 @@
     <ClInclude Include="Audio.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="Collision.h" />
+    <ClInclude Include="controller.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="debug_ostream.h" />
     <ClInclude Include="direct3d.h" />
@@ -181,6 +185,7 @@
     <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h" />
     <ClInclude Include="imgui-docking\imgui.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="manager.h" />
@@ -188,6 +193,7 @@
     <ClInclude Include="mouse.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
+    <ClInclude Include="PlayerStatus.h" />
     <ClInclude Include="Polygon3D.h" />
     <ClInclude Include="result.h" />
     <ClInclude Include="score.h" />
