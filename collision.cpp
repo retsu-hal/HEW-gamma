@@ -62,7 +62,8 @@ int Player3DField_Collision()
 		// 床との当たり判定
 		else
 		{
-			if ((Map[i].pos.z - BOX_RADIUS) < player3D->Position.z && player3D->Position.z < (Map[i].pos.z + BOX_RADIUS))
+			//レイキャスト方式に変更
+			/*if ((Map[i].pos.z - BOX_RADIUS) < player3D->Position.z && player3D->Position.z < (Map[i].pos.z + BOX_RADIUS))
 			{
 				if ((Map[i].pos.x - BOX_RADIUS) < player3D->Position.x && player3D->Position.x < (Map[i].pos.x + BOX_RADIUS))
 				{
@@ -79,7 +80,7 @@ int Player3DField_Collision()
 						hit = HIT_WALL_NegX;
 					}
 				}
-			}
+			}*/
 		}
 	}
 	return hit;
@@ -194,4 +195,52 @@ void Collision_DebugDraw() {// 当たり判定のデバッグ描画
 
 	XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
 
+}
+
+bool Collision_RayToField(
+	const XMFLOAT3& start,
+	const XMFLOAT3& dir,
+	float maxDist,
+	float* hitY
+)
+{
+	MAPDATA* Map = GetFieldMap();
+	size_t fieldSize = GetFieldMapSize();
+	if (!Map || fieldSize == 0) return false;
+
+	bool hit = false;
+	float nearestY = -FLT_MAX;
+
+	for (size_t i = 0; i < fieldSize; ++i)
+	{
+		if (Map[i].no != FIELD_GROUND) continue;
+
+		// AABB（箱）
+		float minX = Map[i].pos.x - BOX_RADIUS;
+		float maxX = Map[i].pos.x + BOX_RADIUS;
+		float minZ = Map[i].pos.z - BOX_RADIUS;
+		float maxZ = Map[i].pos.z + BOX_RADIUS;
+		float topY = Map[i].pos.y + BOX_RADIUS;
+
+		// 下向きレイ専用（dir = 0,-1,0 前提）
+		if (start.x < minX || start.x > maxX) continue;
+		if (start.z < minZ || start.z > maxZ) continue;
+
+		float dy = start.y - topY;
+		if (dy < 0.0f || dy > maxDist) continue;
+
+		// 一番近い床を採用
+		if (!hit || topY > nearestY)
+		{
+			nearestY = topY;
+			hit = true;
+		}
+	}
+
+	if (hit && hitY)
+	{
+		*hitY = nearestY;
+	}
+
+	return hit;
 }
