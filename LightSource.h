@@ -26,10 +26,6 @@ public:
 	XMFLOAT3 m_acceleration;
 
 	MODEL* Model;
-
-	XMVECTOR Quaternion;
-	XMVECTOR Axis;
-	float qSpeed;
 };
 
 LightSource* GetLight();
