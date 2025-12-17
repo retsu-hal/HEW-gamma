@@ -7,82 +7,128 @@
 #include "debug.h"
 using namespace DirectX;
 
+static bool debugMode = TRUE;
+int debugHit = 0;
+
+
 //=========================================================================================================
 // ボールとフィールドの当たり判定
 //=========================================================================================================
 
+static const float PLAYER_COLLISION_OFFSET_Y = 0.9f;
 
 int Player3DField_Collision()
 {
     int hit = HIT_NONE;
+
     PLAYER3D* player3D = GetPlayer3D();
-	std::vector<MAPDATA>& Map = GetFieldMap();
-    if (Map.size() == 0) return hit;
+    MAPDATA* Map = GetFieldMap();
+    size_t fieldSize = GetFieldMapSize();
+    if (!player3D || !Map || fieldSize == 0) return hit;
 
-    for (size_t i = 0; i < Map.size(); ++i)
+	XMFLOAT3 playerHalf = Player3D_GetDetectHalfSize();
+	XMFLOAT3 playerPos = player3D->Position;
+	playerPos.y += PLAYER_COLLISION_OFFSET_Y;
+
+	player3D->isGround = false;
+
+    for (size_t i = 0; i < fieldSize; ++i)
     {
+        // CSV Type値 (0:箱, 1:OBJ_1...)
+        if (Map[i].no != FIELD_GROUND) continue; // 箱以外はスキップ（画像のTypeカラム利用）
 
-        float BoxTop = Map[i].pos.y + BOX_RADIUS;
+        XMFLOAT3 boxPos = Map[i].pos;
+		XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
+
+		float dx = playerPos.x - boxPos.x;
+		float dy = playerPos.y - boxPos.y;
+		float dz = playerPos.z - boxPos.z;
+
+		// AABB同士の当たり判定
+		float overlapX = (playerHalf.x + boxHalf.x) - fabsf(dx);
+		if (overlapX <= 0.0f) continue;
+		float overlapY = (playerHalf.y + boxHalf.y) - fabsf(dy);
+		if (overlapY <= 0.0f) continue;
+		float overlapZ = (playerHalf.z + boxHalf.z) - fabsf(dz);
+		if (overlapZ <= 0.0f) continue;
 
 
-		// 壁との当たり判定
-		if (Map[i].pos.y - BOX_RADIUS < player3D->Position.y && player3D->Position.y < BoxTop - 0.1f)
+		
+		if (overlapZ <= overlapY && overlapZ <= overlapX)
 		{
-			if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
+			debugHit = 1;
+			if (dz > 0.0f)
 			{
-				if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x + PLAYER3D_RADIUS && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
-				{//-X面判定
-					player3D->Position.x += (Map[i].pos.x - BOX_RADIUS) - (player3D->Position.x + PLAYER3D_RADIUS);
-					player3D->Velocity.x *= -COE;
-					hit = HIT_WALL_NegX;
-				}
-				else if (Map[i].pos.x + BOX_RADIUS > player3D->Position.x - PLAYER3D_RADIUS && player3D->Position.x > Map[i].pos.x + BOX_RADIUS)
-				{//+X面判定
-					player3D->Position.x += (Map[i].pos.x + BOX_RADIUS) - (player3D->Position.x - PLAYER3D_RADIUS);
-					player3D->Velocity.x *= -COE;
-					hit = HIT_WALL_PlusX;
-				}
+				playerPos.z = boxPos.z + boxHalf.z + playerHalf.z;
+				player3D->Velocity.z = 0.0f;
+				hit = HIT_WALL_PlusZ;
 			}
-			else if (Map[i].pos.x - BOX_RADIUS < player3D->Position.x && player3D->Position.x < Map[i].pos.x + BOX_RADIUS)
+			else
 			{
-				if (Map[i].pos.z - BOX_RADIUS < player3D->Position.z + PLAYER3D_RADIUS && player3D->Position.z < Map[i].pos.z + BOX_RADIUS)
-				{//-Z面判定
-					player3D->Position.z += (Map[i].pos.z - BOX_RADIUS) - (player3D->Position.z + PLAYER3D_RADIUS);
-					player3D->Velocity.z *= -COE;
-					hit = HIT_WALL_NegZ;
-				}
-				else if (Map[i].pos.z + BOX_RADIUS > player3D->Position.z - PLAYER3D_RADIUS && player3D->Position.z > Map[i].pos.z + BOX_RADIUS)
-				{//+Z面判定
-					player3D->Position.z += (Map[i].pos.z + BOX_RADIUS) - (player3D->Position.z - PLAYER3D_RADIUS);
-					player3D->Velocity.z *= -COE;
-					hit = HIT_WALL_PlusZ;
-				}
+				playerPos.z = boxPos.z - boxHalf.z - playerHalf.z;
+				player3D->Velocity.z = 0.0f;
+				hit = HIT_WALL_NegZ;
+			}
+
+			
+		}
+		
+		else if(overlapX <= overlapY && overlapX <= overlapZ)
+		{
+			debugHit = 2;
+			if(dx > 0.0f)
+			{
+				playerPos.x = boxPos.x + boxHalf.x + playerHalf.x;
+				player3D->Velocity.x = 0.0f;
+				hit = HIT_WALL_PlusX;
+			}
+			else
+			{
+				playerPos.x = boxPos.x - boxHalf.x - playerHalf.x;
+				player3D->Velocity.x = 0.0f;
+				hit = HIT_WALL_NegX;
 			}
 		}
-		// 床との当たり判定
+
 		else
 		{
-			//レイキャスト方式に変更
-			/*if ((Map[i].pos.z - BOX_RADIUS) < player3D->Position.z && player3D->Position.z < (Map[i].pos.z + BOX_RADIUS))
+			debugHit = 3;
+			if (dy > 0.0f)
 			{
-				if ((Map[i].pos.x - BOX_RADIUS) < player3D->Position.x && player3D->Position.x < (Map[i].pos.x + BOX_RADIUS))
+				playerPos.y = boxPos.y + boxHalf.y + playerHalf.y;
+				player3D->Velocity.y = 0.0f;
+				player3D->isGround = true;
+				hit = HIT_GROUND;
+			}
+			else
+			{
+				playerPos.y = boxPos.y - boxHalf.y - playerHalf.y;
+				if (player3D->Velocity.y > 0.0f)
 				{
-					if ((Map[i].pos.y - BOX_RADIUS) < (player3D->Position.y + PLAYER3D_RADIUS) && player3D->Position.y < (Map[i].pos.y - BOX_RADIUS))
-					{
-						player3D->Position.y += (Map[i].pos.y - BOX_RADIUS) - (player3D->Position.y + PLAYER3D_RADIUS);
-						player3D->Velocity.y *= -COE;
-						hit = HIT_GROUND;
-					}
-					else if (BoxTop > (player3D->Position.y - PLAYER3D_RADIUS) && player3D->Position.y > BoxTop)
-					{
-						player3D->Position.y += (BoxTop)-(player3D->Position.y - PLAYER3D_RADIUS);
-						player3D->Velocity.y = player3D->Velocity.y * (-COE * 1.0f);
-						hit = HIT_WALL_NegX;
-					}
+					player3D->Velocity.y = 0.0f;
 				}
-			}*/
+			}
 		}
 	}
+
+	player3D->Position.x = playerPos.x;
+	player3D->Position.y = playerPos.y - PLAYER_COLLISION_OFFSET_Y;
+	player3D->Position.z = playerPos.z;
+
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("Collision.cpp"))
+		{
+			ImGui::Text("HIT: %d", hit);
+			ImGui::Text("HITMod: %d", debugHit);
+
+			ImGui::TreePop();
+		}
+		ImGui::End();
+	}
+
+
 	return hit;
 }
 
@@ -121,10 +167,11 @@ static ScreenPoint WorldToScreenSafe(const XMFLOAT3& pWS)// World Space -> Scree
 
 	ImGuiViewport* vpIm = ImGui::GetMainViewport();
 	const ImVec2   pos = vpIm->Pos;
-	const ImVec2   size = vpIm->Size;
+	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
 
-	float x = pos.x + (ndc.x * 0.5f + 0.5f) * size.x;
-	float y = pos.y + (-ndc.y * 0.5f + 0.5f) * size.y;
+	float x = pos.x + (ndc.x * 0.5f + 0.5f) * SCREEN_WIDTH;
+	float y = pos.y + (-ndc.y * 0.5f + 0.5f) * SCREEN_HEIGHT;
 
 	out.pos = ImVec2(x, y);
 	out.valid = true;
@@ -183,63 +230,26 @@ static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 
 void Collision_DebugDraw() {// 当たり判定のデバッグ描画
 
-	PLAYER3D* player = GetPlayer3D();
-	std::vector<MAPDATA>& Map = GetFieldMap();
-
+	// プレイヤーのAABB描画
+	PLAYER3D* player = GetPlayer3D();// プレイヤー取得
+	if (!player) return;
 	XMFLOAT3 playerHalf = Player3D_GetDetectHalfSize();
 	XMFLOAT3 playerC = player->Position;
+	playerC.y += PLAYER_COLLISION_OFFSET_Y;
+	DebugDrawAABB(playerC, playerHalf, IM_COL32(0, 255, 0, 255));// プレイヤーのAABB描画
 
 
-	DebugDrawAABB(playerC, playerHalf, IM_COL32(0, 255, 0, 255));
+	// フィールドのAABB描画
+	//MAPDATA* map = GetFieldMap();
+	//size_t fieldSize = GetFieldMapSize();
+	//if(!map || fieldSize == 0) return;
+	//XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
+	//for (size_t i = 0; i < fieldSize; ++i)
+	//{
+	//	const XMFLOAT3& boxC = map[i].pos;
+	//	bool triggered = AABB_Intersect(playerC, playerHalf, boxC, boxHalf);// 当たっているかどうか
+	//	ImU32 col = triggered ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);// 当たっているなら赤、そうでなければシアン
+	//	DebugDrawAABB(boxC, boxHalf, col);
+	//}
 
-
-	XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
-
-}
-
-bool Collision_RayToField(
-	const XMFLOAT3& start,
-	const XMFLOAT3& dir,
-	float maxDist,
-	float* hitY
-)
-{
-	std::vector<MAPDATA>& Map = GetFieldMap();
-	if (Map.size() == 0) return false;
-
-	bool hit = false;
-	float nearestY = -FLT_MAX;
-
-	for (size_t i = 0; i < Map.size(); ++i)
-	{
-		if (Map[i].no != FIELD_GROUND) continue;
-
-		// AABB（箱）
-		float minX = Map[i].pos.x - BOX_RADIUS;
-		float maxX = Map[i].pos.x + BOX_RADIUS;
-		float minZ = Map[i].pos.z - BOX_RADIUS;
-		float maxZ = Map[i].pos.z + BOX_RADIUS;
-		float topY = Map[i].pos.y + BOX_RADIUS;
-
-		// 下向きレイ専用（dir = 0,-1,0 前提）
-		if (start.x < minX || start.x > maxX) continue;
-		if (start.z < minZ || start.z > maxZ) continue;
-
-		float dy = start.y - topY;
-		if (dy < 0.0f || dy > maxDist) continue;
-
-		// 一番近い床を採用
-		if (!hit || topY > nearestY)
-		{
-			nearestY = topY;
-			hit = true;
-		}
-	}
-
-	if (hit && hitY)
-	{
-		*hitY = nearestY;
-	}
-
-	return hit;
 }
