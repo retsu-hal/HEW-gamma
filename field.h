@@ -47,5 +47,5 @@ std::vector<MAPDATA>& GetFieldMap();
 
 
 XMMATRIX Field_GetWorldMatrix(int i);
-void Field_DrawShadowMap(const XMMATRIX& lightViewProj);
+void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix , int i);
 

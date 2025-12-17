@@ -204,14 +204,13 @@ bool Collision_RayToField(
 	float* hitY
 )
 {
-	MAPDATA* Map = GetFieldMap();
-	size_t fieldSize = GetFieldMapSize();
-	if (!Map || fieldSize == 0) return false;
+	std::vector<MAPDATA>& Map = GetFieldMap();
+	if (Map.size() == 0) return false;
 
 	bool hit = false;
 	float nearestY = -FLT_MAX;
 
-	for (size_t i = 0; i < fieldSize; ++i)
+	for (size_t i = 0; i < Map.size(); ++i)
 	{
 		if (Map[i].no != FIELD_GROUND) continue;
 
