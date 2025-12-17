@@ -36,7 +36,7 @@ static const auto DownKey = KK_S;
 static const auto LeftKey = KK_A;
 
 static const auto JumpKey = KK_SPACE;
-static const auto ActionKey = KK_F;	
+static const auto ActionKey = KK_F;
 static const auto ChangeKey = KK_F;
 
 static const auto ResetKey = KK_R;
@@ -229,7 +229,7 @@ void Player3D_Respawn()
 
 void Player3D_Move()
 {
-	
+
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (Keyboard_IsKeyDown(UpKey))    inputDir.z += +1.0f;
@@ -254,7 +254,7 @@ void Player3D_Move()
 			camAt.z - camPos.z
 		);// カメラの前方向ベクトル
 		float flen = sqrtf(camFwd.x * camFwd.x + camFwd.z * camFwd.z);
-		if (flen >1e-6f)
+		if (flen > 1e-6f)
 		{
 			camFwd.x /= flen;
 			camFwd.z /= flen;
@@ -271,10 +271,10 @@ void Player3D_Move()
 			-camFwd.x
 		);
 		float rlen = sqrtf(camRight.x * camRight.x + camRight.z * camRight.z);
-		if (rlen > 1e-6f) 
-		{ 
-			camRight.x /= rlen; 
-			camRight.z /= rlen; 
+		if (rlen > 1e-6f)
+		{
+			camRight.x /= rlen;
+			camRight.z /= rlen;
 		}
 
 		// 移動方向をワールド座標に変換
@@ -293,7 +293,7 @@ void Player3D_Move()
 		g_Player3D.Velocity.x += moveWorld.x * moveSpeed;
 		g_Player3D.Velocity.z += moveWorld.z * moveSpeed;
 
-		float targetYawRad = atan2f(moveWorld.x,moveWorld.z);
+		float targetYawRad = atan2f(moveWorld.x, moveWorld.z);
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
 
 		const float yawOffset = FirstRotation.y;
@@ -312,7 +312,7 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-	if (Keyboard_IsKeyDownTrigger(JumpKey)&& g_Player3D.isGround)
+	if (Keyboard_IsKeyDownTrigger(JumpKey) && g_Player3D.isGround)
 	{
 		g_Player3D.Velocity.y = jumpPower;
 		g_Player3D.isGround = false;

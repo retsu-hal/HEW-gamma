@@ -39,8 +39,9 @@
 *.dwo
 
 #.vs
-*.vs
+*.vs/
 
 # Debug base directory/file
-base/
-base
+x64/
+Debug/
+Release/
