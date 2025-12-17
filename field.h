@@ -19,10 +19,9 @@ enum FIELD
 {
     FIELD_GROUND = 0,
     FIELD_WALL,
-    FIELD_OBJ_BOX,
-    FIELD_OBJ_1,
     FIELD_OBJ_2,
-    FIELD_GOAL,
+    FIELD_OBJ_3,
+    FIELD_OBJ_4,
     FIELD_MAX,
 };
 
@@ -33,6 +32,9 @@ public:
     FIELD no;        //種類
 };
 
+// グローバルなフィールドデータ配列
+extern std::vector<MAPDATA> g_MapData;
+
 //=========================================================================================================
 // プロトタイプ宣言
 //=========================================================================================================
@@ -41,11 +43,9 @@ void field_Finalize(void);
 void field_Update(void);
 void field_Draw(void);
 void CreateBox(void);
-
-bool LoadMapFromFile(const char* filename);
-std::vector<MAPDATA>& GetFieldMap();
-
+MAPDATA* GetFieldMap(void);
+size_t GetFieldMapSize(void);
 
 XMMATRIX Field_GetWorldMatrix(int i);
-void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix , int i);
-
+void Field_DrawShadowMap(const XMMATRIX& lightViewProj);
+void LoadMapFromCSV(const char* filename);

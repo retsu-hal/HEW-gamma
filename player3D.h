@@ -39,6 +39,8 @@ public:
 	MODEL* Model;				//モデルデータ
 	XMVECTOR Quaternion;		//
 
+	bool isGround = false;             //地面にいるかどうか
+
 };
 
 //=========================================================================================================
@@ -49,24 +51,25 @@ void Player3D_Finalize(void);
 void Player3D_Update();
 void Player3D_Draw(void);
 
-XMFLOAT3 GetPlayer3DPositon();
+XMFLOAT3 GetPlayer3DPosition();
 
 void Player3D_Gravity();
 void Player3D_Move();
+
+
 void Player3D_Jump();
 void Player3D_Change();
 void Player3D_Action();
 void Player3D_Reset();
 void Player3D_Respawn();
-void Player3D_Fall();
 
 PLAYER3D* GetPlayer3D();
 
 
 
-#define PLAYER3D_DETECT_HALF_X (1.5f)
-#define PLAYER3D_DETECT_HALF_Y (1.0f)
-#define PLAYER3D_DETECT_HALF_Z (1.5f)
+#define PLAYER3D_DETECT_HALF_X (0.45f)
+#define PLAYER3D_DETECT_HALF_Y (0.9f)
+#define PLAYER3D_DETECT_HALF_Z (0.45f)
 
 XMFLOAT3 Player3D_GetDetectHalfSize();
 PLAYER3D* GetPlayer3D();
