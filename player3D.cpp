@@ -292,7 +292,7 @@ void Player3D_Move()
 			camAt.z - camPos.z
 		);// カメラの前方向ベクトル
 		float flen = sqrtf(camFwd.x * camFwd.x + camFwd.z * camFwd.z);
-		if (flen >1e-6f)
+		if (flen > 1e-6f)
 		{
 			camFwd.x /= flen;
 			camFwd.z /= flen;
@@ -309,10 +309,10 @@ void Player3D_Move()
 			-camFwd.x
 		);
 		float rlen = sqrtf(camRight.x * camRight.x + camRight.z * camRight.z);
-		if (rlen > 1e-6f) 
-		{ 
-			camRight.x /= rlen; 
-			camRight.z /= rlen; 
+		if (rlen > 1e-6f)
+		{
+			camRight.x /= rlen;
+			camRight.z /= rlen;
 		}
 
 		// 移動方向をワールド座標に変換

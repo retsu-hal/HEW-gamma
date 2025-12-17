@@ -50,6 +50,7 @@ int Player3DField_Collision()
 		if (overlapZ <= 0.0f) continue;
 
 		// •Ç‚Æ‚Ì“–‚½‚è”»’è
+		//  Z²•ûŒü‚Ì‰Ÿ‚µo‚µ‚ªˆê”Ôó‚¢
 		if (overlapZ <= overlapY && overlapZ <= overlapX)
 		{
 			debugHit = 1;
@@ -66,7 +67,7 @@ int Player3DField_Collision()
 				hit = HIT_WALL_NegZ;
 			}
 		}
-		
+		//  X²•ûŒü‚Ì‰Ÿ‚µo‚µ‚ªˆê”Ôó‚¢
 		else if(overlapX <= overlapY && overlapX <= overlapZ)
 		{
 			debugHit = 2;
@@ -79,10 +80,9 @@ int Player3DField_Collision()
 			else
 			{
 				playerPos.x = boxPos.x - boxHalf.x - playerHalf.x;
-				player3D->Velocity.x = 0.0f;
-				hit = HIT_WALL_NegX;
 			}
 		}
+		//  Y²•ûŒü‚Ì‰Ÿ‚µo‚µ‚ªˆê”Ôó‚¢
 		else
 		{
 			debugHit = 3;
