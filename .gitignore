@@ -39,7 +39,10 @@
 *.dwo
 
 #.vs
-*.vs
+.vs
 
 # Debug base directory/file
 x64/
+Debug/
+Release/
+imgui.ini
