@@ -31,6 +31,8 @@ class MAPDATA
 public:
     XMFLOAT3 pos;    //位置
     FIELD no;        //種類
+
+	XMFLOAT3 scale;
 };
 
 // グローバルなフィールドデータ配列

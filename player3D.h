@@ -65,11 +65,17 @@ PLAYER3D* GetPlayer3D();
 
 
 
-#define PLAYER3D_DETECT_HALF_X (0.45f)
-#define PLAYER3D_DETECT_HALF_Y (0.9f)
-#define PLAYER3D_DETECT_HALF_Z (0.45f)
+#define PLAYER3D_SOLID_HALF_X (0.45f)
+#define PLAYER3D_SOLID_HALF_Y (0.9f)
+#define PLAYER3D_SOLID_HALF_Z (0.45f)
 
-XMFLOAT3 Player3D_GetDetectHalfSize();
+#define PLAYER3D_TRIGGER_HALF_X (1.0f)
+#define PLAYER3D_TRIGGER_HALF_Y (1.0f)
+#define PLAYER3D_TRIGGER_HALF_Z (1.0f)
+
+XMFLOAT3 Player3D_GetSolidHalfSize();
+XMFLOAT3 Player3D_GetTriggerHalfSize();
+
 PLAYER3D* GetPlayer3D();
 
 

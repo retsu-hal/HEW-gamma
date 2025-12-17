@@ -1,10 +1,5 @@
-﻿  camera.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
-  (编译源文件“camera.cpp”)
-  
-  Collision.cpp
-E:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
+﻿  Collision.cpp
+F:\code\hew\direct3d.h(19,46): warning C4081: 应输入“newline”；找到“;”
   (编译源文件“Collision.cpp”)
   
-  正在生成代码...
-  base.vcxproj -> E:\code\hew\x64\Debug\base.exe
+  base.vcxproj -> F:\code\hew\x64\Debug\base.exe

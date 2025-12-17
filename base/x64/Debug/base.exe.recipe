@@ -2,15 +2,15 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>E:\code\hew\x64\Debug\base.exe</FullPath>
+      <FullPath>F:\code\hew\x64\Debug\base.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles>
     <ContentFile>
-      <FullPath>E:\code\hew\shader_pixel_2d.cso</FullPath>
+      <FullPath>F:\code\hew\shader_pixel_2d.cso</FullPath>
     </ContentFile>
     <ContentFile>
-      <FullPath>E:\code\hew\shader_vertex_2d.cso</FullPath>
+      <FullPath>F:\code\hew\shader_vertex_2d.cso</FullPath>
     </ContentFile>
   </ContentFiles>
   <SatelliteDlls />
