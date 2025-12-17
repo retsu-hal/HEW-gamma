@@ -61,7 +61,7 @@ static const auto ActionKey = KK_F;		//アクション
 static const auto ChangeKey = KK_F;		//影変身
 // その他
 static const auto ResetKey = KK_R;		//リセット
-static const auto MenuKey = KK_ESCAPE;	//終了
+static const auto MenuKey = KK_ESCAPE;	//メニュー
 
 static bool debugMode = TRUE;
 
