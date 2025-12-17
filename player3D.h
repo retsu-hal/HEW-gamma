@@ -60,7 +60,6 @@ void Player3D_Change();
 void Player3D_Action();
 void Player3D_Reset();
 void Player3D_Respawn();
-void Player3D_Fall();
 
 PLAYER3D* GetPlayer3D();
 

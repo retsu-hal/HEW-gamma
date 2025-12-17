@@ -229,17 +229,13 @@ static ID3D11Buffer* g_VertexBuffer = NULL;		// 頂点バッファ
 static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
 
 MODEL* Model[FIELD_MAX] = { NULL };
+static std::vector<MAPDATA> g_MapData;
 
-<<<<<<< HEAD
 static void EnsureBoxCreated()
 {
 	if (g_VertexBuffer && g_IndexBuffer) return;
 	CreateBox();
 }
-=======
-static std::vector<MAPDATA> g_MapData;
-
->>>>>>> f552419c5f8f677e4860fe53ddc46f1b35dd0386
 
 //=========================================================================================================
 // 初期化
@@ -256,7 +252,13 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-<<<<<<< HEAD
+	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+	{
+		// Error:  could not load map
+		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+	}
+
+
 	bool hasGround = false;
 	bool hasWall = false;
 	for (const auto& m : g_MapData) {
@@ -266,33 +268,16 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	if (hasGround) EnsureBoxCreated();
 
-	if (hasWall && !Model[FIELD_WALL]) {
-		Model[FIELD_WALL] = ModelLoad("asset\\model\\tree.fbx");
-=======
-	for (int i = 0; i < FIELD_MAX; ++i)
+	if (hasWall && !Model[FIELD_WALL]) 
 	{
-		switch (i) {
-		case FIELD_GROUND:
-			CreateBox();
-		case FIELD_WALL:
-			break;
-		case FIELD_OBJ_BOX:
-			Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
-			break;
-		case FIELD_GOAL:
-			Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
-			break;
-			// 他のOBJタイプも必要なら追加
-		}
->>>>>>> f552419c5f8f677e4860fe53ddc46f1b35dd0386
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\tree.fbx");
+	}
+	if (!Model[FIELD_GOAL])
+	{
+		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
 	}
 
-	// Load map from file! 
-	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
-	{
-		// Error:  could not load map
-		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
-	}
+	
 }
 
 
@@ -348,7 +333,6 @@ void field_Draw(void)
 
 		
 
-<<<<<<< HEAD
 		if (g_MapData[i].no == FIELD_GROUND)
 		{
 			g_pContext->PSSetShaderResources(0, 1, &g_Texture);
@@ -362,11 +346,6 @@ void field_Draw(void)
 
 		}
 		else if (Model[g_MapData[i].no])
-=======
-		if (g_MapData[i].no == FIELD_GROUND || g_MapData[i].no == FIELD_WALL)// ima dake debugu you
-			g_pContext->DrawIndexed(6 * 6, 0, 0);
-		else
->>>>>>> f552419c5f8f677e4860fe53ddc46f1b35dd0386
 			ModelDraw(Model[g_MapData[i].no]);
 	}
 }
@@ -427,9 +406,18 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 {
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(matrix);
+	// Set vertex and index buffers for box
+	UINT stride = sizeof(Vertex3D);
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+	g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	if (g_MapData[i].no == FIELD_GROUND)
+	{
 		return; // skip shadow
+		g_pContext->DrawIndexed(6 * 6, 0, 0); // →　欲しいならreturnの上にいればいい
+	}
 	else if (Model[g_MapData[i].no])
 		ModelDraw(Model[g_MapData[i].no]);
 
@@ -475,7 +463,7 @@ bool LoadMapFromFile(const char* filename)
 
 			switch (line[x])
 			{
-			case 'G': type =  FIELD_GROUND;   break;
+			case 'G': type = FIELD_GROUND;   break;
 			case 'W':  type = FIELD_WALL; break;
 			case 'B':  type = FIELD_OBJ_BOX;  break;
 			case '1':  type = FIELD_GOAL;  break;
@@ -499,12 +487,6 @@ bool LoadMapFromFile(const char* filename)
 		z++;
 	}
 
-<<<<<<< HEAD
-	std::cout << "Loaded field count: " << g_MapData.size() << std::endl;
-
-}
-=======
 	file.close();
 	return true;
 }
->>>>>>> f552419c5f8f677e4860fe53ddc46f1b35dd0386
