@@ -394,9 +394,18 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 {
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(matrix);
+	// Set vertex and index buffers for box
+	UINT stride = sizeof(Vertex3D);
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+	g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	if (g_MapData[i].no == FIELD_GROUND)
+	{
 		return; // skip shadow
+		g_pContext->DrawIndexed(6 * 6, 0, 0); // Å®Å@ó~ÇµÇ¢Ç»ÇÁreturnÇÃè„Ç…Ç¢ÇÍÇŒÇ¢Ç¢
+	}
 	else if (Model[g_MapData[i].no])
 		ModelDraw(Model[g_MapData[i].no]);
 
