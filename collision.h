@@ -27,6 +27,17 @@ enum COLLISION_HIT
 
 	HIT_MAX,
 };
+
+enum TRIGGER_SIDE
+{
+	TRIGGER_SIDE_NONE = 0,
+	TRIGGER_SIDE_FRONT,
+	TRIGGER_SIDE_BACK,
+	TRIGGER_SIDE_LEFT,
+	TRIGGER_SIDE_RIGHT,
+};
+
+
 //=========================================================================================================
 // プロトタイプ宣言
 //=========================================================================================================
@@ -35,9 +46,12 @@ int Player3DField_Collision();
 
 void Collision_DebugDraw();
 
-bool Collision_RayToField(
-	const XMFLOAT3& start,
-	const XMFLOAT3& dir,
-	float maxDist,
-	float* hitY
-);
+struct TRIGGER_HIT
+{
+	bool hit = false;
+	size_t mapIndex = 0;
+	FIELD type = FIELD_MAX;
+	TRIGGER_SIDE side = TRIGGER_SIDE_NONE;
+};
+
+bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);

@@ -61,14 +61,19 @@ static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//終了
 
 static bool debugMode = TRUE;
+bool isTrigger = false;
 
 // プレイヤー当たり判定半分の大きさ
-static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
-	PLAYER3D_DETECT_HALF_X,
-	PLAYER3D_DETECT_HALF_Y,
-	PLAYER3D_DETECT_HALF_Z
+static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
+	PLAYER3D_SOLID_HALF_X,
+	PLAYER3D_SOLID_HALF_Y,
+	PLAYER3D_SOLID_HALF_Z
 );
-
+static XMFLOAT3 g_TriggerHalfSize = XMFLOAT3(
+	PLAYER3D_TRIGGER_HALF_X,
+	PLAYER3D_TRIGGER_HALF_Y,
+	PLAYER3D_TRIGGER_HALF_Z
+);
 
 //=========================================================================================================
 // 初期化処理
@@ -133,59 +138,6 @@ void Player3D_Update()
 }
 
 
-//=========================================================================================================
-// 描画処理
-//=========================================================================================================
-void Player3D_Draw(void)
-{
-	if (debugMode)
-	{
-		ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("Player3D.cpp"))
-		{
-			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
-			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
-			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
-			ImGui::Text("Gr: %s", g_Player3D.isGround ? "true" : "false");
-			ImGui::TreePop();
-		}
-		ImGui::End();
-	}
-
-	XMMATRIX scale = XMMatrixScaling
-	(
-		g_Player3D.Scaling.x,
-		g_Player3D.Scaling.y,
-		g_Player3D.Scaling.z);
-
-	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
-	(
-		XMConvertToRadians(g_Player3D.Rotation.x),
-		XMConvertToRadians(g_Player3D.Rotation.y),
-		XMConvertToRadians(g_Player3D.Rotation.z)
-
-	);
-
-	XMMATRIX translation = XMMatrixTranslation
-	(
-		g_Player3D.Position.x,
-		g_Player3D.Position.y,
-		g_Player3D.Position.z
-	);
-
-	XMMATRIX world = scale * rotation * translation;
-
-	XMMATRIX view = GetViewMatrix();
-	XMMATRIX projection = GetProjectionMatrix();
-	XMMATRIX wvp = world * view * projection;
-
-	// 変換行列を頂点シェーダへセット
-	Shader_SetWorldMatrix(world);
-	Shader_SetMatrix(wvp);
-
-	// モデルの描画リクエスト
-	ModelDraw(g_Player3D.Model);
-}
 
 
 //=========================================================================================================
@@ -397,6 +349,28 @@ void Player3D_Action()
 		//照明操作
 
 	}
+	isTrigger = false;
+
+	TRIGGER_HIT hit;
+	if (!Collision_PlayerTrigger(&hit, 0.2f)) return;
+	//if (hit.side != TRIGGER_SIDE_FRONT) return;
+	switch (hit.type)
+	{
+	case FIELD_GOAL:
+		break;
+	case FIELD_OBJ_1:
+		isTrigger = true;
+	case FIELD_OBJ_2:
+		// TODO: ﾊｰﾈ｡/ｿｪﾃﾅ/ｶﾔｻｰｵﾈ
+		break;
+
+	default:
+		break;
+	}
+
+	
+	
+
 }
 
 void Player3D_Reset()
@@ -416,7 +390,65 @@ PLAYER3D* GetPlayer3D()
 	return &g_Player3D;
 }
 
-XMFLOAT3 Player3D_GetDetectHalfSize()
+XMFLOAT3 Player3D_GetSolidHalfSize()
 {
-	return g_DetectHalfSize;
+	return g_SolidHalfSize;
+}
+
+XMFLOAT3 Player3D_GetTriggerHalfSize()
+{
+	return g_TriggerHalfSize;
+}
+
+//=========================================================================================================
+// 描画処理
+//=========================================================================================================
+void Player3D_Draw(void)
+{
+
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("Player3D.cpp"))
+		{
+			ImGui::Text("Pos: %.2f,%.2f,%.2f", g_Player3D.Position.x, g_Player3D.Position.y, g_Player3D.Position.z);
+			ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
+			ImGui::TreePop();
+		}
+		ImGui::End();
+	}
+
+	XMMATRIX scale = XMMatrixScaling
+	(
+		g_Player3D.Scaling.x,
+		g_Player3D.Scaling.y,
+		g_Player3D.Scaling.z);
+
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
+	(
+		XMConvertToRadians(g_Player3D.Rotation.x),
+		XMConvertToRadians(g_Player3D.Rotation.y),
+		XMConvertToRadians(g_Player3D.Rotation.z)
+
+	);
+
+	XMMATRIX translation = XMMatrixTranslation
+	(
+		g_Player3D.Position.x,
+		g_Player3D.Position.y,
+		g_Player3D.Position.z
+	);
+
+	XMMATRIX world = scale * rotation * translation;
+
+	XMMATRIX view = GetViewMatrix();
+	XMMATRIX projection = GetProjectionMatrix();
+	XMMATRIX wvp = world * view * projection;
+
+	// 変換行列を頂点シェーダへセット
+	Shader_SetWorldMatrix(world);
+	Shader_SetMatrix(wvp);
+
+	// モデルの描画リクエスト
+	ModelDraw(g_Player3D.Model);
 }
