@@ -1,6 +1,8 @@
-/*#include "Player2D.h"
+#include "Player2D.h"
 #include "keyboard.h"
 #include "Camera.h"
+#include "shader.h"
+#include "sprite.h"
 #include "shader.h"
 #include "Collision.h"
 
@@ -16,29 +18,63 @@
 // グローバル変数
 //=========================================================================================================
 PLAYER2D g_Player2D;
-ID3D11Device* g_pDevice;
-ID3D11DeviceContext* g_pContext;
-float g_StopTime = 0.0f;
+static ID3D11Device* g_pDevice = NULL;
+static ID3D11DeviceContext* g_pContext = NULL;
+static ID3D11ShaderResourceView* g_Texture;		//テクスチャ変数
+static ID3D11Buffer* g_VertexBuffer = NULL;		// 頂点バッファ
+static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
+static float g_StopTime = 0.0f;
+
+static Vertex3D Player2D[4]{
+	// 頂点8　左上
+	{
+		XMFLOAT3(0.5f,0.5f,0.5f),				//頂点座標
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
+		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
+	},
+	// 頂点9　右上
+	{
+		XMFLOAT3(-0.5f,0.5f,0.5f),			//頂点座標
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
+		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
+	},
+	// 頂点10　左下
+	{
+		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
+		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
+	},
+	// 頂点11　右下
+	{
+		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
+		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
+	},
+};
 
 // 入力ベクトル
-XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+static XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 
 // リセット用
-XMFLOAT3		Firstposition;
-XMFLOAT3		FirstRotation;
-XMFLOAT3		FirstScaling;
-XMFLOAT3		FirstVelocity;
-XMFLOAT3		FirstAcceleration;
-PLAYER2D_STATE	FirstState;
-float			FirstStopTime;
-XMVECTOR		FirstQuaternion;
+static XMFLOAT3		Firstposition;
+static XMFLOAT3		FirstRotation;
+static XMFLOAT3		FirstScaling;
+static XMFLOAT3		FirstVelocity;
+static XMFLOAT3		FirstAcceleration;
+static PLAYER2D_STATE	FirstState;
+static float			FirstStopTime;
+static XMVECTOR		FirstQuaternion;
 
 // プレイヤーステータス
-float moveSpeed = 0.005f;			//移動速度
-float maxMoveSpeed = 1.0f;			//最大移動速度
-float maxGravity = -0.25f;			//最大落下速度
-float jumpPower = 0.175f;			//ジャンプ力
-bool isGround = false;				//接地判定
+static float moveSpeed = 0.005f;			//移動速度
+static float maxMoveSpeed = 1.0f;			//最大移動速度
+static float maxGravity = -0.25f;			//最大落下速度
+static float jumpPower = 0.175f;			//ジャンプ力
+static bool isGround = false;				//接地判定
 
 // キーボード定義
 // 移動
@@ -53,10 +89,10 @@ static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//終了
 
 static bool debugMode = TRUE;
-static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
-	PLAYER2D_DETECT_HALF_X,
-	PLAYER2D_DETECT_HALF_Y,
-	PLAYER2D_DETECT_HALF_Z
+static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
+#define PLAYER3D_SOLID_HALF_X (0.45f)
+#define PLAYER3D_SOLID_HALF_Y (0.9f)
+#define PLAYER3D_SOLID_HALF_Z (0.45f)
 );
 
 
@@ -69,11 +105,32 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player2D.Model = ModelLoad("asset\\model\\Test_man_stand.fbx");
+	// テクスチャ
+	TexMetadata metadata;
+	ScratchImage image;
+	LoadFromWICFile(L"asset\\Texture\\player2d.png", WIC_FLAGS_NONE, &metadata, image);
+	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
+	assert(g_Texture);
+
+	//頂点バッファの生成
+	D3D11_BUFFER_DESC bd;
+	ZeroMemory(&bd, sizeof(bd));//0でクリア
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.ByteWidth = sizeof(Vertex3D) * 4;//格納できる頂点数*頂点サイズ
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
+
+	D3D11_MAPPED_SUBRESOURCE msr;
+	g_pContext->Map(g_VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
+	Vertex3D* vertex = (Vertex3D*)msr.pData;
+	CopyMemory(&vertex[0], &Player2D[0], sizeof(Vertex3D) * 4);
+	g_pContext->Unmap(g_VertexBuffer, 0);
+
 
 	Firstposition = g_Player2D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
 	FirstRotation = g_Player2D.Rotation = XMFLOAT3(-90.0f, 180.0f, 0.0f);
-	FirstScaling = g_Player2D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
+	FirstScaling = g_Player2D.Scaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
 	FirstVelocity = g_Player2D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	FirstAcceleration = g_Player2D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	FirstState = g_Player2D.state = PLAYER2D_STATE_MOVE;
@@ -87,7 +144,9 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
-	ModelRelease(g_Player2D.Model);
+	SAFE_RELEASE(g_VertexBuffer);
+	SAFE_RELEASE(g_IndexBuffer);
+	SAFE_RELEASE(g_Texture);
 }
 
 //=========================================================================================================
@@ -102,7 +161,7 @@ void Player2D_Update()
 	Player2D_Jump();	//ジャンプ
 	Player2D_Change();	//影変身
 
-	Player2D_Gravity();	//重力処理
+	//Player2D_Gravity();	//重力処理
 
 
 	switch (g_Player2D.state)
@@ -125,64 +184,9 @@ void Player2D_Update()
 }
 
 //=========================================================================================================
-// 描画処理
-//=========================================================================================================
-void Player2D_Draw(void)
-{
-	if (debugMode)
-	{
-		ImGui::Begin("Debug - CHEN");
-		if (ImGui::TreeNode("Player2D.cpp"))
-		{
-			ImGui::Text("PosX: %.2f", g_Player2D.Position.x);
-			ImGui::Text("PosY: %.2f", g_Player2D.Position.y);
-			ImGui::Text("PosZ: %.2f", g_Player2D.Position.z);
-			ImGui::TreePop();
-		}
-		ImGui::End();
-
-		//DebugDrawDetectBox();
-	}
-	//???[???h?s???
-	XMMATRIX scale = XMMatrixScaling
-	(
-		g_Player2D.Scaling.x,
-		g_Player2D.Scaling.y,
-		g_Player2D.Scaling.z);
-
-	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
-	(
-		XMConvertToRadians(g_Player2D.Rotation.x),
-		XMConvertToRadians(g_Player2D.Rotation.y),
-		XMConvertToRadians(g_Player2D.Rotation.z)
-	);
-
-	XMMATRIX translation = XMMatrixTranslation
-	(
-		g_Player2D.Position.x,
-		g_Player2D.Position.y,
-		g_Player2D.Position.z
-	);
-
-	XMMATRIX world = scale * rotation * translation;
-
-	//????s???
-	XMMATRIX view = GetViewMatrix();
-	XMMATRIX projection = GetProjectionMatrix();
-	XMMATRIX wvp = world * view * projection;
-
-	// 変換行列を頂点シェーダへセット
-	Shader_SetWorldMatrix(world);
-	Shader_SetMatrix(wvp);
-
-	// モデルの描画リクエスト
-	ModelDraw(g_Player2D.Model);
-}
-
-//=========================================================================================================
 // ゲッター
 //=========================================================================================================
-XMFLOAT3 GetPlayer2DPositon()
+XMFLOAT3 GetPlayer2DPosition()
 {
 	return g_Player2D.Position;
 }
@@ -341,87 +345,52 @@ PLAYER2D* GetPlayer2D()
 
 XMFLOAT3 Player2D_GetDetectHalfSize()
 {
-	return g_DetectHalfSize;
+	return g_SolidHalfSize;
 }
 
-bool Player2D_IsNearPoint(const XMFLOAT3& point)
+//=========================================================================================================
+// 描画処理
+//=========================================================================================================
+void Player2D_Draw(void)
 {
-	const XMFLOAT3& c = g_Player2D.Position;
 
-	if (fabsf(point.x - c.x) > g_DetectHalfSize.x) return false;
-	if (fabsf(point.y - c.y) > g_DetectHalfSize.y) return false;
-	if (fabsf(point.z - c.z) > g_DetectHalfSize.z) return false;
+	XMMATRIX scale = XMMatrixScaling
+	(
+		g_Player2D.Scaling.x,
+		g_Player2D.Scaling.y,
+		g_Player2D.Scaling.z);
 
-	return true;
-}
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw
+	(
+		XMConvertToRadians(g_Player2D.Rotation.x),
+		XMConvertToRadians(g_Player2D.Rotation.y),
+		XMConvertToRadians(g_Player2D.Rotation.z)
+	);
 
-static ImVec2 WorldToScreen(const XMFLOAT3& p)
-{
-	using namespace DirectX;
+	XMMATRIX translation = XMMatrixTranslation
+	(
+		g_Player2D.Position.x,
+		g_Player2D.Position.y,
+		g_Player2D.Position.z
+	);
 
-	float bbWidth = (float)Direct3D_GetBackBufferWidth();
-	float bbHeight = (float)Direct3D_GetBackBufferHeight();
+	XMMATRIX world = scale * rotation * translation;
 
 	XMMATRIX view = GetViewMatrix();
-	XMMATRIX proj = GetProjectionMatrix();
-	XMMATRIX vp = XMMatrixMultiply(view, proj);
+	XMMATRIX projection = GetProjectionMatrix();
+	XMMATRIX wvp = world * view * projection;
 
+	// 変換行列を頂点シェーダへセット
+	Shader_SetWorldMatrix(world);
+	Shader_SetMatrix(wvp);
 
-	XMVECTOR v = XMVectorSet(p.x, p.y, p.z, 1.0f);
-	v = XMVector3TransformCoord(v, vp);
+	// モデルの描画リクエスト
+	g_pContext->PSSetShaderResources(0, 1, &g_Texture);
+	UINT stride = sizeof(Vertex3D);
+	UINT offset = 0;
+	g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+	g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	XMFLOAT3 ndc;
-	XMStoreFloat3(&ndc, v);
-
-
-	float x_bb = (ndc.x * 0.5f + 0.5f) * bbWidth;
-	float y_bb = (-ndc.y * 0.5f + 0.5f) * bbHeight;
-
-
-	ImGuiIO& io = ImGui::GetIO();
-	float x_imgui = x_bb / bbWidth * io.DisplaySize.x;
-	float y_imgui = y_bb / bbHeight * io.DisplaySize.y;
-
-	return ImVec2(x_imgui, y_imgui);
+	g_pContext->DrawIndexed(4, 0, 0);
 }
-
-
-static void DebugDrawDetectBox()
-{
-	using namespace DirectX;
-
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-	const XMFLOAT3& c = g_Player2D.Position;
-	const XMFLOAT3& h = g_DetectHalfSize;
-
-
-	XMFLOAT3 corners[8] =
-	{
-		{c.x - h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y + h.y, c.z + h.z},
-		{c.x - h.x, c.y + h.y, c.z + h.z},
-	};
-
-	ImVec2 pts[8];
-	for (int i = 0; i < 8; ++i)
-		pts[i] = WorldToScreen(corners[i]);
-
-	ImU32 col = IM_COL32(0, 255, 0, 255);
-
-	auto Line = [&](int a, int b)
-		{
-			draw->AddLine(pts[a], pts[b], col, 1.0f);
-		};
-
-
-	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
-
-	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
-
-	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
-}*/

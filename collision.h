@@ -28,7 +28,7 @@ enum COLLISION_HIT
 	HIT_MAX,
 };
 
-enum TRIGGER_SIDE
+enum TRIGGER_SIDE//トリガーが当たった面
 {
 	TRIGGER_SIDE_NONE = 0,
 	TRIGGER_SIDE_FRONT,
@@ -46,10 +46,10 @@ int Player3DField_Collision();
 
 void Collision_DebugDraw();
 
-struct TRIGGER_HIT
+struct TRIGGER_HIT//トリガーヒット情報
 {
 	bool hit = false;
-	size_t mapIndex = 0;
+	size_t mapIndex = 0;// 当たったマップデータのインデックス
 	FIELD type = FIELD_MAX;
 	TRIGGER_SIDE side = TRIGGER_SIDE_NONE;
 };

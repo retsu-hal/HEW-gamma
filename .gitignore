@@ -73,10 +73,6 @@ Debug/
 Release/
 ipch/
 
-<<<<<<< HEAD
-# Debug base directory/file
-x64/
-=======
 ############################################
 # Visual Studio project build artifacts
 ############################################
@@ -115,4 +111,3 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
->>>>>>> 84d89f88962bfb2eaf9daaae66f4ebc13bd69504

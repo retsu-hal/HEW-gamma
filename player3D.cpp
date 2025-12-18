@@ -19,32 +19,32 @@
 PLAYER3D g_Player3D;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
-float g_StopTime = 0.0f;
+static float g_StopTime = 0.0f;
 
 // コントローラー
 extern Controller gPad;
 
 // 入力ベクトル
-XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+static XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 
 // リセット用
-XMFLOAT3		Firstposition;
-XMFLOAT3		FirstRotation;
-XMFLOAT3		FirstScaling;
-XMFLOAT3		FirstVelocity;
-XMFLOAT3		FirstAcceleration;
-PLAYER3D_STATE	FirstState;
-float			FirstStopTime;
-XMVECTOR		FirstQuaternion;
+static XMFLOAT3		Firstposition;
+static XMFLOAT3		FirstRotation;
+static XMFLOAT3		FirstScaling;
+static XMFLOAT3		FirstVelocity;
+static XMFLOAT3		FirstAcceleration;
+static PLAYER3D_STATE	FirstState;
+static float			FirstStopTime;
+static XMVECTOR		FirstQuaternion;
 
 // プレイヤーステータス
-float moveSpeed = 0.005f;			//移動速度
-float maxMoveSpeed = 1.0f;			//最大移動速度
-float maxGravity = -0.5f;			//最大落下速度
-float gravityPower = 0.925f;		//重力加速度
-float jumpPower = 0.175f;			//ジャンプ力
+static float moveSpeed = 0.005f;			//移動速度
+static float maxMoveSpeed = 1.0f;			//最大移動速度
+static float maxGravity = -0.5f;			//最大落下速度
+static float gravityPower = 0.925f;		//重力加速度
+static float jumpPower = 0.175f;			//ジャンプ力
 
-float FirstMaxMoveSpeed = maxMoveSpeed;
+static float FirstMaxMoveSpeed = maxMoveSpeed;
 
 // キーボード定義
 // 移動
@@ -175,7 +175,6 @@ void Player3D_Gravity()
 		if (g_Player3D.Velocity.y < 0.0f)
 			g_Player3D.Velocity.y = 0.0f;
 	}
-
 
 	g_Player3D.Position.x += g_Player3D.Velocity.x;
 	g_Player3D.Position.y += g_Player3D.Velocity.y;
@@ -353,24 +352,22 @@ void Player3D_Action()
 
 	TRIGGER_HIT hit;
 	if (!Collision_PlayerTrigger(&hit, 0.2f)) return;
-	//if (hit.side != TRIGGER_SIDE_FRONT) return;
-	switch (hit.type)
+	if (hit.side != TRIGGER_SIDE_FRONT) return;// 前面以外は無視
+	switch (hit.type)// 当たったオブジェクトの種類で処理分岐
 	{
 	case FIELD_GOAL:
+
 		break;
 	case FIELD_OBJ_1:
 		isTrigger = true;
+		break;
 	case FIELD_OBJ_2:
-		// TODO: ﾊｰﾈ｡/ｿｪﾃﾅ/ｶﾔｻｰｵﾈ
+
 		break;
 
 	default:
 		break;
 	}
-
-	
-	
-
 }
 
 void Player3D_Reset()

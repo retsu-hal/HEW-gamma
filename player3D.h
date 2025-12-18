@@ -8,7 +8,15 @@
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
-#define PLAYER3D_RADIUS (0.2f)			//半径
+// プレイヤー当たり判定サイズ
+#define PLAYER3D_SOLID_HALF_X (0.45f)
+#define PLAYER3D_SOLID_HALF_Y (0.9f)
+#define PLAYER3D_SOLID_HALF_Z (0.45f)
+
+// トリガー当たり判定サイズ
+#define PLAYER3D_TRIGGER_HALF_X (1.0f)
+#define PLAYER3D_TRIGGER_HALF_Y (1.0f)
+#define PLAYER3D_TRIGGER_HALF_Z (1.0f)
 
 //=========================================================================================================
 // 構造体
@@ -16,7 +24,6 @@
 //プレイヤーステート
 enum PLAYER3D_STATE
 {
-
 	PLAYER3D_STATE_IDLE = 0,	//何もしない
 	PLAYER3D_STATE_MOVE,		//移動中
 	PLAYER3D_STATE_FALL,		//落下中
@@ -34,10 +41,10 @@ public:
 	XMFLOAT3 Rotation;			//回転
 	XMFLOAT3 Scaling;			//サイズ
 	XMFLOAT3 Velocity;			//方向
-	XMFLOAT3 Acceleration;		//
+	XMFLOAT3 Acceleration;		//加速度
 	PLAYER3D_STATE state;		//状態
 	MODEL* Model;				//モデルデータ
-	XMVECTOR Quaternion;		//
+	XMVECTOR Quaternion;		//クォータニオン回転
 
 	bool isGround = false;             //地面にいるかどうか
 
@@ -63,19 +70,7 @@ void Player3D_Respawn();
 
 PLAYER3D* GetPlayer3D();
 
-
-
-#define PLAYER3D_SOLID_HALF_X (0.45f)
-#define PLAYER3D_SOLID_HALF_Y (0.9f)
-#define PLAYER3D_SOLID_HALF_Z (0.45f)
-
-#define PLAYER3D_TRIGGER_HALF_X (1.0f)
-#define PLAYER3D_TRIGGER_HALF_Y (1.0f)
-#define PLAYER3D_TRIGGER_HALF_Z (1.0f)
-
 XMFLOAT3 Player3D_GetSolidHalfSize();
 XMFLOAT3 Player3D_GetTriggerHalfSize();
-
-PLAYER3D* GetPlayer3D();
 
 
