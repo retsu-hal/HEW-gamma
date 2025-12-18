@@ -15,30 +15,110 @@ int debugHit = 0;
 // ボールとフィールドの当たり判定
 //=========================================================================================================
 
-static const float PLAYER_COLLISION_OFFSET_Y = 0.9f;
+static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
+{
+	return XMFLOAT3{
+	BOX_RADIUS * m.scale.x,
+	BOX_RADIUS * m.scale.y,
+	BOX_RADIUS * m.scale.z
+	};
+}
+
+static XMFLOAT3 GetPlayerSolidCollider()
+{
+	PLAYER3D* p = GetPlayer3D();
+	XMFLOAT3 c = p->Position;
+
+	XMFLOAT3 half = Player3D_GetSolidHalfSize();
+	c.y += half.y;
+	return c;
+}
+
+static XMFLOAT3 GetPlayerTriggerCollider()
+{
+	PLAYER3D* p = GetPlayer3D();
+	XMFLOAT3 c = p->Position;
+
+	XMFLOAT3 half = Player3D_GetTriggerHalfSize();
+	c.y += half.y;
+	return c;
+}
+
+static float Dot2D(const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.z * b.z; }
+static float Len2D(const XMFLOAT3& v) { return sqrtf(v.x * v.x + v.z * v.z); }
+static XMFLOAT3 Normalize2D(XMFLOAT3 v)
+{
+	float l = Len2D(v);
+	if (l < 1e-6f) return XMFLOAT3(0, 0, 1);
+	v.x /= l; v.z /= l; v.y = 0.0f;
+	return v;
+}
+static TRIGGER_SIDE CalcSide_ByCamera(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
+{
+	XMFLOAT3 camPos = GetCameraPosition();
+	XMFLOAT3 camAt = GetCameraAtPosition();
+
+	XMFLOAT3 forward = Normalize2D({ camAt.x - camPos.x, 0, camAt.z - camPos.z });
+	XMFLOAT3 right = { forward.z, 0, -forward.x };
+
+	XMFLOAT3 to = { targetC.x - playerC.x, 0, targetC.z - playerC.z };
+	float f = Dot2D(to, forward);
+	float r = Dot2D(to, right);
+
+	if (fabsf(f) < 1e-5f && fabsf(r) < 1e-5f) return TRIGGER_SIDE_NONE;
+
+	if (fabsf(f) >= fabsf(r)) return (f >= 0) ? TRIGGER_SIDE_FRONT : TRIGGER_SIDE_BACK;
+	return (r >= 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
+}
+
+static bool Field_IsSolid(FIELD t)
+{
+	switch (t)
+	{
+	case FIELD_GROUND:
+	case FIELD_WALL:
+	case FIELD_OBJ_BOX:
+	case FIELD_GOAL:
+	case FIELD_OBJ_1:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool Field_IsTrigger(FIELD t)
+{
+	switch (t)
+	{
+	case FIELD_GOAL:
+	case FIELD_OBJ_1:
+	case FIELD_OBJ_2:
+		return true;
+	default:
+		return false;
+	}
+}
+
 
 int Player3DField_Collision()
 {
-    int hit = HIT_NONE;
+	int hit = HIT_NONE;
 
-    PLAYER3D* player3D = GetPlayer3D();
-    MAPDATA* Map = GetFieldMap();
-    size_t fieldSize = GetFieldMapSize();
-    if (!player3D || !Map || fieldSize == 0) return hit;
-
-	XMFLOAT3 playerHalf = Player3D_GetDetectHalfSize();
-	XMFLOAT3 playerPos = player3D->Position;
-	playerPos.y += PLAYER_COLLISION_OFFSET_Y;
+	PLAYER3D* player3D = GetPlayer3D();
+	std::vector<MAPDATA>& Map = GetFieldMap();
+	if (!player3D || Map.size() == 0) return hit;
 
 	player3D->isGround = false;
 
-    for (size_t i = 0; i < fieldSize; ++i)
-    {
-        // CSV Type値 (0:箱, 1:OBJ_1...)
-        if (Map[i].no != FIELD_GROUND) continue; // 箱以外はスキップ（画像のTypeカラム利用）
+	XMFLOAT3 playerHalf = Player3D_GetSolidHalfSize();
+	XMFLOAT3 playerPos = GetPlayerSolidCollider();
 
-        XMFLOAT3 boxPos = Map[i].pos;
-		XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
+	for (size_t i = 0; i < Map.size(); ++i)
+	{
+		if (!Field_IsSolid(Map[i].no)) continue;
+
+		XMFLOAT3 boxPos = Map[i].pos;
+		XMFLOAT3 boxHalf = Field_GetHalfSize(Map[i]);
 
 		float dx = playerPos.x - boxPos.x;
 		float dy = playerPos.y - boxPos.y;
@@ -52,8 +132,8 @@ int Player3DField_Collision()
 		float overlapZ = (playerHalf.z + boxHalf.z) - fabsf(dz);
 		if (overlapZ <= 0.0f) continue;
 
-
-		
+		// 壁との当たり判定
+		//  Z軸方向の押し出しが一番浅い
 		if (overlapZ <= overlapY && overlapZ <= overlapX)
 		{
 			debugHit = 1;
@@ -69,14 +149,12 @@ int Player3DField_Collision()
 				player3D->Velocity.z = 0.0f;
 				hit = HIT_WALL_NegZ;
 			}
-
-			
 		}
-		
-		else if(overlapX <= overlapY && overlapX <= overlapZ)
+		//  X軸方向の押し出しが一番浅い
+		else if (overlapX <= overlapY && overlapX <= overlapZ)
 		{
 			debugHit = 2;
-			if(dx > 0.0f)
+			if (dx > 0.0f)
 			{
 				playerPos.x = boxPos.x + boxHalf.x + playerHalf.x;
 				player3D->Velocity.x = 0.0f;
@@ -85,11 +163,9 @@ int Player3DField_Collision()
 			else
 			{
 				playerPos.x = boxPos.x - boxHalf.x - playerHalf.x;
-				player3D->Velocity.x = 0.0f;
-				hit = HIT_WALL_NegX;
 			}
 		}
-
+		//  Y軸方向の押し出しが一番浅い
 		else
 		{
 			debugHit = 3;
@@ -112,7 +188,7 @@ int Player3DField_Collision()
 	}
 
 	player3D->Position.x = playerPos.x;
-	player3D->Position.y = playerPos.y - PLAYER_COLLISION_OFFSET_Y;
+	player3D->Position.y = playerPos.y - playerHalf.y;
 	player3D->Position.z = playerPos.z;
 
 	if (debugMode)
@@ -127,7 +203,6 @@ int Player3DField_Collision()
 		}
 		ImGui::End();
 	}
-
 
 	return hit;
 }
@@ -203,12 +278,12 @@ static void DebugDrawAABB(const XMFLOAT3& center,
 		pts[i] = WorldToScreenSafe(corners[i]);
 
 	auto Line = [&](int a, int b)
-	{
-		if (pts[a].valid && pts[b].valid)
 		{
-			draw->AddLine(pts[a].pos, pts[b].pos, color, 1.0f);
-		}
-	};
+			if (pts[a].valid && pts[b].valid)
+			{
+				draw->AddLine(pts[a].pos, pts[b].pos, color, 1.0f);
+			}
+		};
 
 
 	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
@@ -217,7 +292,6 @@ static void DebugDrawAABB(const XMFLOAT3& center,
 
 	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
 }
-
 
 static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 	const XMFLOAT3& c1, const XMFLOAT3& h1) {// AABB同士当たり判定
@@ -228,28 +302,79 @@ static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 	return true;
 }
 
+bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
+{
+	if (outHit) *outHit = TRIGGER_HIT{};
+
+	PLAYER3D* p = GetPlayer3D();
+	if (!p) return false;
+
+	auto& map = GetFieldMap();
+	if (map.empty()) return false;
+
+	const XMFLOAT3 pHalf = Player3D_GetTriggerHalfSize();
+	const XMFLOAT3 pC = GetPlayerTriggerCollider();
+	bool found = false;
+	float bestD2 = 1e30f;
+	TRIGGER_HIT best;
+
+	for (size_t i = 0; i < map.size(); ++i)
+	{
+		if (!Field_IsTrigger(map[i].no)) continue;
+
+		const XMFLOAT3 tC = map[i].pos;
+
+		XMFLOAT3 tHalf = Field_GetHalfSize(map[i]);
+		tHalf.x += extraRange;
+		tHalf.y += extraRange;
+		tHalf.z += extraRange;
+
+		if (!AABB_Intersect(pC, pHalf, tC, tHalf)) continue;
+
+		float dx = tC.x - pC.x;
+		float dz = tC.z - pC.z;
+		float d2 = dx * dx + dz * dz;
+
+		if (!found || d2 < bestD2)
+		{
+			found = true;
+			bestD2 = d2;
+			best.hit = true;
+			best.mapIndex = i;
+			best.type = map[i].no;
+			best.side = CalcSide_ByCamera(pC, tC);
+		}
+	}
+
+	if (!found) return false;
+	if (outHit) *outHit = best;
+	return true;
+}
+
+
 void Collision_DebugDraw() {// 当たり判定のデバッグ描画
 
 	// プレイヤーのAABB描画
 	PLAYER3D* player = GetPlayer3D();// プレイヤー取得
 	if (!player) return;
-	XMFLOAT3 playerHalf = Player3D_GetDetectHalfSize();
-	XMFLOAT3 playerC = player->Position;
-	playerC.y += PLAYER_COLLISION_OFFSET_Y;
+	XMFLOAT3 playerHalf = Player3D_GetSolidHalfSize();
+	XMFLOAT3 playerC = GetPlayerSolidCollider();
 	DebugDrawAABB(playerC, playerHalf, IM_COL32(0, 255, 0, 255));// プレイヤーのAABB描画
 
+	XMFLOAT3 playerHalf_t = Player3D_GetTriggerHalfSize();
+	XMFLOAT3 playerC_t = GetPlayerTriggerCollider();
+	DebugDrawAABB(playerC_t, playerHalf_t, IM_COL32(255, 255, 255, 255));// プレイヤーのAABB描画
 
 	// フィールドのAABB描画
-	//MAPDATA* map = GetFieldMap();
-	//size_t fieldSize = GetFieldMapSize();
-	//if(!map || fieldSize == 0) return;
-	//XMFLOAT3 boxHalf(BOX_RADIUS, BOX_RADIUS, BOX_RADIUS);
-	//for (size_t i = 0; i < fieldSize; ++i)
-	//{
-	//	const XMFLOAT3& boxC = map[i].pos;
-	//	bool triggered = AABB_Intersect(playerC, playerHalf, boxC, boxHalf);// 当たっているかどうか
-	//	ImU32 col = triggered ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);// 当たっているなら赤、そうでなければシアン
-	//	DebugDrawAABB(boxC, boxHalf, col);
-	//}
-
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (map.size() == 0) return;
+	for (size_t i = 0; i < map.size(); ++i)
+	{
+		if (!Field_IsTrigger(map[i].no)) continue;
+		const XMFLOAT3& boxHalf = Field_GetHalfSize(map[i]);
+		const XMFLOAT3& boxC = map[i].pos;
+		bool triggered_t = AABB_Intersect(playerC_t, playerHalf_t, boxC, boxHalf);// 当たっているかどうか
+		ImU32 col = triggered_t ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
+		DebugDrawAABB(boxC, boxHalf, col);
+	}
 }

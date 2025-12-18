@@ -1,0 +1,119 @@
+﻿  Audio.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Audio.cpp' をコンパイルしています)
+  
+  camera.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'camera.cpp' をコンパイルしています)
+  
+  Collision.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Collision.cpp' をコンパイルしています)
+  
+  controller.cpp
+  debug_ostream.cpp
+  direct3d.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'direct3d.cpp' をコンパイルしています)
+  
+  effect.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'effect.cpp' をコンパイルしています)
+  
+  fade.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'fade.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\fade.cpp(82,19): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\fade.cpp(137,17): warning C4244: '=': 'int' から 'float' への変換です。データが失われる可能性があります。
+  field.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'field.cpp' をコンパイルしています)
+  
+  game.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'game.cpp' をコンパイルしています)
+  
+  imgui_impl_dx11.cpp
+  imgui_impl_win32.cpp
+  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  Input.cpp
+  keyboard.cpp
+  LightSource.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'LightSource.cpp' をコンパイルしています)
+  
+  コードを生成中...
+  コンパイル中...
+  main.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'main.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\main.cpp(248,7): warning C4101: 'hdc': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\main.cpp(246,10): warning C4101: 'hbrWhite': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\main.cpp(249,14): warning C4101: 'ps': ローカル変数は 1 度も使われていません。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\main.cpp(246,20): warning C4101: 'hbrGray': ローカル変数は 1 度も使われていません。
+  manager.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'manager.cpp' をコンパイルしています)
+  
+  memo.cpp
+  model.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'model.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\model.cpp(96,19): warning C4018: '<': signed と unsigned の数値を比較しようとしました。
+  mouse.cpp
+  Player3D.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Player3D.cpp' をコンパイルしています)
+  
+  Polygon3D.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Polygon3D.cpp' をコンパイルしています)
+  
+  Result.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Result.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\Result.cpp(32,10): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\Result.cpp(57,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+  score.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'score.cpp' をコンパイルしています)
+  
+  shader.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'shader.cpp' をコンパイルしています)
+  
+  sprite.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'sprite.cpp' をコンパイルしています)
+  
+  title.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'title.cpp' をコンパイルしています)
+  
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\title.cpp(38,10): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\title.cpp(65,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\title.cpp(72,11): warning C4244: '引数': 'float' から 'int' への変換です。データが失われる可能性があります。
+  Trail.cpp
+C:\Users\retsu\Documents\2025_hal\HEW-gamma\direct3d.h(19,46): warning C4081: 'newline' が必要です ; ';' が見つかりました。
+  (ソース ファイル 'Trail.cpp' をコンパイルしています)
+  
+  コードを生成中...
+DirectXTex_Debug.lib(DirectXTexImage.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexImage.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexWIC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexWIC.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexD3D11.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexD3D11.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexUtil.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexUtil.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexConvert.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexConvert.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexCompress.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexCompress.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(DirectXTexMipMaps.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(DirectXTexMipMaps.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC4BC5.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC4BC5.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+DirectXTex_Debug.lib(BC6HBC7.obj) : warning LNK4099: PDB 'DirectXTex.pdb' が 'DirectXTex_Debug.lib(BC6HBC7.obj)' で、または 'C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\DirectXTex.pdb' に見つかりません。デバッグ情報がないものとして、オブジェクトにリンクします。
+  base.vcxproj -> C:\Users\retsu\Documents\2025_hal\HEW-gamma\x64\Debug\base.exe
