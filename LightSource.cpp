@@ -92,7 +92,7 @@ void Light_Draw(void)
 	Shader_SetMatrix(WVP);
 
 
-	//ModelDraw(g_Light.Model);
+	ModelDraw(g_Light.Model);
 }
 
 XMFLOAT3 GetLight_Position()
@@ -119,5 +119,5 @@ void Light_DrawRaw(const XMMATRIX& world, const XMMATRIX& matrix)
 {
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(matrix);
-	//ModelDraw(g_Light.Model);
+	ModelDraw(g_Light.Model);
 }
