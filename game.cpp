@@ -41,9 +41,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(true);
 	XMFLOAT4 para;
-	para = XMFLOAT4(0.4f, 0.4f, 0.4f, 1.0f);
+	para = XMFLOAT4(0.08f, 0.08f, 0.1f, 1.0f);
 	g_BallLight.SetAmbient(para);
-	para = XMFLOAT4(0.6f, 0.6f, 0.6f, 1.0f);
+	para = XMFLOAT4(1.0f, 0.95f, 0.85f, 1.0f);
 	g_BallLight.SetDiffuse(para);
 }
 

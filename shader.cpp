@@ -109,6 +109,7 @@ bool Shader_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	buffer_desc.ByteWidth = sizeof(LIGHT);
 	g_pDevice->CreateBuffer(&buffer_desc, nullptr, &g_pLightConstantBuffer);
 	g_pContext->VSSetConstantBuffers(2, 1, &g_pLightConstantBuffer);
+	g_pContext->PSSetConstantBuffers(2, 1, &g_pLightConstantBuffer);
 
 	buffer_desc.ByteWidth = sizeof(XMFLOAT4X4);
 	buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;

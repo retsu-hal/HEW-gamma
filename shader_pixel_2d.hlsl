@@ -11,6 +11,21 @@ SamplerState g_SamplerState : register(s0);
 TextureCube g_ShadowCubemap : register(t1);
 SamplerState g_ShadowSampler : register(s1);
 
+struct LIGHT
+{
+    bool Enable;
+    bool3 dummy;
+    float4 Dir;
+    float4 Diffuse;
+    float4 Ambient;
+};
+
+cbuffer Buffer2 : register(b2)
+{
+    LIGHT Light;
+}
+
+
 cbuffer Buffer4 : register(b4)
 {
     float3 ShadowLightPos;
@@ -53,11 +68,17 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
     float4 col = g_Texture.Sample(g_SamplerState, ps_in.texcoord);
     col *= ps_in.color;
 
+    if (!Light.Enable)
+    {
+        float3 ambientOnly = col.rgb * Light.Ambient.rgb;
+        return float4(ambientOnly, col.a);
+    }
+    
     // Light & ambient
     // ライト色と環境光
     float lightIntensity = 2.0f; // master light intensity / ライト強度スケール
-    float3 lightColor = lightIntensity * float3(1.0f, 0.95f, 0.85f); // slightly warm light / やや暖色系
-    float3 ambientColor = float3(0.08f, 0.08f, 0.1f); // very dark ambient / 非常に暗い環境光
+    float3 lightColor = lightIntensity * Light.Diffuse.rgb; // slightly warm light / やや暖色系
+    float3 ambientColor = Light.Ambient.rgb; // very dark ambient / 非常に暗い環境光
 
     // ---------------- Distance attenuation (physically-inspired) ---------------
     // 距離による減衰（物理ベース風の逆二乗減衰）
