@@ -41,13 +41,12 @@ XMVECTOR		FirstQuaternion;
 float moveSpeed = 0.005f;			//移動速度
 float maxMoveSpeed = 1.0f;			//最大移動速度
 float maxFallSpeed = -0.5f;			//最大落下速度
-float gravityPower = 0.925f;		//重力加速度
+float  dampingXZ = 0.925f;			//摩擦係数
+//float gravityPower = 1.0f;		//重力加速度（もしかしたら使う予定）
 float jumpPower = 0.175f;			//ジャンプ力
 bool isGround = false;				//接地判定
 
 float FirstMaxMoveSpeed = maxMoveSpeed;
-
-
 
 // キーボード定義
 // 移動
@@ -63,7 +62,7 @@ static const auto ChangeKey = KK_F;		//影変身
 static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//メニュー
 
-static bool debugMode = TRUE;
+static bool debugMode = true;
 
 static XMFLOAT3 g_DetectHalfSize = XMFLOAT3(
 	PLAYER3D_DETECT_HALF_X,
@@ -194,7 +193,7 @@ void Player3D_Draw(void)
 //=========================================================================================================
 // ゲッター
 //=========================================================================================================
-XMFLOAT3 GetPlayer3DPositon()
+XMFLOAT3 GetPlayer3DPosition()
 {
 	return g_Player3D.Position;
 }
@@ -252,8 +251,8 @@ void Player3D_Gravity()
 	g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 	g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
 
-	g_Player3D.Velocity.x *= gravityPower;
-	g_Player3D.Velocity.z *= gravityPower;
+	g_Player3D.Velocity.x *=  dampingXZ;
+	g_Player3D.Velocity.z *=  dampingXZ;
 
 	g_Player3D.Position.x += g_Player3D.Velocity.x;
 	g_Player3D.Position.z += g_Player3D.Velocity.z;
@@ -351,9 +350,9 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-	if (Keyboard_IsKeyDownTrigger(JumpKey))
+	if (Keyboard_IsKeyDownTrigger(JumpKey) || gPad.IsButtonPressed(JumpKey))
 	{
-		if(isGround)
+		if (isGround)
 		{
 			g_Player3D.Velocity.y = jumpPower;
 			isGround = false;
@@ -393,6 +392,8 @@ void Player3D_Reset()
 	g_Player3D.state = FirstState;
 	g_StopTime = FirstStopTime;
 	g_Player3D.Quaternion = FirstQuaternion;
+
+	maxMoveSpeed = FirstMaxMoveSpeed;
 }
 
 void Player3D_Fall()

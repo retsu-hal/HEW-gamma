@@ -37,7 +37,7 @@ void Camera_Initialize()
 	CameraObject.NearClip = 0.5f;
 	CameraObject.FarClip = 1000.0f;
 
-	g_PlayerPosOld = GetPlayer3DPositon();
+	g_PlayerPosOld = GetPlayer3DPosition();
 	
 	Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 }
@@ -207,7 +207,7 @@ void Mouse()
 		}
 
 		XMFLOAT3 playerDelta = g_PlayerPosOld;
-		g_PlayerPosOld = GetPlayer3DPositon();
+		g_PlayerPosOld = GetPlayer3DPosition();
 		playerDelta.x = g_PlayerPosOld.x - playerDelta.x;
 		playerDelta.y = g_PlayerPosOld.y - playerDelta.y;
 		playerDelta.z = g_PlayerPosOld.z - playerDelta.z;
@@ -298,7 +298,7 @@ void Keyb()
 {
 
 	XMFLOAT3 pos = g_PlayerPosOld;
-	g_PlayerPosOld = GetPlayer3DPositon();
+	g_PlayerPosOld = GetPlayer3DPosition();
 
 
 	pos.x = g_PlayerPosOld.x - pos.x;

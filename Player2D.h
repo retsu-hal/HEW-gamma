@@ -1,6 +1,6 @@
 #pragma once
 
-#include <d3D11.h>
+#include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3D.h"
 #include "model.h"

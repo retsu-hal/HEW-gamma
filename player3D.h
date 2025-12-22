@@ -49,7 +49,7 @@ void Player3D_Finalize(void);
 void Player3D_Update();
 void Player3D_Draw(void);
 
-XMFLOAT3 GetPlayer3DPositon();
+XMFLOAT3 GetPlayer3DPosition();
 
 void Player3D_Gravity();
 void Player3D_Move();
