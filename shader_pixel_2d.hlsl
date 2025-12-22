@@ -44,6 +44,11 @@ struct PS_INPUT
     float3 normal : TEXCOORD2;
     float3 posWorld : TEXCOORD3;
 };
+float SampleShadowPCF(
+    float3 dir,
+    float myDepth,
+    float dist,
+    float3 normal);
 
 float4 main(PS_INPUT ps_in) : SV_TARGET
 {
@@ -70,8 +75,7 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
 
     if (!Light.Enable)
     {
-        float3 ambientOnly = col.rgb * Light.Ambient.rgb;
-        return float4(ambientOnly, col.a);
+        return col.rgba;
     }
     
     // Light & ambient
@@ -101,6 +105,7 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
         // Soft cutoff near radius so nothing pops
         // ライト半径付近でソフトにフェードアウトさせる
         float edge = saturate(1.0f - distToLight / ShadowLightRadius);
+        //edge = pow(edge, 3.0f);
         //edge = edge * edge; // smoother edge / エッジをなめらかに
         att *= edge;
     }
@@ -123,21 +128,27 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
         float myDepth = (distToLight - nearPlane) / (farPlane - nearPlane);
 
         // Single sample (no PCF) to avoid banding artifacts
-        float storedDepth = g_ShadowCubemap.Sample(g_ShadowSampler, direction).r;
+        //float storedDepth = g_ShadowCubemap.Sample(g_ShadowSampler, direction).r;
         
         // Slope-scaled bias based on distance
-        float bias = 0.02f + (distToLight * 0.01f);
+        //float bias = 0.02f + (distToLight * 0.01f);
+        //float NdotL = saturate(dot(normalize(ps_in.normal), normalize(-Light.Dir.xyz)));
+        //float bias = max(0.005f * (1.0f - NdotL), 0.001f);
         
         // Simple shadow test
-        if (myDepth > storedDepth + bias)
-        {
-            shadowFactor = 0.15f; // In shadow
-        }
-        else
-        {
-            shadowFactor = 1.0f; // Lit
-        }
-
+        //if (myDepth > storedDepth + bias)
+        //{
+        //    shadowFactor = 0.15f; // In shadow
+        //}
+        //else
+        //{
+        //    shadowFactor = 1.0f; // Lit
+        //}
+        shadowFactor = SampleShadowPCF(
+                        direction,
+                        myDepth,
+                        distToLight,
+                        normalize(ps_in.normal));
         shadowFactor = lerp(1.0f, shadowFactor, saturate(ShadowIntensity));
     }
 
@@ -146,6 +157,56 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
     float3 finalRGB = col.rgb * finalLight;
 
     return float4(finalRGB, col.a);
+}
+
+float SampleShadowPCF(
+    float3 dir,
+    float myDepth,
+    float dist,
+    float3 normal)
+{
+    const int SAMPLE_COUNT = 6;
+
+    float3 offsets[SAMPLE_COUNT] =
+    {
+        float3(1, 0, 0),
+        float3(-1, 0, 0),
+        float3(0, 1, 0),
+        float3(0, -1, 0),
+        float3(0, 0, 1),
+        float3(0, 0, -1)
+    };
+
+    // ================= ADAPTIVE RADIUS =================
+    //TUNE THESE THREE VALUES
+    float minRadius = 0.008f; // near = sharp
+    float maxRadius = 0.04f; // far = soft
+
+    float dist01 = saturate(dist / ShadowLightRadius);
+    float sampleRadius = lerp(minRadius, maxRadius, dist01 * dist01);
+
+    // ================= ADAPTIVE BIAS =================
+    float3 L = normalize(-Light.Dir.xyz);
+    float NdotL = saturate(dot(normal, L));
+
+    float bias = max(0.004f * (1.0f - NdotL), 0.001f);
+    bias *= lerp(1.0f, 2.0f, dist01);
+
+    // ================= PCF =================
+    float shadow = 0.0f;
+
+    for (int i = 0; i < SAMPLE_COUNT; i++)
+    {
+        float3 sampleDir =
+            normalize(dir + offsets[i] * sampleRadius);
+
+        float stored =
+            g_ShadowCubemap.Sample(g_ShadowSampler, sampleDir).r;
+
+        shadow += (myDepth > stored + bias) ? 1.0f : 0.0f;
+    }
+
+    return 1.0f - shadow / SAMPLE_COUNT;
 }
 
 

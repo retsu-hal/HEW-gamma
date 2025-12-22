@@ -28,7 +28,6 @@ void	Manager_Initialize()
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
 	//SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
 
-
 	//本来の形
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
