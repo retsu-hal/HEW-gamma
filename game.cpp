@@ -4,6 +4,7 @@
 #include	"keyboard.h"
 #include	"Polygon3D.h"
 #include	"Player3D.h"
+#include "Player2D.h"
 #include	"LightSource.h"
 #include	"field.h"
 #include	"Effect.h"
@@ -11,9 +12,11 @@
 #include	"Audio.h"
 #include	"camera.h"
 #include	"direct3d.h"
-
-
 #include "Collision.h"
+
+#include "debug.h"
+
+static bool debugMode = TRUE;
 
 static	int		g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
@@ -28,6 +31,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	Player3D_Initialize(pDevice, pContext);
+	Player2D_Initialize(pDevice, pContext);
 
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
@@ -52,6 +56,7 @@ void Game_Finalize()
 	Camera_Finalize();
 	
 	Player3D_Finalize();
+	Player2D_Finalize();
 
 }
 
@@ -70,10 +75,11 @@ void Game_Update()
 	float shadowIntensity = 1.0f;
 	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
 
+	Player3D_Update();
+	Player2D_Update();
 	Camera_Update();
 	field_Update();
 
-	Player3D_Update();
 
 
 }
@@ -81,15 +87,23 @@ void Game_Update()
 
 void Game_Draw()
 { 
-	Camera_Draw();
 
+	Camera_Draw();
+	Light_Draw();
 
 	g_BallLight.SetEnable(TRUE);
 	Shader_SetLight(g_BallLight.Light);
 	SetDepthTest(TRUE);
 
 
-	XMFLOAT3 lightPos = g_ShadowLightPos;
+	XMFLOAT3 lightPos = GetLight_Position();
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		ImGui::Text("Pos: %.2f,%.2f,%.2f", lightPos.x, lightPos.y, lightPos.z);
+		ImGui::End();
+	}
+
 	float lightRadius = g_ShadowLightRadius;
 
 
@@ -151,6 +165,9 @@ void Game_Draw()
 
 	{
 		Player3D_Draw();
+	}
+	{
+		Player2D_Draw();
 	}
 	{
 		field_Draw();

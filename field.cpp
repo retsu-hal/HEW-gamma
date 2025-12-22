@@ -229,9 +229,13 @@ static ID3D11Buffer* g_VertexBuffer = NULL;		// 頂点バッファ
 static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
 
 MODEL* Model[FIELD_MAX] = { NULL };
-
 static std::vector<MAPDATA> g_MapData;
 
+static void EnsureBoxCreated()
+{
+	if (g_VertexBuffer && g_IndexBuffer) return;
+	CreateBox();
+}
 
 //=========================================================================================================
 // 初期化
@@ -248,29 +252,37 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	for (int i = 0; i < FIELD_MAX; ++i)
-	{
-		switch (i) {
-		case FIELD_GROUND:
-			CreateBox();
-		case FIELD_WALL:
-			break;
-		case FIELD_OBJ_BOX:
-			Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
-			break;
-		case FIELD_GOAL:
-			Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
-			break;
-			// 他のOBJタイプも必要なら追加
-		}
-	}
-
-	// Load map from file! 
 	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
 	{
 		// Error:  could not load map
 		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
 	}
+
+	for (size_t i = 0; i < g_MapData.size(); ++i)
+	{
+		g_MapData[i].scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	}
+
+
+	bool hasGround = false;
+	bool hasWall = false;
+	for (const auto& m : g_MapData) {
+		if (m.no == FIELD_GROUND) hasGround = true;
+		if (m.no == FIELD_WALL)   hasWall = true;
+	}
+
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1]) EnsureBoxCreated();
+
+	if (!Model[FIELD_OBJ_BOX])
+	{
+		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
+	}
+	if (!Model[FIELD_GOAL])
+	{
+		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
+	}
+
+	
 }
 
 
@@ -298,6 +310,13 @@ void field_Finalize(void)
 //=========================================================================================================
 void field_Update(void)
 {
+	for (size_t i = 0; i < g_MapData.size(); ++i)
+	{
+		if (g_MapData[i].no == FIELD_OBJ_1)
+		{
+			g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 5.0f);
+		}
+	}
 }
 
 //=========================================================================================================
@@ -312,29 +331,40 @@ void field_Draw(void)
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
-		XMMATRIX ScalingMatrix = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-		XMMATRIX TranslationMatrix = XMMatrixTranslation(g_MapData[i].pos.x, g_MapData[i].pos.y, g_MapData[i].pos.z);
+		XMMATRIX ScalingMatrix = XMMatrixScaling(
+			g_MapData[i].scale.x,
+			g_MapData[i].scale.y,
+			g_MapData[i].scale.z);
+		XMMATRIX TranslationMatrix = XMMatrixTranslation(
+			g_MapData[i].pos.x,
+			g_MapData[i].pos.y,
+			g_MapData[i].pos.z);
 		XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(
 			XMConvertToRadians(0.0f),
 			XMConvertToRadians(0.0f),
 			XMConvertToRadians(0.0f));
+
 		XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
 		XMMATRIX WVP = WorldMatrix * VP;
 
 		Shader_SetWorldMatrix(WorldMatrix);
 		Shader_SetMatrix(WVP);
 
-		g_pContext->PSSetShaderResources(0, 1, &g_Texture);
-		UINT stride = sizeof(Vertex3D);
-		UINT offset = 0;
-		g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
-		g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-		g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		
 
-		if (g_MapData[i].no == FIELD_GROUND || g_MapData[i].no == FIELD_WALL)// ima dake debugu you
-			g_pContext->DrawIndexed(6 * 6, 0, 0);
-		else
+		if (Model[g_MapData[i].no])
 			ModelDraw(Model[g_MapData[i].no]);
+		else
+		{
+			g_pContext->PSSetShaderResources(0, 1, &g_Texture);
+			UINT stride = sizeof(Vertex3D);
+			UINT offset = 0;
+			g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
+			g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+			g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+			g_pContext->DrawIndexed(6 * 6, 0, 0);
+		}
 	}
 }
 
@@ -451,10 +481,11 @@ bool LoadMapFromFile(const char* filename)
 
 			switch (line[x])
 			{
-			case 'G': type =  FIELD_GROUND;   break;
+			case 'G': type = FIELD_GROUND;   break;
 			case 'W':  type = FIELD_WALL; break;
 			case 'B':  type = FIELD_OBJ_BOX;  break;
 			case '1':  type = FIELD_GOAL;  break;
+			case 'S':  type = FIELD_OBJ_1;  break;
 			case '.': valid = false;      break;  // Empty
 			case ' ': valid = false;      break;  // Space
 			default:  valid = false;      break;

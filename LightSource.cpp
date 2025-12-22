@@ -6,6 +6,9 @@
 
 #include"Collision.h"
 
+#include "debug.h"
+static bool debugMode = TRUE;
+
 LightSource g_Light;
 
 //グローバル変数
@@ -35,26 +38,29 @@ void Light_Update(void)
 	g_Light.m_velo = XMFLOAT3(0, 0, 0);
 	//Camera Movement
 	if (Keyboard_IsKeyDown(KK_UP)) {
-		g_Light.m_velo.z = 1.0f / 60.0f;
+		g_Light.m_velo.z = 5.0f / 60.0f;
 	}
 	if (Keyboard_IsKeyDown(KK_DOWN)) {
-		g_Light.m_velo.z = -1.0f / 60.0f;
+		g_Light.m_velo.z = -5.0f / 60.0f;
 	}
 	if (Keyboard_IsKeyDown(KK_LEFT)) {
-		g_Light.m_velo.x = -1.0f / 60.0f;
+		g_Light.m_velo.y = -5.0f / 60.0f;
 
 	}
 	if (Keyboard_IsKeyDown(KK_RIGHT)) {
-		g_Light.m_velo.x = 1.0f / 60.0f;
+		g_Light.m_velo.y = 5.0f / 60.0f;
 	}
 
 	g_Light.m_position.x += g_Light.m_velo.x;
 	g_Light.m_position.y += g_Light.m_velo.y;
 	g_Light.m_position.z += g_Light.m_velo.z;
 
+	
+
 }
 void Light_Draw(void)
 {
+
 	//シェーダーを描画パイプライン設定
 	Shader_Begin();
 

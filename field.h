@@ -31,7 +31,12 @@ class MAPDATA
 public:
     XMFLOAT3 pos;    //位置
     FIELD no;        //種類
+
+	XMFLOAT3 scale;
 };
+
+// グローバルなフィールドデータ配列
+//extern std::vector<MAPDATA> g_MapData;
 
 //=========================================================================================================
 // プロトタイプ宣言
@@ -45,7 +50,6 @@ void CreateBox(void);
 bool LoadMapFromFile(const char* filename);
 std::vector<MAPDATA>& GetFieldMap();
 
-
 XMMATRIX Field_GetWorldMatrix(int i);
-void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix , int i);
+void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i);
 
