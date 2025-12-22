@@ -15,6 +15,7 @@ int debugHit = 0;
 // ボールとフィールドの当たり判定
 //=========================================================================================================
 
+// ボックスの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
 	return XMFLOAT3{
@@ -24,6 +25,7 @@ static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 	};
 }
 
+// プレイヤーの当たり判定中心座標を取得
 static XMFLOAT3 GetPlayerSolidCollider()
 {
 	PLAYER3D* p = GetPlayer3D();
@@ -34,6 +36,7 @@ static XMFLOAT3 GetPlayerSolidCollider()
 	return c;
 }
 
+// プレイヤーのトリガー当たり判定中心座標を取得
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
 	PLAYER3D* p = GetPlayer3D();
@@ -44,8 +47,11 @@ static XMFLOAT3 GetPlayerTriggerCollider()
 	return c;
 }
 
+// 2Dベクトルの内積
 static float Dot2D(const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.z * b.z; }
+// 2Dベクトルの長さ
 static float Len2D(const XMFLOAT3& v) { return sqrtf(v.x * v.x + v.z * v.z); }
+// 2Dベクトルの正規化
 static XMFLOAT3 Normalize2D(XMFLOAT3 v)
 {
 	float l = Len2D(v);
@@ -53,6 +59,7 @@ static XMFLOAT3 Normalize2D(XMFLOAT3 v)
 	v.x /= l; v.z /= l; v.y = 0.0f;
 	return v;
 }
+// カメラ基準で見たときのターゲットの位置を計算
 static TRIGGER_SIDE CalcSide_ByCamera(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
 {
 	XMFLOAT3 camPos = GetCameraPosition();
@@ -71,6 +78,7 @@ static TRIGGER_SIDE CalcSide_ByCamera(const XMFLOAT3& playerC, const XMFLOAT3& t
 	return (r >= 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
 }
 
+// フィールドが固体かどうかを取得
 static bool Field_IsSolid(FIELD t)
 {
 	switch (t)
@@ -78,7 +86,6 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_GROUND:
 	case FIELD_WALL:
 	case FIELD_OBJ_BOX:
-	case FIELD_GOAL:
 	case FIELD_OBJ_1:
 		return true;
 	default:
@@ -86,6 +93,7 @@ static bool Field_IsSolid(FIELD t)
 	}
 }
 
+// フィールドがトリガーかどうかを取得
 static bool Field_IsTrigger(FIELD t)
 {
 	switch (t)
@@ -99,7 +107,52 @@ static bool Field_IsTrigger(FIELD t)
 	}
 }
 
+// ワールド座標をスクリーン座標に変換（安全版）
+struct ScreenPoint// スクリーン座標
+{
+	ImVec2 pos;
+	bool   valid;
+};
+static ScreenPoint WorldToScreenSafe(const XMFLOAT3& pWS)
+{
+	using namespace DirectX;
 
+	ScreenPoint out{};
+	out.valid = false;
+
+	XMMATRIX view = GetViewMatrix();
+	XMMATRIX proj = GetProjectionMatrix();
+	XMMATRIX vp = XMMatrixMultiply(view, proj);
+
+	XMVECTOR vWS = XMVectorSet(pWS.x, pWS.y, pWS.z, 1.0f);
+	XMVECTOR vView = XMVector3TransformCoord(vWS, view);
+	float zView = XMVectorGetZ(vView);
+	if (zView <= 0.01f) {
+		return out;
+	}
+
+	XMVECTOR vClip = XMVector3TransformCoord(vWS, vp);
+	XMFLOAT3 ndc;
+	XMStoreFloat3(&ndc, vClip);
+
+	if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f) {
+		return out;
+	}
+
+	ImGuiViewport* vpIm = ImGui::GetMainViewport();
+	const ImVec2   pos = vpIm->Pos;
+	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
+
+	float x = pos.x + (ndc.x * 0.5f + 0.5f) * SCREEN_WIDTH;
+	float y = pos.y + (-ndc.y * 0.5f + 0.5f) * SCREEN_HEIGHT;
+
+	out.pos = ImVec2(x, y);
+	out.valid = true;
+	return out;
+}
+
+// プレイヤーとフィールドの当たり判定
 int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
@@ -207,94 +260,9 @@ int Player3DField_Collision()
 	return hit;
 }
 
-
-struct ScreenPoint// スクリーン座標
-{
-	ImVec2 pos;
-	bool   valid;
-};
-
-static ScreenPoint WorldToScreenSafe(const XMFLOAT3& pWS)// World Space -> Screen Space
-{
-	using namespace DirectX;
-
-	ScreenPoint out{};
-	out.valid = false;
-
-	XMMATRIX view = GetViewMatrix();
-	XMMATRIX proj = GetProjectionMatrix();
-	XMMATRIX vp = XMMatrixMultiply(view, proj);
-
-	XMVECTOR vWS = XMVectorSet(pWS.x, pWS.y, pWS.z, 1.0f);
-	XMVECTOR vView = XMVector3TransformCoord(vWS, view);
-	float zView = XMVectorGetZ(vView);
-	if (zView <= 0.01f) {
-		return out;
-	}
-
-	XMVECTOR vClip = XMVector3TransformCoord(vWS, vp);
-	XMFLOAT3 ndc;
-	XMStoreFloat3(&ndc, vClip);
-
-	if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f) {
-		return out;
-	}
-
-	ImGuiViewport* vpIm = ImGui::GetMainViewport();
-	const ImVec2   pos = vpIm->Pos;
-	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
-	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
-
-	float x = pos.x + (ndc.x * 0.5f + 0.5f) * SCREEN_WIDTH;
-	float y = pos.y + (-ndc.y * 0.5f + 0.5f) * SCREEN_HEIGHT;
-
-	out.pos = ImVec2(x, y);
-	out.valid = true;
-	return out;
-}
-
-static void DebugDrawAABB(const XMFLOAT3& center,
-	const XMFLOAT3& half, ImU32 color) {// AABBをデバッグ描画
-
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-
-	XMFLOAT3 c = center;
-	XMFLOAT3 h = half;
-
-	XMFLOAT3 corners[8] =
-	{
-		{c.x - h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y + h.y, c.z + h.z},
-		{c.x - h.x, c.y + h.y, c.z + h.z},
-	};
-
-	ScreenPoint pts[8];
-	for (int i = 0; i < 8; ++i)
-		pts[i] = WorldToScreenSafe(corners[i]);
-
-	auto Line = [&](int a, int b)
-		{
-			if (pts[a].valid && pts[b].valid)
-			{
-				draw->AddLine(pts[a].pos, pts[b].pos, color, 1.0f);
-			}
-		};
-
-
-	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
-
-	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
-
-	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
-}
-
+// AABB同士の当たり判定
 static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
-	const XMFLOAT3& c1, const XMFLOAT3& h1) {// AABB同士当たり判定
+	const XMFLOAT3& c1, const XMFLOAT3& h1) {
 
 	if (fabsf(c0.x - c1.x) > (h0.x + h1.x)) return false;
 	if (fabsf(c0.y - c1.y) > (h0.y + h1.y)) return false;
@@ -302,6 +270,7 @@ static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
 	return true;
 }
 
+// プレイヤーとトリガーの当たり判定
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
@@ -351,8 +320,48 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 	return true;
 }
 
+// AABBをデバッグ描画
+static void DebugDrawAABB(const XMFLOAT3& center,
+	const XMFLOAT3& half, ImU32 color) {
 
-void Collision_DebugDraw() {// 当たり判定のデバッグ描画
+	ImDrawList* draw = ImGui::GetBackgroundDrawList();
+
+	XMFLOAT3 c = center;
+	XMFLOAT3 h = half;
+
+	XMFLOAT3 corners[8] =
+	{
+		{c.x - h.x, c.y - h.y, c.z - h.z},
+		{c.x + h.x, c.y - h.y, c.z - h.z},
+		{c.x + h.x, c.y + h.y, c.z - h.z},
+		{c.x - h.x, c.y + h.y, c.z - h.z},
+		{c.x - h.x, c.y - h.y, c.z + h.z},
+		{c.x + h.x, c.y - h.y, c.z + h.z},
+		{c.x + h.x, c.y + h.y, c.z + h.z},
+		{c.x - h.x, c.y + h.y, c.z + h.z},
+	};
+
+	ScreenPoint pts[8];
+	for (int i = 0; i < 8; ++i)
+		pts[i] = WorldToScreenSafe(corners[i]);
+
+	auto Line = [&](int a, int b)
+		{
+			if (pts[a].valid && pts[b].valid)
+			{
+				draw->AddLine(pts[a].pos, pts[b].pos, color, 1.0f);
+			}
+		};
+
+
+	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
+
+	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
+
+	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
+}
+// 当たり判定のデバッグ描画
+void Collision_DebugDraw() {
 
 	// プレイヤーのAABB描画
 	PLAYER3D* player = GetPlayer3D();// プレイヤー取得
