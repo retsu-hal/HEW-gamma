@@ -57,7 +57,7 @@
 *.app
 
 ############################################
-# Debug information files
+# Debug / build information files
 ############################################
 *.dwo
 *.log
@@ -69,9 +69,18 @@
 .vs/
 x64/
 x86/
+base/        # ← bade → base に修正
 Debug/
 Release/
 ipch/
+
+############################################
+# Visual Studio intermediate files
+############################################
+*.iobj
+*.ipdb
+*.cache
+*.db
 
 ############################################
 # Visual Studio project build artifacts
@@ -110,8 +119,4 @@ Thumbs.db
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-<<<<<<< HEAD
 Makefile
-=======
-Makefile
->>>>>>> origin/chen
