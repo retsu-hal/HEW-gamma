@@ -53,7 +53,6 @@ float maxGravity = -0.25f;			//最大落下速度
 float jumpPower = 0.175f;			//ジャンプ力
 bool isGround = false;				//接地判定
 
-// 入力キー定義を関数化して宣言エラーを回避
 inline void DefineInputKeys()
 {
 	if (!gPad.IsConnected())
