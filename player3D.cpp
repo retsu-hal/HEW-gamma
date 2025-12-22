@@ -85,7 +85,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	g_Player3D.Model = ModelLoad("asset\\model\\Test_man_stand.fbx");
+	g_Player3D.Model = ModelLoad("asset\\model\\Hip_Hop_Dancing.fbx");
 
 	Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
 	FirstRotation = g_Player3D.Rotation = XMFLOAT3(-90.0f, 180.0f, 0.0f);
@@ -168,8 +168,8 @@ void Player3D_Gravity()
 
 	if (!g_Player3D.isGround)
 	{
-		if (g_Player3D.Velocity.y < maxGravity) g_Player3D.Velocity.y = maxGravity;
-		else g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
+		//if (g_Player3D.Velocity.y < maxGravity) g_Player3D.Velocity.y = maxGravity;
+		//else g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
 	}
 	else
 	{
@@ -360,7 +360,7 @@ void Player3D_Action()
 		//照明操作
 
 	}
-	isTrigger = false;
+	//isTrigger = false;
 
 	TRIGGER_HIT hit;
 	if (!Collision_PlayerTrigger(&hit, 0.2f)) return;
@@ -371,7 +371,7 @@ void Player3D_Action()
 
 		break;
 	case FIELD_OBJ_1:
-		isTrigger = true;
+		//isTrigger = true;
 		break;
 	case FIELD_OBJ_2:
 
@@ -419,14 +419,14 @@ void Player3D_Draw(void)
 
 	if (debugMode)
 	{
-		ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("Player3D.cpp"))
-		{
-			ImGui::Text("Pos: %.2f,%.2f,%.2f", g_Player3D.Position.x, g_Player3D.Position.y, g_Player3D.Position.z);
-			ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
-			ImGui::TreePop();
-		}
-		ImGui::End();
+		//ImGui::Begin("Debug - han");
+		//if (ImGui::TreeNode("Player3D.cpp"))
+		//{
+		//	ImGui::Text("Pos: %.2f,%.2f,%.2f", g_Player3D.Position.x, g_Player3D.Position.y, g_Player3D.Position.z);
+		//	ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
+		//	ImGui::TreePop();
+		//}
+		//ImGui::End();
 	}
 
 	XMMATRIX scale = XMMatrixScaling
@@ -459,6 +459,9 @@ void Player3D_Draw(void)
 	// 変換行列を頂点シェーダへセット
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
+
+	ModelUpdateAnimation(g_Player3D.Model, 10.0f / 600.0f);   // CPU animation
+	Shader_SetBones(g_Player3D.Model);	// upload bones
 
 	// モデルの描画リクエスト
 	ModelDraw(g_Player3D.Model);

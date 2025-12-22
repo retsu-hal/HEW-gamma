@@ -1,27 +1,71 @@
-
 #define NOMINMAX
-
 
 //#include "directx.h"
 //#include "texture.h"
 #include "model.h"
+#include "debug_ostream.h"
 
 //#include "renderer.h"
 
+XMMATRIX AiToXM(const aiMatrix4x4& m)
+{
+	return XMMatrixSet(
+		m.a1, m.b1, m.c1, m.d1,
+		m.a2, m.b2, m.c2, m.d2,
+		m.a3, m.b3, m.c3, m.d3,
+		m.a4, m.b4, m.c4, m.d4
+	);
+}
 
-
-MODEL* ModelLoad( const char *FileName )
+MODEL* ModelLoad(const char* FileName)
 {
 	MODEL* model = new MODEL;
 
 
-	const std::string modelPath( FileName );
+	const std::string modelPath(FileName);
 
-	model->AiScene = aiImportFile(FileName, aiProcessPreset_TargetRealtime_MaxQuality | aiProcess_ConvertToLeftHanded);
+	model->AiScene = aiImportFile(FileName,
+		aiProcessPreset_TargetRealtime_MaxQuality |
+		aiProcess_ConvertToLeftHanded |
+		aiProcess_GenSmoothNormals |           // Generate smooth normals
+		aiProcess_LimitBoneWeights |           // Limit bone weights to 4 per vertex
+		aiProcess_CalcTangentSpace |          // Calculate tangents and bitangents
+		aiProcess_Triangulate);               // Ensure triangles
+
+	hal::dout << "Loading model: " << FileName << std::endl;
+
+	if (!model->AiScene) {
+		hal::dout << "Failed to load model: " << aiGetErrorString() << std::endl;
+		delete model;
+		return nullptr;
+	}
+
+	hal::dout << "Model loaded successfully." << std::endl;
+	hal::dout << "  Meshes: " << model->AiScene->mNumMeshes << std::endl;
+	hal::dout << "  Animations: " << model->AiScene->mNumAnimations << std::endl;
+	hal::dout << "  Bones total: " << model->BoneMap.size() << std::endl;
+
+
+	XMMATRIX rootTransform = AiToXM(model->AiScene->mRootNode->mTransformation);
+	hal::dout << "Root node transform (before inverse):" << std::endl;
+	XMFLOAT4X4 debugRoot;
+	XMStoreFloat4x4(&debugRoot, rootTransform);
+	hal::dout << debugRoot._11 << " " << debugRoot._12 << " " << debugRoot._13 << " " << debugRoot._14 << std::endl;
+	hal::dout << debugRoot._21 << " " << debugRoot._22 << " " << debugRoot._23 << " " << debugRoot._24 << std::endl;
+	hal::dout << debugRoot._31 << " " << debugRoot._32 << " " << debugRoot._33 << " " << debugRoot._34 << std::endl;
+	hal::dout << debugRoot._41 << " " << debugRoot._42 << " " << debugRoot._43 << " " << debugRoot._44 << std::endl;
+
+	XMVECTOR det;
+	model->GlobalInverse = XMMatrixInverse(&det, rootTransform);
+	if (XMVector4Equal(det, XMVectorZero())) {
+		hal::dout << "Warning: Root transform is not invertible, using identity." << std::endl;
+		model->GlobalInverse = XMMatrixIdentity();
+	}
+
 	assert(model->AiScene);
 
-	model->VertexBuffer = new ID3D11Buffer*[model->AiScene->mNumMeshes];//頂点データポインター
-	model->IndexBuffer = new ID3D11Buffer*[model->AiScene->mNumMeshes];//インデックスデータポインター
+	model->VertexBuffer = new ID3D11Buffer * [model->AiScene->mNumMeshes];//頂点データポインター
+	model->IndexBuffer = new ID3D11Buffer * [model->AiScene->mNumMeshes];//インデックスデータポインター
 
 
 	for (unsigned int m = 0; m < model->AiScene->mNumMeshes; m++)
@@ -34,10 +78,98 @@ MODEL* ModelLoad( const char *FileName )
 
 			for (unsigned int v = 0; v < mesh->mNumVertices; v++)
 			{
-				vertex[v].position = XMFLOAT3(mesh->mVertices[v].x, -mesh->mVertices[v].z, mesh->mVertices[v].y);
-				vertex[v].texCoord = XMFLOAT2( mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
+				vertex[v].position = XMFLOAT3(
+					mesh->mVertices[v].x,
+					mesh->mVertices[v].y,
+					mesh->mVertices[v].z);
+				vertex[v].normal = XMFLOAT3(
+					mesh->mNormals[v].x,
+					mesh->mNormals[v].y,
+					mesh->mNormals[v].z);
+				//vertex[v].position = XMFLOAT3(mesh->mVertices[v].x, -mesh->mVertices[v].z, mesh->mVertices[v].y);
+				vertex[v].texCoord = XMFLOAT2(mesh->mTextureCoords[0][v].x, mesh->mTextureCoords[0][v].y);
 				vertex[v].color = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
-				vertex[v].normal = XMFLOAT3(mesh->mNormals[v].x, -mesh->mNormals[v].z, mesh->mNormals[v].y);
+				//vertex[v].normal = XMFLOAT3(mesh->mNormals[v].x, -mesh->mNormals[v].z, mesh->mNormals[v].y);
+				for (int i = 0; i < 4; i++)
+				{
+					vertex[v].boneIndex[i] = 0;
+					vertex[v].boneWeight[i] = 0.0f;
+				}
+			}
+
+
+			for (UINT b = 0; b < mesh->mNumBones; b++)
+			{
+				aiBone* bone = mesh->mBones[b];
+				std::string boneName = bone->mName.C_Str();
+
+				UINT boneIndex = 0;
+
+				if (model->BoneMap.find(boneName) == model->BoneMap.end())
+				{
+					boneIndex = (UINT)model->Bones.size();
+					model->BoneMap[boneName] = boneIndex;
+
+					BoneInfo bi;
+					bi.offset = AiToXM(bone->mOffsetMatrix);
+
+					model->Bones.push_back(bi);
+				}
+				else
+				{
+					boneIndex = model->BoneMap[boneName];
+				}
+
+				// Assign weights to vertices
+				for (UINT w = 0; w < bone->mNumWeights; w++)
+				{
+					UINT vtx = bone->mWeights[w].mVertexId;
+					float weight = bone->mWeights[w].mWeight;
+
+					for (int i = 0; i < 4; i++)
+					{
+						if (vertex[vtx].boneWeight[i] == 0.0f)
+						{
+							vertex[vtx].boneIndex[i] = boneIndex;
+							vertex[vtx].boneWeight[i] = weight;
+							break;
+						}
+					}
+				}
+			}
+
+			for (UINT v = 0; v < mesh->mNumVertices; v++)
+			{
+				float sum =
+					vertex[v].boneWeight[0] +
+					vertex[v].boneWeight[1] +
+					vertex[v].boneWeight[2] +
+					vertex[v].boneWeight[3];
+
+				if (sum > 0.0f)
+				{
+					for (int i = 0; i < 4; i++)
+						vertex[v].boneWeight[i] /= sum;
+				}
+			}
+
+			// Add debug output to check bone weights
+			for (UINT v = 0; v < mesh->mNumVertices && v < 10; v++) // Check first 10 vertices
+			{
+				hal::dout << "Vertex " << v << ": ";
+				hal::dout << "Indices: "
+					<< vertex[v].boneIndex[0] << ", "
+					<< vertex[v].boneIndex[1] << ", "
+					<< vertex[v].boneIndex[2] << ", "
+					<< vertex[v].boneIndex[3] << " | ";
+				hal::dout << "Weights: "
+					<< vertex[v].boneWeight[0] << ", "
+					<< vertex[v].boneWeight[1] << ", "
+					<< vertex[v].boneWeight[2] << ", "
+					<< vertex[v].boneWeight[3]
+					<< " (sum: " << (vertex[v].boneWeight[0] + vertex[v].boneWeight[1] +
+						vertex[v].boneWeight[2] + vertex[v].boneWeight[3]) << ")"
+					<< std::endl;
 			}
 
 			D3D11_BUFFER_DESC bd;
@@ -55,6 +187,7 @@ MODEL* ModelLoad( const char *FileName )
 
 			delete[] vertex;
 		}
+
 
 
 		// インデックスバッファ生成
@@ -90,10 +223,8 @@ MODEL* ModelLoad( const char *FileName )
 
 	}
 
-
-
 	//テクスチャ読み込み
-	for(int i = 0; i < model->AiScene->mNumTextures; i++)
+	for (int i = 0; i < model->AiScene->mNumTextures; i++)
 	{
 		aiTexture* aitexture = model->AiScene->mTextures[i];
 
@@ -111,8 +242,6 @@ MODEL* ModelLoad( const char *FileName )
 
 	return model;
 }
-
-
 
 
 void ModelRelease(MODEL* model)
@@ -138,7 +267,6 @@ void ModelRelease(MODEL* model)
 
 	delete model;
 }
-
 
 void ModelDraw(MODEL* model)
 {
@@ -171,5 +299,198 @@ void ModelDraw(MODEL* model)
 	}
 }
 
+const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName)
+{
+	for (UINT i = 0; i < animation->mNumChannels; i++)
+	{
+		const aiNodeAnim* channel = animation->mChannels[i];
+		if (channel->mNodeName.C_Str() == nodeName)
+			return channel;
+	}
+	return nullptr;
+}
+
+XMMATRIX InterpolatePosition(float time, const aiNodeAnim* channel)
+{
+	if (channel->mNumPositionKeys == 1)
+	{
+		auto& p = channel->mPositionKeys[0].mValue;
+		return XMMatrixTranslation(p.x, p.y, p.z);
+	}
+
+	UINT i = 0;
+	while (i + 1 < channel->mNumPositionKeys &&
+		time > (float)channel->mPositionKeys[i + 1].mTime)
+		i++;
+
+	UINT j = i + 1;
+	float dt =
+		(float)(channel->mPositionKeys[j].mTime -
+			channel->mPositionKeys[i].mTime);
+
+	float factor =
+		(time - (float)channel->mPositionKeys[i].mTime) / dt;
+
+	auto& a = channel->mPositionKeys[i].mValue;
+	auto& b = channel->mPositionKeys[j].mValue;
+
+	XMVECTOR A = XMVectorSet(a.x, a.y, a.z, 0);
+	XMVECTOR B = XMVectorSet(b.x, b.y, b.z, 0);
+	XMVECTOR P = XMVectorLerp(A, B, factor);
+
+	return XMMatrixTranslationFromVector(P);
+}
+
+XMMATRIX InterpolateRotation(float time, const aiNodeAnim* channel)
+{
+	if (channel->mNumRotationKeys == 1)
+	{
+		auto& q = channel->mRotationKeys[0].mValue;
+		return XMMatrixRotationQuaternion(
+			XMVectorSet(q.x, q.y, q.z, q.w));
+	}
+
+	UINT i = 0;
+	while (i + 1 < channel->mNumRotationKeys &&
+		time > (float)channel->mRotationKeys[i + 1].mTime)
+		i++;
+
+	UINT j = i + 1;
+	float dt =
+		(float)(channel->mRotationKeys[j].mTime -
+			channel->mRotationKeys[i].mTime);
+
+	float factor =
+		(time - (float)channel->mRotationKeys[i].mTime) / dt;
+
+	auto& a = channel->mRotationKeys[i].mValue;
+	auto& b = channel->mRotationKeys[j].mValue;
+
+	XMVECTOR A = XMVectorSet(a.x, a.y, a.z, a.w);
+	XMVECTOR B = XMVectorSet(b.x, b.y, b.z, b.w);
+	XMVECTOR Q = XMQuaternionSlerp(A, B, factor);
+
+	return XMMatrixRotationQuaternion(Q);
+}
+
+XMMATRIX InterpolateScale(float time, const aiNodeAnim* channel)
+{
+	if (channel->mNumScalingKeys == 1)
+	{
+		auto& s = channel->mScalingKeys[0].mValue;
+		return XMMatrixScaling(s.x, s.y, s.z);
+	}
+
+	UINT i = 0;
+	while (i + 1 < channel->mNumScalingKeys &&
+		time > (float)channel->mScalingKeys[i + 1].mTime)
+		i++;
+
+	UINT j = i + 1;
+	float dt =
+		(float)(channel->mScalingKeys[j].mTime -
+			channel->mScalingKeys[i].mTime);
+
+	float factor =
+		(time - (float)channel->mScalingKeys[i].mTime) / dt;
+
+	auto& a = channel->mScalingKeys[i].mValue;
+	auto& b = channel->mScalingKeys[j].mValue;
+
+	XMVECTOR A = XMVectorSet(a.x, a.y, a.z, 0);
+	XMVECTOR B = XMVectorSet(b.x, b.y, b.z, 0);
+	XMVECTOR S = XMVectorLerp(A, B, factor);
+
+	return XMMatrixScalingFromVector(S);
+}
+
+void ReadNodeHierarchy(
+	MODEL* model,
+	float animTime,
+	const aiNode* node,
+	const XMMATRIX& parentTransform)
+{
+	//XMMATRIX nodeTransform = AiToXM(node->mTransformation);
+	XMMATRIX nodeTransform = XMMatrixIdentity();
+
+	const aiAnimation* animation = model->AiScene->mAnimations[0];
+	const aiNodeAnim* channel =
+		FindNodeAnim(animation, node->mName.C_Str());
+
+	if (channel)
+	{
+		XMMATRIX T = InterpolatePosition(animTime, channel);
+		XMMATRIX R = InterpolateRotation(animTime, channel);
+		XMMATRIX S = InterpolateScale(animTime, channel);
+
+		//nodeTransform = T * R * S;
+		nodeTransform = S * R * T;
+	}
+
+	//XMMATRIX globalTransform = parentTransform * nodeTransform;
+	XMMATRIX globalTransform = nodeTransform * parentTransform;
+
+	auto it = model->BoneMap.find(node->mName.C_Str());
+	if (it != model->BoneMap.end())
+	{
+		UINT index = it->second;
+
+		//model->Bones[index].finalTransform =
+		//	model->GlobalInverse *
+		//	globalTransform *
+		//	model->Bones[index].offset;
+
+		model->Bones[index].finalTransform =
+			model->Bones[index].offset *
+			globalTransform;
+
+		//model->Bones[index].finalTransform =
+		//	model->GlobalInverse *
+		//	model->Bones[index].offset *
+		//	globalTransform;
+
+
+		if (index == 0 && animTime == 0.0f) {
+			XMFLOAT4X4 debugBone;
+			XMStoreFloat4x4(&debugBone, model->Bones[index].finalTransform);
+			hal::dout << "First bone final transform:" << std::endl;
+			hal::dout << debugBone._11 << " " << debugBone._12 << " " << debugBone._13 << " " << debugBone._14 << std::endl;
+			hal::dout << debugBone._21 << " " << debugBone._22 << " " << debugBone._23 << " " << debugBone._24 << std::endl;
+			hal::dout << debugBone._31 << " " << debugBone._32 << " " << debugBone._33 << " " << debugBone._34 << std::endl;
+			hal::dout << debugBone._41 << " " << debugBone._42 << " " << debugBone._43 << " " << debugBone._44 << std::endl;
+		}
+	}
+
+	for (UINT i = 0; i < node->mNumChildren; i++)
+	{
+		ReadNodeHierarchy(
+			model,
+			animTime,
+			node->mChildren[i],
+			globalTransform);
+	}
+}
+
+void ModelUpdateAnimation(MODEL* model, float deltaTime)
+{
+	if (!model->AiScene->HasAnimations() || model->Bones.empty())
+		return;
+
+	const aiAnimation* anim = model->AiScene->mAnimations[0];
+
+	float ticksPerSecond =
+		anim->mTicksPerSecond != 0.0f ?
+		(float)anim->mTicksPerSecond : 25.0f;
+
+	model->AnimationTime += deltaTime * ticksPerSecond;
+	float time =
+		fmod(model->AnimationTime, (float)anim->mDuration);
+
+	ReadNodeHierarchy(
+		model,
+		time,
+		model->AiScene->mRootNode,
+		XMMatrixIdentity());
+}
 
 

@@ -13,6 +13,11 @@
 using namespace DirectX;
 #include	"direct3d.h"
 
+struct BoneInfo
+{
+	XMMATRIX offset;        // inverse bind pose
+	XMMATRIX finalTransform;
+};
 
 struct MODEL
 {
@@ -22,10 +27,28 @@ struct MODEL
 	ID3D11Buffer** IndexBuffer;
 
 	std::unordered_map<std::string, ID3D11ShaderResourceView*> Texture;
-};
+	std::unordered_map<std::string, UINT> BoneMap;
+	std::vector<BoneInfo> Bones;
 
+	float AnimationTime = 0.0f;
+
+	XMMATRIX GlobalInverse;
+};
 
 MODEL* ModelLoad(const char* FileName);
 void ModelRelease(MODEL* model);
 
 void ModelDraw(MODEL* model);
+
+const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
+XMMATRIX InterpolatePosition(float time, const aiNodeAnim* channel);
+XMMATRIX InterpolateRotation(float time, const aiNodeAnim* channel);
+XMMATRIX InterpolateScale(float time, const aiNodeAnim* channel);
+
+void ReadNodeHierarchy(
+	MODEL* model,
+	float animTime,
+	const aiNode* node,
+	const XMMATRIX& parentTransform);
+
+void ModelUpdateAnimation(MODEL* model, float deltaTime);
