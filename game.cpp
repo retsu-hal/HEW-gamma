@@ -4,6 +4,7 @@
 #include	"keyboard.h"
 #include	"Polygon3D.h"
 #include	"Player3D.h"
+#include "Player2D.h"
 #include	"LightSource.h"
 #include	"field.h"
 #include	"Effect.h"
@@ -30,6 +31,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	Player3D_Initialize(pDevice, pContext);
+	Player2D_Initialize(pDevice, pContext);
 
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
@@ -54,6 +56,7 @@ void Game_Finalize()
 	Camera_Finalize();
 	
 	Player3D_Finalize();
+	Player2D_Finalize();
 
 }
 
@@ -73,6 +76,7 @@ void Game_Update()
 	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
 
 	Player3D_Update();
+	Player2D_Update();
 	Camera_Update();
 	field_Update();
 
@@ -161,6 +165,9 @@ void Game_Draw()
 
 	{
 		Player3D_Draw();
+	}
+	{
+		Player2D_Draw();
 	}
 	{
 		field_Draw();

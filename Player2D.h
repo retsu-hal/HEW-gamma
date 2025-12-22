@@ -8,8 +8,9 @@
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
-#define PLAYER2D_RADIUS (0.2f)			//半径
-
+#define PLAYER3D_SOLID_HALF_X (0.45f)
+#define PLAYER3D_SOLID_HALF_Y (0.9f)
+#define PLAYER3D_SOLID_HALF_Z (0.45f)
 //=========================================================================================================
 // 構造体
 //=========================================================================================================
@@ -33,10 +34,10 @@ public:
 	XMFLOAT3 Rotation;			//回転
 	XMFLOAT3 Scaling;			//サイズ
 	XMFLOAT3 Velocity;			//方向
-	XMFLOAT3 Acceleration;		//
+	XMFLOAT3 Acceleration;		
 	PLAYER2D_STATE state;		//状態
-	MODEL* Model;				//モデルデータ
-	XMVECTOR Quaternion;		//
+
+	XMVECTOR Quaternion;
 
 };
 
@@ -48,7 +49,7 @@ void Player2D_Finalize(void);
 void Player2D_Update();
 void Player2D_Draw(void);
 
-XMFLOAT3 GetPlayer2DPositon();
+XMFLOAT3 GetPlayer2DPosition();
 
 void Player2D_Gravity();
 void Player2D_Move();
@@ -60,15 +61,8 @@ void Player2D_Reset();
 void Player2D_Respawn();
 
 PLAYER2D* GetPlayer2D();
+XMFLOAT3 Player2D_GetSolidHalfSize();
 
 
-
-#define PLAYER2D_DETECT_HALF_X (1.5f)
-#define PLAYER2D_DETECT_HALF_Y (1.0f)
-#define PLAYER2D_DETECT_HALF_Z (1.5f)
-
-bool     Player2D_IsNearPoint(const XMFLOAT3& point);
-XMFLOAT3 Player2D_GetDetectHalfSize();
-PLAYER2D* GetPlayer2D();
 
 

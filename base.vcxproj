@@ -160,6 +160,7 @@
     <ClCompile Include="memo.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
+    <ClCompile Include="Player2D.cpp" />
     <ClCompile Include="Player3D.cpp" />
     <ClCompile Include="Polygon3D.cpp" />
     <ClCompile Include="Result.cpp" />
