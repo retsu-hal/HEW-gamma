@@ -3,6 +3,7 @@
 #include "mouse.h"
 #include "player3D.h"
 #include "debug.h"
+#include "Player2D.h"
 
 //=========================================================================================================
 // グローバル変数
@@ -71,9 +72,81 @@ void Camera_Finalize()
 //=========================================================================================================
 // 更新処理
 //=========================================================================================================
-void Camera_Update()
+void Player3DCamera_Update()
 {
-	cameraMouse_1();
+	Mouse_State ms{};
+	Mouse_GetState(&ms);
+
+	static bool relativeMode = true;
+	bool suppressDelta = false;
+	{
+		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+			relativeMode = !relativeMode;
+			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+				: MOUSE_POSITION_MODE_ABSOLUTE);
+		}
+	}
+
+	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
+	{
+		const float sensYaw = 0.25f;
+		const float sensPitch = 0.25f;
+		gYawDeg -= ms.x * sensYaw;
+		gPitchDeg += ms.y * sensPitch;
+
+		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+	}
+
+	XMFLOAT3 playerPos = GetPlayer3DPosition();
+	XMFLOAT3 desiredTarget = {
+		playerPos.x + gTargetOffset.x,
+		playerPos.y + gTargetOffset.y,
+		playerPos.z + gTargetOffset.z
+	};
+
+	float yaw = XMConvertToRadians(gYawDeg);
+	float pitch = XMConvertToRadians(gPitchDeg);
+
+	float cp = cosf(pitch), sp = sinf(pitch);
+	float cy = cosf(yaw), sy = sinf(yaw);
+
+	XMFLOAT3 back = { sy * cp, sp, cy * cp };
+	XMFLOAT3 desiredPos = {
+		desiredTarget.x - back.x * gDistance,
+		desiredTarget.y - back.y * gDistance,
+		desiredTarget.z - back.z * gDistance
+	};
+
+	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+	gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
+
+	CameraObject.AtPosition = gCamTarget;
+	CameraObject.Position = gCamPos;
+	CameraObject.UpVector = { 0, 1, 0 };
+
+}
+
+void Player2DCamera_Update()
+{
+	XMFLOAT3 pos = g_PlayerPosOld;
+	PLAYER2D* player2D = GetPlayer2D();
+
+	pos.x = g_PlayerPosOld.x - pos.x;
+	pos.y = g_PlayerPosOld.y - pos.y;
+	pos.z = g_PlayerPosOld.z - pos.z;
+
+	CameraObject.Position.x += pos.x;
+	CameraObject.Position.y += pos.y;
+	CameraObject.Position.z += pos.z;
+
+
+	CameraObject.AtPosition.x = g_PlayerPosOld.x;
+	CameraObject.AtPosition.y = g_PlayerPosOld.y;
+	CameraObject.AtPosition.z = g_PlayerPosOld.z;
+
+	CameraObject.Position.x += CameraObject.AtPosition.x;
+	CameraObject.Position.z += CameraObject.AtPosition.z;
 
 }
 

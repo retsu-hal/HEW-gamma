@@ -14,6 +14,8 @@
 #include	"direct3d.h"
 #include "Collision.h"
 
+#include "PlayerModeSwitchManager.h"
+
 #include "debug.h"
 
 static bool debugMode = TRUE;
@@ -29,6 +31,9 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
+
+	PlayerModeSwitchManager_Init();
+
 
 	Player3D_Initialize(pDevice, pContext);
 	Player2D_Initialize(pDevice, pContext);
@@ -65,6 +70,7 @@ void Game_Update()
 {
 	Light_Update();
 
+	PlayerModeSwitchManager_Update();
 
 	XMFLOAT3 LightPos = GetLight_Position();
 	g_BallLight.SetEnable(true);
@@ -75,9 +81,20 @@ void Game_Update()
 	float shadowIntensity = 1.0f;
 	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
 
-	Player3D_Update();
-	Player2D_Update();
-	Camera_Update();
+	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
+	{
+		Player3D_Update();
+		//Player3DCamera_Update();
+
+	}
+	else
+	{
+		Player2D_Update();
+		//Player2DCamera_Update();
+	}
+	Player3DCamera_Update();
+
+	
 	field_Update();
 
 
@@ -99,9 +116,7 @@ void Game_Draw()
 	XMFLOAT3 lightPos = GetLight_Position();
 	if (debugMode)
 	{
-		ImGui::Begin("Debug - han");
-		ImGui::Text("Pos: %.2f,%.2f,%.2f", lightPos.x, lightPos.y, lightPos.z);
-		ImGui::End();
+		
 	}
 
 	float lightRadius = g_ShadowLightRadius;
@@ -163,17 +178,22 @@ void Game_Draw()
 	Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 0.0f);
 
 
-	{
-		Player3D_Draw();
-	}
-	{
-		Player2D_Draw();
-	}
+	
+	
 	{
 		field_Draw();
 	}
 	{
 		Light_Draw();
+	}
+
+	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
+	{
+		Player3D_Draw();
+	}
+	else
+	{
+		Player2D_Draw();
 	}
 
 	Collision_DebugDraw();
