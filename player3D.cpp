@@ -126,12 +126,16 @@ void Player3D_Update()
 	switch (g_Player3D.state)
 	{
 	case PLAYER3D_STATE_IDLE:
+		
 		break;
 	case PLAYER3D_STATE_MOVE:
+
 		break;
 	case PLAYER3D_STATE_FALL:
+
 		break;
 	case PLAYER3D_STATE_ACTION:
+
 		break;
 	default:
 		break;
@@ -168,7 +172,8 @@ void Player3D_Gravity()
 
 	if (!g_Player3D.isGround)
 	{
-		//if (g_Player3D.Velocity.y < maxGravity) g_Player3D.Velocity.y = maxGravity;
+		//if (g_Player3D.Velocity.y 
+		// < maxGravity) g_Player3D.Velocity.y = maxGravity;
 		//else g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
 	}
 	else
@@ -229,7 +234,8 @@ void Player3D_Move()
 		if (fabsf(lx) < deadzone) lx = 0.0f;
 		if (fabsf(ly) < deadzone) ly = 0.0f;
 
-		inputDir.x = lx;       // 左右
+		// 左右が逆になる問題を修正（スティック右で x が正になるよう符号を反転）
+		inputDir.x = -lx;      // 左右
 		inputDir.y = 0.0f;     // 3Dなら Y は高さとして使わない
 		inputDir.z = -ly;      // 前後
 	}
