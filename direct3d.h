@@ -93,6 +93,8 @@ public:
 	XMFLOAT4 Direction;	//Œõ‚Ì•ûŒü
 	XMFLOAT4 Diffuse;		//Œõ‚ÌF
 	XMFLOAT4 Ambient;		//ŠÂ‹«F‚ÌF
+	float Radius;
+	XMFLOAT3 pad1;
 };
 
 class LIGHTOBJECT
@@ -103,6 +105,7 @@ public:
 	void SetDirection(XMFLOAT4 d) { Light.Direction = d; }
 	void SetDiffuse(XMFLOAT4 d) { Light.Diffuse = d; }
 	void SetAmbient(XMFLOAT4 a) { Light.Ambient = a; }
+	void SetRadius(float r) { Light.Radius = r; }
 };
 
 #define SHADOW_MAP_SIZE 2048
@@ -115,7 +118,7 @@ extern ID3D11SamplerState* g_pShadowSamplerState;
 extern ID3D11RasterizerState* g_pShadowRasterizer;
 
 extern XMFLOAT3 g_ShadowLightPos;
-extern float g_ShadowLightRadius;
+extern float g_ShadowRadius;
 
 void Direct3D_InitializeShadowMap();
 void Direct3D_BeginShadowPass(int faceIndex);

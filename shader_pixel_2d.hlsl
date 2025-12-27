@@ -18,6 +18,8 @@ struct LIGHT
     float4 Dir;
     float4 Diffuse;
     float4 Ambient;
+    float Radius;
+    float3 pad1;
 };
 
 cbuffer Buffer2 : register(b2)
@@ -30,7 +32,7 @@ cbuffer Buffer4 : register(b4)
 {
     float3 ShadowLightPos;
     float ShadowPassMode;
-    float ShadowLightRadius;
+    float ShadowRadius;
     float3 pad2;
     float ShadowIntensity;
 };
@@ -60,7 +62,7 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
         float distToLight = length(toPixel);
         
         float nearPlane = 0.1f;
-        float farPlane = ShadowLightRadius;
+        float farPlane = ShadowRadius;
         float depth = saturate((distToLight - nearPlane) / (farPlane - nearPlane));
         
         return float4(depth, depth, depth, 1.0f);
@@ -90,7 +92,7 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
     float distToLight = length(toPixel); // distance from light / ライトからの距離
 
     float att = 1.0f; // attenuation factor / 減衰係数
-    if (ShadowLightRadius > 0.0f)
+    if (ShadowRadius > 0.0f)
     {
         // Avoid divide-by-zero / 0 除算を回避
         float d = max(distToLight, 0.1f);
@@ -104,7 +106,7 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
 
         // Soft cutoff near radius so nothing pops
         // ライト半径付近でソフトにフェードアウトさせる
-        float edge = saturate(1.0f - distToLight / ShadowLightRadius);
+        float edge = saturate(1.0f - distToLight / ShadowRadius);
         //edge = pow(edge, 3.0f);
         //edge = edge * edge; // smoother edge / エッジをなめらかに
         att *= edge;
@@ -116,15 +118,15 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
     
     float minShadowDist = 0.5f;
 
-    if (ShadowLightRadius > 0.0f &&
+    if (ShadowRadius > 0.0f &&
         ShadowIntensity > 0.0f &&
-        distToLight <= ShadowLightRadius &&
+        distToLight <= ShadowRadius &&
         distToLight > minShadowDist)
     {
         float3 direction = normalize(toPixel);
 
         float nearPlane = 0.1f;
-        float farPlane = ShadowLightRadius;
+        float farPlane = ShadowRadius;
         float myDepth = (distToLight - nearPlane) / (farPlane - nearPlane);
 
         // Single sample (no PCF) to avoid banding artifacts
@@ -182,7 +184,7 @@ float SampleShadowPCF(
     float minRadius = 0.008f; // near = sharp
     float maxRadius = 0.04f; // far = soft
 
-    float dist01 = saturate(dist / ShadowLightRadius);
+    float dist01 = saturate(dist / ShadowRadius);
     float sampleRadius = lerp(minRadius, maxRadius, dist01 * dist01);
 
     // ================= ADAPTIVE BIAS =================
