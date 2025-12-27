@@ -98,7 +98,7 @@ void Title_Draw()
 		//テクスチャをセット
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);//g_Textureを使うように設定する
 
-	static XMFLOAT2 texcoord = { 0.0f, 0.0f };
+	//static XMFLOAT2 texcoord = { 0.0f, 0.0f };
 
 	//スプライト描画
 	SetBlendState(BLENDSTATE_NONE);//ブレンド無し

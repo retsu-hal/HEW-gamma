@@ -30,3 +30,17 @@
 * 十字キー 右	XINPUT_GAMEPAD_DPAD_RIGHT
 * 
 */
+
+
+/*
+ animation 利用方法
+
+ ModelDraw(Model)　→　の前に
+ {
+　ModelUpdateAnimation(Model, 10.0f / 600.0f);   // モデル　、deltatime
+　Shader_SetBones(Model);	// upload bones
+ }
+
+　ModelDraw(g_Player3D.Model);
+
+*/
