@@ -23,6 +23,8 @@ struct LIGHT
     float4 Dir;
     float4 Diffuse;
     float4 Ambient;
+    float Radius;
+    float3 pad1;
 };
 
 cbuffer Buffer2 : register(b2)
@@ -39,7 +41,7 @@ cbuffer Buffer4 : register(b4)
 {
     float3 ShadowLightPos;
     float ShadowPassMode;
-    float ShadowLightRadius;
+    float ShadowRadius;
     float3 pad2;
     float ShadowIntensity;
 };

@@ -73,7 +73,7 @@ void Game_Update()
 
 	g_ShadowLightPos = LightPos;
 	float shadowIntensity = 1.0f;
-	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
+	Shader_SetShadowLightData(LightPos, g_ShadowRadius, shadowIntensity);
 
 	Player3D_Update();
 	Player2D_Update();
@@ -104,7 +104,7 @@ void Game_Draw()
 		ImGui::End();
 	}
 
-	float lightRadius = g_ShadowLightRadius;
+	float lightRadius = g_ShadowRadius;
 
 
 
@@ -130,7 +130,7 @@ void Game_Draw()
 
 		{
 			std::vector<MAPDATA>& Map = GetFieldMap();
-			float maxShadowDist = g_ShadowLightRadius;
+			float maxShadowDist = g_ShadowRadius;
 
 			for (size_t i = 0; i < Map.size(); ++i)
 			{
