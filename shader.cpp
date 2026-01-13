@@ -237,7 +237,7 @@ void Shader_SetShadowLightData(const DirectX::XMFLOAT3& pos, float radius, float
 	{
 		DirectX::XMFLOAT3 ShadowLightPos;
 		float ShadowPassMode;
-		float ShadowLightRadius;
+		float ShadowRadius;
 		DirectX::XMFLOAT3 pad2;
 		float ShadowIntensity;
 	};
@@ -245,7 +245,7 @@ void Shader_SetShadowLightData(const DirectX::XMFLOAT3& pos, float radius, float
 	ShadowLightData data{};
 	data.ShadowLightPos = pos;
 	data.ShadowPassMode = shadowPassMode;
-	data.ShadowLightRadius = radius;
+	data.ShadowRadius = radius;
 	data.pad2 = DirectX::XMFLOAT3(0, 0, 0);
 	data.ShadowIntensity = intensity;
 

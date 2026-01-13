@@ -44,7 +44,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	
 
 	// Initialize the ball's light source
-	g_BallLight.SetEnable(true);
+	g_BallLight.SetEnable(false);
 	XMFLOAT4 para;
 	para = XMFLOAT4(0.08f, 0.08f, 0.1f, 1.0f);
 	g_BallLight.SetAmbient(para);
@@ -73,13 +73,13 @@ void Game_Update()
 	PlayerModeSwitchManager_Update();
 
 	XMFLOAT3 LightPos = GetLight_Position();
-	g_BallLight.SetEnable(true);
+	//g_BallLight.SetEnable(true);
 	g_BallLight.SetDirection(XMFLOAT4(0, 0, 0, 0));
 	g_BallLight.Light.Direction = XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f);
 
 	g_ShadowLightPos = LightPos;
 	float shadowIntensity = 1.0f;
-	Shader_SetShadowLightData(LightPos, g_ShadowLightRadius, shadowIntensity);
+	Shader_SetShadowLightData(LightPos, g_ShadowRadius, shadowIntensity);
 
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
@@ -119,7 +119,7 @@ void Game_Draw()
 		
 	}
 
-	float lightRadius = g_ShadowLightRadius;
+	float lightRadius = g_ShadowRadius;
 
 
 
@@ -145,7 +145,7 @@ void Game_Draw()
 
 		{
 			std::vector<MAPDATA>& Map = GetFieldMap();
-			float maxShadowDist = g_ShadowLightRadius;
+			float maxShadowDist = g_ShadowRadius;
 
 			for (size_t i = 0; i < Map.size(); ++i)
 			{

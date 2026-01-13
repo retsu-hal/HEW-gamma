@@ -43,7 +43,7 @@ static ID3D11Texture2D* g_pShadowDepthTex = nullptr;
 static ID3D11DepthStencilView* g_pShadowDepthDSV = nullptr;
 
 XMFLOAT3 g_ShadowLightPos = XMFLOAT3(0.0f, 1.0f, 10.0f);//ライトの座標
-float g_ShadowLightRadius = 20.0f;//ライトの半径
+float g_ShadowRadius = 50.0f;//ライトの半径
 
 bool Direct3D_Initialize(HWND hWnd)
 {
@@ -496,6 +496,17 @@ void Direct3D_InitializeShadowMap()
 		hal::dout << "Shadow sampler created successfully" << std::endl;
 	}
 
+	//D3D11_RASTERIZER_DESC rsDesc = {};
+	//rsDesc.FillMode = D3D11_FILL_SOLID;
+	//rsDesc.CullMode = D3D11_CULL_NONE;
+	//rsDesc.DepthClipEnable = TRUE;
+
+	//hr = g_pDevice->CreateRasterizerState(&rsDesc, &g_pShadowRasterizer);
+	//if (FAILED(hr))
+	//{
+	//	hal::dout << "ERROR: Failed to create shadow rasterizer state!" << std::endl;
+	//}
+
 	hal::dout << "Shadow map initialization complete!" << std::endl;
 }
 
@@ -512,6 +523,7 @@ void Direct3D_BeginShadowPass(int faceIndex)
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	g_pDeviceContext->RSSetViewports(1, &vp);
+	//g_pDeviceContext->RSSetState(g_pShadowRasterizer);
 
 	// Render to color cubemap face + depth buffer
 	g_pDeviceContext->OMSetRenderTargets(1, &g_pShadowCubemapRTV[faceIndex], g_pShadowDepthDSV);
