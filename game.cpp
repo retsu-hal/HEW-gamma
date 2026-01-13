@@ -14,6 +14,8 @@
 #include "Collision.h"
 
 #include "debug.h"
+#include "ui.h"
+#include "fade.h"
 
 static bool debugMode = TRUE;
 
@@ -22,7 +24,10 @@ LIGHTOBJECT g_BallLight;
 
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+//static UINT g_stencilPrev = 0;
 
+void OnGameStart();
+void OnOption();
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -33,7 +38,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	field_Initialize(pDevice, pContext);
 	Camera_Initialize();
-
+	UI_Pause_Reset();
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(true);
 	XMFLOAT4 para;
@@ -57,6 +62,33 @@ void Game_Finalize()
 
 void Game_Update()
 {
+	// Pause menu (ESCで開閉)
+	UI_Pause_Update();
+	UI_PAUSE_RESULT pr = UI_Pause_GetResult();
+	if (pr != UI_PAUSE_NONE)
+	{
+		if (pr == UI_PAUSE_RESUME)
+		{
+			UI_Pause_ConsumeResult();
+		}
+		else if (pr == UI_PAUSE_RESTART)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+			UI_Pause_Close();
+		}
+		else if (pr == UI_PAUSE_TO_TITLE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(40.0f, color, FADE_OUT, SCENE_TITLE);
+			UI_Pause_Close();
+		}
+	}
+
+	// Pause中はゲームを止める
+	if (UI_Pause_IsOpen())
+		return;
+
 	Light_Update();
 
 
@@ -76,17 +108,44 @@ void Game_Update()
 
 
 }
-
-
 void Game_Draw()
 { 
 
+   // ★ Pause中はゲーム画面を一切描かない
+	if (UI_Pause_IsOpen())
+	{
+		Direct3D_Clear();               // ★前フレームの3Dを完全に消す
+		SetDepthTest(FALSE);            // ★UIは2Dなので深度OFF
+		SetBlendState(BLENDSTATE_ALFA); // ★ブレンドを標準に戻す
+		UI_Pause_Draw();                // ★UIだけ描く
+		return;
+	}
+	//Direct3D_Clear();
 	Camera_Draw();
 	Light_Draw();
 
-	g_BallLight.SetEnable(TRUE);
-	Shader_SetLight(g_BallLight.Light);
+
 	SetDepthTest(TRUE);
+
+	Player3D_Draw();
+	field_Draw();
+
+	SetDepthTest(FALSE);
+	//// 文字（START/OPTIONS/EXIT）は加算で発光
+	//SetBlendState(BLENDSTATE_ADD);
+	//textImg.col = XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f);
+	//UI_DrawImage(textImg);
+
+	//g_BallLight.SetEnable(TRUE);
+	//Shader_SetLight(g_BallLight.Light);
+	//SetDepthTest(TRUE);
+	//
+	//g_BallLight.SetEnable(FALSE);
+	//Shader_SetLight(g_BallLight.Light);
+	//SetDepthTest(FALSE);
+
+
+	//UI_Pause_Draw();
 
 
 	XMFLOAT3 lightPos = GetLight_Position();
@@ -104,14 +163,11 @@ void Game_Draw()
 	for (int face = 0; face < 6; face++)
 	{
 		Direct3D_BeginShadowPass(face);
-
 		Shader_Begin();
-
 		Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 1.0f);
 
 		XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, lightPos, lightRadius);
 		Shader_SetShadowMatrix(lightViewProj);
-
 
 		{
 			XMMATRIX world = Light_GetWorldMatrix();
@@ -120,7 +176,6 @@ void Game_Draw()
 			Light_DrawRaw(world, world * lightViewProj);
 		}
 
-
 		{
 			Field_DrawShadowMap(lightViewProj);
 		}
@@ -128,7 +183,6 @@ void Game_Draw()
 
 	Direct3D_EndShadowPass();
 	
-
 	Shader_Begin();
 
 	Shader_SetLight(g_BallLight.Light);
@@ -151,5 +205,9 @@ void Game_Draw()
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);
 	SetDepthTest(FALSE);
+
+	 
+	//UI_Pause_Draw();
+
 }
 

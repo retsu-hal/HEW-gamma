@@ -5,7 +5,7 @@
 #include "fade.h"
 #include "shader.h"
 #include "mouse.h"
-
+#include "ui.h"
 //=========================================================================================================
 // 構造体宣言
 //=========================================================================================================
@@ -49,63 +49,96 @@ void Title_Finalize()
 
 }
 
+void Title_Update()
+{
+	Mouse_GetState(&ms);
+
+	// フェード中は操作させない
+	if (GetFadeState() != FADE_NONE)
+		return;
+
+	// タイトルメニューUI
+	UI_Title_Update();
+	UI_TITLE_RESULT r = UI_Title_GetResult();
+	if (r == UI_TITLE_NONE)
+		return;
+
+	// 決定結果で分岐
+	if (r == UI_TITLE_START)
+	{
+		XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+	}
+	else if (r == UI_TITLE_OPTIONS)
+	{
+		// ここは後で「オプション画面」に差し替え可能
+		// 今はゲーム開始と同じにしてある
+		XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+	}
+	else if (r == UI_TITLE_EXIT)
+	{
+		PostQuitMessage(0);
+	}
+
+	UI_Title_ConsumeResult();
+}
+
 //=========================================================================================================
 //更新処理
 //=========================================================================================================
-void Title_Update()
-{ 
-	Mouse_GetState(&ms);
-	//キー入力チェック
-	//スタートボタンが押されたらシーンを切り替え
-	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
-
-	if (ms.leftButton)
-	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
-}
+//void Title_Update()
+//{ 
+//	Mouse_GetState(&ms);
+//	//キー入力チェック
+//	//スタートボタンが押されたらシーンを切り替え
+//	//フェード処理中はキーを受け付けない
+//	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+//	{
+//		//フェードアウトさせてシーンを切り替える
+//		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+//		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+//	}
+//
+//	if (ms.leftButton)
+//	{
+//		//フェードアウトさせてシーンを切り替える
+//		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+//		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+//	}
+//}
 //=========================================================================================================
 //描画処理
 //=========================================================================================================
+
 void Title_Draw()
 {
-	// シェーダーを描画パイプラインに設定
-	Shader_Begin();
-
-	// 画面サイズ取得
-	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
-	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
-
+	 
+    UI_Title_Draw();
+	
+   //シェーダーを描画パイプラインに設定
+	//Shader_Begin();
+	//画面サイズ取得
+	//const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+	//const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
 	// 頂点シェーダーに変換行列を設定
-	Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
-		0.0f,
-		SCREEN_WIDTH,
-		SCREEN_HEIGHT,
-		0.0f,
-		0.0f,
-		1.0f));
-	//---------------------------------------------------
-
-
-		//テクスチャをセット
-	g_pContext->PSSetShaderResources(0, 1, &g_Texture);//g_Textureを使うように設定する
-
-	static XMFLOAT2 texcoord = { 0.0f, 0.0f };
-
-	//スプライト描画
-	SetBlendState(BLENDSTATE_NONE);//ブレンド無し
-	XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };	//スプライトの色
-	XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
-	XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
-	DrawSprite(pos, size, col);//1枚絵を表示
+	//Shader_SetMatrix(XMMatrixOrthographicOffCenterLH(
+	//	0.0f,
+	//	SCREEN_WIDTH,
+	//	SCREEN_HEIGHT,
+	//	0.0f,
+	//	0.0f,
+	//	1.0f));
+	////---------------------------------------------------
+	//	//テクスチャをセット
+	//g_pContext->PSSetShaderResources(0, 1, &g_Texture);//g_Textureを使うように設定する
+	//static XMFLOAT2 texcoord = { 0.0f, 0.0f };
+	////スプライト描画
+	//SetBlendState(BLENDSTATE_NONE);//ブレンド無し
+	//XMFLOAT4 col = { 1.0f, 1.0f, 1.0f, 1.0f };	//スプライトの色
+	//XMFLOAT2 pos = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+	//XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
+	//DrawSprite(pos, size, col);//1枚絵を表示
 
 }
 

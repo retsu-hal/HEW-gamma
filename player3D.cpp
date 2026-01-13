@@ -5,6 +5,7 @@
 #include "Collision.h"
 
 #include "debug.h"
+#include "ui.h"
 
 
 PLAYER3D g_Player3D;
@@ -160,6 +161,8 @@ void Player3D_Draw(void)
 	Shader_SetMatrix(wvp);
 
 	ModelDraw(g_Player3D.Model);
+
+
 }
 
 XMFLOAT3 GetPlayer3DPosition()

@@ -17,8 +17,9 @@
 #include "Manager.h"
 #include "Audio.h"	
 #include "Mouse.h"
-
+#include "ui.h"
 #include "debug.h"
+#include "game.h"
 
 //==================================
 //グローバル変数
@@ -113,7 +114,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	Shader_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext()); // シェーダの初期化
 	InitializeSprite();//スプライトの初期化
-
+	UI_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	InitAudio();	//サウンドの初期化
 
 	{// ImGui 初期化

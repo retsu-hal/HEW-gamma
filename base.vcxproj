@@ -155,7 +155,6 @@
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="manager.cpp" />
-    <ClCompile Include="memo.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
     <ClCompile Include="Player3D.cpp" />
@@ -166,6 +165,7 @@
     <ClCompile Include="sprite.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="Trail.cpp" />
+    <ClCompile Include="ui.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h" />
@@ -196,6 +196,7 @@
     <ClInclude Include="sprite.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="Trail.h" />
+    <ClInclude Include="ui.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader_pixel_2d.hlsl">
