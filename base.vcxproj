@@ -162,6 +162,7 @@
     <ClCompile Include="mouse.cpp" />
     <ClCompile Include="Player2D.cpp" />
     <ClCompile Include="Player3D.cpp" />
+    <ClCompile Include="PlayerModeSwitchManager.cpp" />
     <ClCompile Include="Polygon3D.cpp" />
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="score.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="mouse.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
+    <ClInclude Include="PlayerModeSwitchManager.h" />
     <ClInclude Include="PlayerStatus.h" />
     <ClInclude Include="Polygon3D.h" />
     <ClInclude Include="result.h" />
