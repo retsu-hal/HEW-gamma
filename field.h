@@ -33,6 +33,7 @@ public:
     FIELD no;        //種類
 
 	XMFLOAT3 scale;
+	XMFLOAT3 rotate;
 };
 
 // グローバルなフィールドデータ配列

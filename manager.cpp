@@ -8,11 +8,13 @@
 #include "Input.h"
 
 #include "debug.h"
+#include <string>
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
 static	SCENE	g_Scene = SCENE_NONE;	//現在のシーン番号
+static std::string sceneText = "NULL";
 
 extern Controller gPad; // コントローラー
 
@@ -48,23 +50,31 @@ void	Manager_Finalize()
 //=========================================================================================================
 void	Manager_Update()
 {
+
 	gPad.Update();
 	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
 	{
 		case SCENE_NONE:
 			break;
 		case SCENE_TITLE:
+			sceneText = "TITLE";
 			Title_Update();	
 			break;
 		case SCENE_GAME:
+			sceneText = "GAME";
 			Game_Update();
 			break;
 		case SCENE_RESULT:
+			sceneText = "RESULT";
 			Result_Update();
 			break;
 		default:
 			break;
 	}
+
+	ImGui::Begin("Debug - han");
+	ImGui::Text("SCENE: %s", sceneText.c_str());
+	ImGui::End();
 
 
 	Fade_Update();

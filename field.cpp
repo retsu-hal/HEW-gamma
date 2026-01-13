@@ -261,6 +261,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
 		g_MapData[i].scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+		g_MapData[i].rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	}
 
 
@@ -315,6 +316,7 @@ void field_Update(void)
 		if (g_MapData[i].no == FIELD_OBJ_1)
 		{
 			g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 5.0f);
+			g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
 		}
 	}
 }
@@ -340,9 +342,9 @@ void field_Draw(void)
 			g_MapData[i].pos.y,
 			g_MapData[i].pos.z);
 		XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(
-			XMConvertToRadians(0.0f),
-			XMConvertToRadians(0.0f),
-			XMConvertToRadians(0.0f));
+			XMConvertToRadians(g_MapData[i].rotate.x),
+			XMConvertToRadians(g_MapData[i].rotate.y),
+			XMConvertToRadians(g_MapData[i].rotate.z));
 
 		XMMATRIX WorldMatrix = ScalingMatrix * RotationMatrix * TranslationMatrix;
 		XMMATRIX WVP = WorldMatrix * VP;
