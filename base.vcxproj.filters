@@ -230,7 +230,7 @@
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
     <FxCompile Include="shader_vertex_2d.hlsl">
-      <Filter>シェーダーファイル</Filter>
+      <Filter>ソース ファイル</Filter>
     </FxCompile>
   </ItemGroup>
   <ItemGroup>

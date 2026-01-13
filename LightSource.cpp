@@ -37,18 +37,25 @@ void Light_Update(void)
 {
 	g_Light.m_velo = XMFLOAT3(0, 0, 0);
 	//Camera Movement
-	if (Keyboard_IsKeyDown(KK_UP)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD8)) {
 		g_Light.m_velo.z = 5.0f / 60.0f;
 	}
-	if (Keyboard_IsKeyDown(KK_DOWN)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD2)) {
 		g_Light.m_velo.z = -5.0f / 60.0f;
 	}
-	if (Keyboard_IsKeyDown(KK_LEFT)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD7)) {
 		g_Light.m_velo.y = -5.0f / 60.0f;
 
 	}
-	if (Keyboard_IsKeyDown(KK_RIGHT)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD9)) {
 		g_Light.m_velo.y = 5.0f / 60.0f;
+	}
+	if (Keyboard_IsKeyDown(KK_NUMPAD4)) {
+		g_Light.m_velo.x = -5.0f / 60.0f;
+
+	}
+	if (Keyboard_IsKeyDown(KK_NUMPAD6)) {
+		g_Light.m_velo.x = 5.0f / 60.0f;
 	}
 
 	g_Light.m_position.x += g_Light.m_velo.x;

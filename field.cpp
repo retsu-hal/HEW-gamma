@@ -272,7 +272,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (m.no == FIELD_WALL)   hasWall = true;
 	}
 
-	if (hasGround || hasWall || !Model[FIELD_OBJ_1]) EnsureBoxCreated();
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2]) EnsureBoxCreated();
 
 	if (!Model[FIELD_OBJ_BOX])
 	{
@@ -438,6 +438,10 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 		return; // skip shadow
 		g_pContext->DrawIndexed(6 * 6, 0, 0); // ¨@—~‚µ‚¢‚È‚çreturn‚Ìã‚É‚¢‚ê‚Î‚¢‚¢
 	}
+	else if (g_MapData[i].no == FIELD_OBJ_2)
+	{
+		g_pContext->DrawIndexed(6 * 6, 0, 0);
+	}
 	else if (Model[g_MapData[i].no])
 		ModelDraw(Model[g_MapData[i].no]);
 
@@ -488,6 +492,7 @@ bool LoadMapFromFile(const char* filename)
 			case 'B':  type = FIELD_OBJ_BOX;  break;
 			case '1':  type = FIELD_GOAL;  break;
 			case 'S':  type = FIELD_OBJ_1;  break;
+			case '2':  type = FIELD_OBJ_2;  break;
 			case '.': valid = false;      break;  // Empty
 			case ' ': valid = false;      break;  // Space
 			default:  valid = false;      break;
