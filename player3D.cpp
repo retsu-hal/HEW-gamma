@@ -131,16 +131,16 @@ void Player3D_Update()
 	switch (g_Player3D.state)
 	{
 	case PLAYER3D_STATE_IDLE:
-		
+		//Idleアニメーション
 		break;
 	case PLAYER3D_STATE_MOVE:
-
+		//Moveアニメーション
 		break;
 	case PLAYER3D_STATE_FALL:
-
+		//Fallアニメーション
 		break;
 	case PLAYER3D_STATE_ACTION:
-
+		//Actionアニメーション
 		break;
 	default:
 		break;
@@ -356,8 +356,14 @@ void Player3D_Change()
 {
 	if (Keyboard_IsKeyDownTrigger(ChangeKey))
 	{
-		//�ǂɋ߂Â����Ƃ��ɔ���
-		//�e�ɕϐg
+		// ◆影に変身
+		// 
+		// 壁に近づいたときに反応
+		// ↓
+		// 2Dキャラクターを3Dプレイヤーの座標を参照して生成
+		// ↓
+		// 3Dプレイヤーを削除する
+		// 
 	}
 }
 
@@ -365,10 +371,42 @@ void Player3D_Action()
 {
 	if (Keyboard_IsKeyDownTrigger(ActionKey))
 	{
-		//��������
-
-
-		//�Ɩ�����
+		// ◆箱を持つ
+		//
+		// アニメーション
+		// ↓
+		// 箱をプレイヤーの座標に追従させる
+		// ↓
+		// 箱持ち状態をtrueにする
+		// 
+		// 
+		// ◆箱を離す
+		// 
+		// アニメーション
+		// ↓
+		// 箱をプレイヤーに追従させるのをやめる
+		// ↓
+		// 箱持ち状態をfalseにする
+		// 
+		// 
+		// ◆照明操作を始める
+		// 
+		// アニメーション
+		// ↓
+		// 照明操作状態をtrueにする
+		// ↓
+		// 移動入力を受け付けなくする
+		// 
+		//  
+		// ◆照明操作をやめる
+		// 
+		// アニメーション
+		// ↓
+		// 照明操作状態をfalseにする
+		// ↓
+		// 移動入力を受け付ける
+		// 
+		// 
 
 	}
 	isTrigger = false;
