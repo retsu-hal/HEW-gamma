@@ -322,7 +322,12 @@ void Player2D_Change()
 {
 	if (Keyboard_IsKeyDownTrigger(ChangeKey))
 	{
-
+		// ◆3Dに変身
+		// 
+		// 3Dキャラクターを2Dプレイヤーの座標を参照して生成
+		// ↓
+		// 2Dプレイヤーを削除する
+		//
 	}
 }
 
