@@ -8,9 +8,9 @@
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
-#define PLAYER3D_SOLID_HALF_X (0.45f)
-#define PLAYER3D_SOLID_HALF_Y (0.9f)
-#define PLAYER3D_SOLID_HALF_Z (0.45f)
+#define PLAYER2D_SOLID_HALF_X (0.5f)
+#define PLAYER2D_SOLID_HALF_Y (1.0f)
+#define PLAYER2D_SOLID_HALF_Z (0.07f)
 //=========================================================================================================
 // 構造体
 //=========================================================================================================
@@ -26,6 +26,7 @@ enum PLAYER2D_STATE
 
 	PLAYER2D_STATE_MAX,
 };
+
 
 class PLAYER2D
 {
@@ -64,5 +65,7 @@ PLAYER2D* GetPlayer2D();
 XMFLOAT3 Player2D_GetSolidHalfSize();
 
 
-
+void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot);
+void Player2D_Uninit();
+void Player2D_SetActive(bool active);
 

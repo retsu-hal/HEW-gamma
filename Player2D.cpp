@@ -20,39 +20,38 @@
 PLAYER2D g_Player2D;
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
+static  ID3D11Buffer* g_VertexBuffer = NULL;
 static ID3D11ShaderResourceView* g_Texture;		//テクスチャ変数
-static ID3D11Buffer* g_VertexBuffer = NULL;		// 頂点バッファ
-static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
+
 static float g_StopTime = 0.0f;
 
-static Vertex3D Player2D[4]{
-	// 頂点8　左上
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
+static Vertex3D Player2DVertex[4] = {
+	{//頂点0 LEFT-TOP
+		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//座標
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
+		XMFLOAT2(0.0f,0.0f)					//テクスチャ座標
 	},
-	// 頂点9　右上
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
+
+	{//頂点1 RIGHT-TOP
+		XMFLOAT3(1.0f, 1.0f, 0.0f),		//座標
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
+		XMFLOAT2(1.0f,0.0f)					//テクスチャ座標
 	},
-	// 頂点10　左下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
+
+	{//頂点2 LEFT-BOTTOM
+		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//座標
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
+		XMFLOAT2(0.0f,1.0f)					//テクスチャ座標
 	},
-	// 頂点11　右下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
+
+	{//頂点3 RIGHT-BOTTOM
+		XMFLOAT3(1.0f, 0.0f, 0.0f),		//座標
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
+		XMFLOAT2(1.0f,1.0f)					//テクスチャ座標
 	},
 };
 
@@ -89,12 +88,15 @@ static const auto ResetKey = KK_R;		//リセット
 static const auto MenuKey = KK_ESCAPE;	//終了
 
 static bool debugMode = TRUE;
-static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
-#define PLAYER3D_SOLID_HALF_X (0.45f)
-#define PLAYER3D_SOLID_HALF_Y (0.9f)
-#define PLAYER3D_SOLID_HALF_Z (0.45f)
+
+
+static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
+	PLAYER2D_SOLID_HALF_X,
+	PLAYER2D_SOLID_HALF_Y,
+	PLAYER2D_SOLID_HALF_Z
 );
 
+static bool g_Player2DActive = false;
 
 //=========================================================================================================
 // 初期化処理
@@ -124,13 +126,12 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	D3D11_MAPPED_SUBRESOURCE msr;
 	g_pContext->Map(g_VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
 	Vertex3D* vertex = (Vertex3D*)msr.pData;
-	CopyMemory(&vertex[0], &Player2D[0], sizeof(Vertex3D) * 4);
+	CopyMemory(&vertex[0], &Player2DVertex[0], sizeof(Vertex3D) * 4);
 	g_pContext->Unmap(g_VertexBuffer, 0);
 
-
-	Firstposition = g_Player2D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
-	FirstRotation = g_Player2D.Rotation = XMFLOAT3(-90.0f, 180.0f, 0.0f);
-	FirstScaling = g_Player2D.Scaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	Firstposition = g_Player2D.Position = XMFLOAT3(0.0f, 1.5f, 0.0f);
+	FirstRotation = g_Player2D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	FirstScaling = g_Player2D.Scaling = XMFLOAT3(1.0f, 2.0f, 1.0f);
 	FirstVelocity = g_Player2D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	FirstAcceleration = g_Player2D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	FirstState = g_Player2D.state = PLAYER2D_STATE_MOVE;
@@ -144,8 +145,6 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
-	SAFE_RELEASE(g_VertexBuffer);
-	SAFE_RELEASE(g_IndexBuffer);
 	SAFE_RELEASE(g_Texture);
 }
 
@@ -154,6 +153,9 @@ void Player2D_Finalize(void)
 //=========================================================================================================
 void Player2D_Update()
 {
+	if (!g_Player2DActive) return;
+
+
 	Player2D_Respawn();	//リスポーン
 
 	// プレイヤー操作
@@ -162,6 +164,8 @@ void Player2D_Update()
 	Player2D_Change();	//影変身
 
 	//Player2D_Gravity();	//重力処理
+	
+
 
 
 	switch (g_Player2D.state)
@@ -191,10 +195,16 @@ XMFLOAT3 GetPlayer2DPosition()
 	return g_Player2D.Position;
 }
 
+
+
+//=========================================================================================================
+// セッター
+//=========================================================================================================
+
+
 //=========================================================================================================
 // 処理
 //=========================================================================================================
-
 void Player2D_Gravity()
 {
 	// 横・縦・奥行きの加算
@@ -299,7 +309,6 @@ void Player2D_Move()
 		while (delta < -180.0f) delta += 360.0f;
 
 		const float rotateLerp = 0.2f; //0..1（1で即時回転）
-		g_Player2D.Rotation.y = currentYaw + delta * rotateLerp;
 	}
 	// 入力無しのときは回転を変更しない（最後に向いていた方向を保持）
 }
@@ -343,9 +352,9 @@ PLAYER2D* GetPlayer2D()
 	return &g_Player2D;
 }
 
-XMFLOAT3 Player2D_GetDetectHalfSize()
+XMFLOAT3 Player2D_GetSolidHalfSize()
 {
-	return g_SolidHalfSize;
+	return g_SolidHalfSize_2d;
 }
 
 //=========================================================================================================
@@ -353,6 +362,8 @@ XMFLOAT3 Player2D_GetDetectHalfSize()
 //=========================================================================================================
 void Player2D_Draw(void)
 {
+
+	if (!g_Player2DActive) return;
 
 	XMMATRIX scale = XMMatrixScaling
 	(
@@ -383,14 +394,45 @@ void Player2D_Draw(void)
 	// 変換行列を頂点シェーダへセット
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
-
-	// モデルの描画リクエスト
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 	UINT stride = sizeof(Vertex3D);
 	UINT offset = 0;
 	g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
-	g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
-	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
-	g_pContext->DrawIndexed(4, 0, 0);
+	SetBlendState(BLENDSTATE_ALFA);
+	g_pContext->Draw(4, 0);
+
+}
+
+void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
+{
+	Firstposition = g_Player2D.Position = pos;
+	FirstRotation = g_Player2D.Rotation = rot;
+
+	g_Player2D.Scaling = XMFLOAT3(1.0f, 2.0f, 1.0f);
+
+	g_Player2D.Velocity = XMFLOAT3(0, 0, 0);
+	g_Player2D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+
+	g_Player2D.state = PLAYER2D_STATE_MOVE;
+	g_StopTime = 0.0f;
+
+	g_Player2D.Quaternion = XMQuaternionIdentity();
+
+	g_Player2DActive = true;
+}
+
+void Player2D_Uninit()
+{
+	g_Player2DActive = false;
+
+	g_Player2D.Velocity = XMFLOAT3(0, 0, 0);
+	g_Player2D.state = PLAYER2D_STATE_IDLE;
+	g_StopTime = 0.0f;
+}
+
+void Player2D_SetActive(bool active)
+{
+	g_Player2DActive = active;
 }

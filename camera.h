@@ -26,7 +26,8 @@ public:
 //=========================================================================================================
 void Camera_Initialize();
 void Camera_Finalize();
-void Camera_Update();
+void Player3DCamera_Update();
+void Player2DCamera_Update();
 void Camera_Draw();
 void SetCameraFov(float);
 void SetCameraAspect(float);
