@@ -91,8 +91,8 @@ void Player3DCamera_Update()
 	{
 		const float sensYaw = 0.25f;
 		const float sensPitch = 0.25f;
-		gYawDeg -= ms.x * sensYaw;
-		gPitchDeg += ms.y * sensPitch;
+		gYawDeg += ms.x * sensYaw;
+		gPitchDeg -= ms.y * sensPitch;
 
 		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
 		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
