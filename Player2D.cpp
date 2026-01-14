@@ -1,4 +1,5 @@
 #include "Player2D.h"
+#include "PlayerStatus.h"
 #include "keyboard.h"
 #include "Camera.h"
 #include "shader.h"
@@ -54,26 +55,6 @@ static Vertex3D Player2DVertex[4] = {
 		XMFLOAT2(1.0f,1.0f)					//テクスチャ座標
 	},
 };
-
-// 入力ベクトル
-static XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
-
-// リセット用
-static XMFLOAT3		Firstposition;
-static XMFLOAT3		FirstRotation;
-static XMFLOAT3		FirstScaling;
-static XMFLOAT3		FirstVelocity;
-static XMFLOAT3		FirstAcceleration;
-static PLAYER2D_STATE	FirstState;
-static float			FirstStopTime;
-static XMVECTOR		FirstQuaternion;
-
-// プレイヤーステータス
-static float moveSpeed = 0.005f;			//移動速度
-static float maxMoveSpeed = 1.0f;			//最大移動速度
-static float maxGravity = -0.25f;			//最大落下速度
-static float jumpPower = 0.175f;			//ジャンプ力
-static bool isGround = false;				//接地判定
 
 // キーボード定義
 // 移動
@@ -217,9 +198,9 @@ void Player2D_Gravity()
 		g_Player2D.Velocity.x += g_Player2D.Acceleration.x;
 	}
 
-	if (g_Player2D.Velocity.y < maxGravity)
+	if (g_Player2D.Velocity.y < gravityPower)
 	{
-		g_Player2D.Velocity.y = maxGravity;
+		g_Player2D.Velocity.y = gravityPower;
 	}
 	else
 	{
