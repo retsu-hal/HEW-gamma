@@ -5,6 +5,13 @@
 using namespace mu;
 using namespace DirectX;
 
+static ShadowManager g_ShadowManager;
+
+ShadowManager* GetShadowManager()
+{
+    return &g_ShadowManager;
+}
+
 
 // フィールドの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
@@ -120,7 +127,7 @@ static bool RaycastReceivers(
 }
 
 // レイとフィールド受け手群の当たり判定
-static bool RaycastScene(
+static bool RaycastToReceivers(
     const XMFLOAT3& rayO, const XMFLOAT3& rayDir, float maxDist,
     const std::vector<MAPDATA>& receivers, const MAPDATA* skip,
     RayHit* outHit)
@@ -134,9 +141,7 @@ static bool RaycastScene(
         const auto& m = receivers[i];
         if (skip == &m) continue;
 
-        if (!(m.no == FIELD_WALL || m.no == FIELD_GROUND ||
-            m.no == FIELD_OBJ_BOX || m.no == FIELD_OBJ_1))
-            continue;
+        if (m.no != FIELD_OBJ_1) continue;
 
         float t;
         XMFLOAT3 n;
@@ -151,6 +156,7 @@ static bool RaycastScene(
                 best.t = t;
                 best.point = rayO + rayDir * t;
                 best.normal = n;
+                best.mapIndex = i;
             }
         }
     }
@@ -237,7 +243,6 @@ static XMFLOAT3 ComputeCentroid(const std::vector<XMFLOAT3>& pts)
 
 // 2D凸包計算（Andrew's monotone chainアルゴリズム）
 struct P2 { float x, y; int idx; };
-
 static float Cross2(const P2& a, const P2& b, const P2& c)
 {
     return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
@@ -335,7 +340,7 @@ bool Shadow_Build(
     {
         XMFLOAT3 dir = Normalize(sample - lightPos);
         RayHit hit;
-        if (RaycastScene(lightPos, dir, config.maxCastDist, receivers, &caster, &hit))
+        if (RaycastToReceivers(lightPos, dir, config.maxCastDist, receivers, &caster, &hit))
         {
             hits.push_back({ hit.point, hit.normal });
         }
@@ -398,3 +403,73 @@ bool Shadow_Build(
 
     return true;
 }
+
+void ShadowManager::Initialize()
+{
+    m_Shadows.clear();
+    m_CasterIndices.clear();
+}
+
+void ShadowManager::Finalize()
+{
+    ClearAll();
+}
+
+void ShadowManager::ClearAll()
+{
+    m_Shadows.clear();
+    m_CasterIndices.clear();
+}
+
+bool ShadowManager::HasValidShadows() const
+{
+    for (const auto& shadow : m_Shadows)
+    {
+        if (shadow.isValid) return true;
+    }
+    return false;
+}
+
+void ShadowManager::UpdateAllShadows(
+    const XMFLOAT3& lightPos,
+    const std::vector<MAPDATA>& map,
+    const ShadowBuildConfig& config)
+{
+
+    std::vector<int> newCasterIndices;
+    for (int i = 0; i < (int)map.size(); ++i)
+    {
+        if (map[i].no == FIELD_OBJ_2)
+        {
+            newCasterIndices.push_back(i);
+        }
+    }
+
+    bool castersChanged = (newCasterIndices != m_CasterIndices);
+
+    if (castersChanged)
+    {
+        m_CasterIndices = newCasterIndices;
+        m_Shadows.resize(m_CasterIndices.size());
+
+        for (size_t i = 0; i < m_Shadows.size(); ++i)
+        {
+            Shadow_Clear(m_Shadows[i]);
+            m_Shadows[i].casterIndex = m_CasterIndices[i];
+        }
+    }
+
+    for (size_t i = 0; i < m_CasterIndices.size(); ++i)
+    {
+        int casterIdx = m_CasterIndices[i];
+        const MAPDATA& caster = map[casterIdx];
+        ShadowPrism& shadow = m_Shadows[i];
+
+        if (Shadow_NeedsRebuild(shadow, lightPos, caster, config.rebuildThreshold))
+        {
+            Shadow_Build(shadow, caster, lightPos, map, config);
+            shadow.casterIndex = casterIdx;
+        }
+    }
+}
+

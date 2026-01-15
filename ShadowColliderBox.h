@@ -25,6 +25,7 @@ struct ShadowPrism
 
 	// キャッシュ情報
     bool isValid = false;
+    int casterIndex = -1;
     DirectX::XMFLOAT3 cachedLightPos{};
     DirectX::XMFLOAT3 cachedCasterPos{};
     float cachedCasterYaw = 0.0f;
@@ -40,6 +41,7 @@ struct ShadowBuildConfig
     float samePlaneDot = 0.95f;
     float thickness = 0.15f;   
     float mergeEpsilon = 0.01f;
+    float rebuildThreshold = 0.01f;
 };
 
 // ============================================================
@@ -63,3 +65,30 @@ bool Shadow_NeedsRebuild(
 
 // シャドウプリズムのクリア
 void Shadow_Clear(ShadowPrism& prism);
+
+class ShadowManager
+{
+public:
+    void Initialize();
+
+    void Finalize();
+
+    void UpdateAllShadows(
+        const DirectX::XMFLOAT3& lightPos,
+        const std::vector<MAPDATA>& map,
+        const ShadowBuildConfig& config);
+
+    const std::vector<ShadowPrism>& GetShadows() const { return m_Shadows; }
+
+    size_t GetShadowCount() const { return m_Shadows.size(); }
+
+    bool HasValidShadows() const;
+
+    void ClearAll();
+
+private:
+    std::vector<ShadowPrism> m_Shadows;
+    std::vector<int> m_CasterIndices;
+};
+
+ShadowManager* GetShadowManager();

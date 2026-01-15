@@ -55,8 +55,11 @@ int Player3DField_Collision();
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
 
 
-void Collision_SetShadowPrism(const ShadowPrism* prism);
+void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms);
+const std::vector<const ShadowPrism*>& Collision_GetShadowPrisms();
 
+
+void Collision_SetShadowPrism(const ShadowPrism* prism);
 const ShadowPrism* Collision_GetShadowPrism();
 
 void Collision_DebugClearExtraBoxes();

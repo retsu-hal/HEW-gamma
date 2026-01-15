@@ -14,7 +14,7 @@ using namespace mu;
 
 static bool debugMode = TRUE;
 
-static const ShadowPrism* g_pShadowPrism = nullptr;
+static std::vector<const ShadowPrism*> g_ShadowPrisms;
 static ShadowDebugOptions g_ShadowDebugOpts;
 
 struct ExtraDebugBox
@@ -25,17 +25,41 @@ struct ExtraDebugBox
 	XMFLOAT3 rotDeg{};
 	ImU32 color = 0;
 };
+
 static std::vector<ExtraDebugBox> g_ExtraBoxes;
+
+//=========================================================================================================
+// ボールとフィールドの当たり判定
+//=========================================================================================================
+
+void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms)
+{
+	g_ShadowPrisms = prisms;
+}
+
+const std::vector<const ShadowPrism*>& Collision_GetShadowPrisms()
+{
+	return g_ShadowPrisms;
+}
+
+void Collision_SetShadowPrism(const ShadowPrism* prism)
+{
+	g_ShadowPrisms.clear();
+	if (prism && prism->isValid)
+	{
+		g_ShadowPrisms.push_back(prism);
+	}
+}
+
+const ShadowPrism* Collision_GetShadowPrism()
+{
+	return g_ShadowPrisms.empty() ? nullptr : g_ShadowPrisms[0];
+}
 
 static ImU32 MakeColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
 	return ((ImU32)a << 24) | ((ImU32)b << 16) | ((ImU32)g << 8) | (ImU32)r;
 }
-
-
-//=========================================================================================================
-// ボールとフィールドの当たり判定
-//=========================================================================================================
 
 // ボックスの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
@@ -372,19 +396,11 @@ static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& tar
 }
 
 
-
-void Collision_SetShadowPrism(const ShadowPrism* prism)
-{
-	g_pShadowPrism = prism;
-}
-const ShadowPrism* Collision_GetShadowPrism()
-{
-	return g_pShadowPrism;
-}
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options)
 {
 	g_ShadowDebugOpts = options;
 }
+
 void Collision_DebugClearExtraBoxes()
 {
 	g_ExtraBoxes.clear();
@@ -556,12 +572,29 @@ void Collision_DebugDraw()
 		}
 	}
 
-	// シャドウプリズム
-	if (g_pShadowPrism && g_pShadowPrism->isValid)
+	if (!g_ShadowPrisms.empty())
 	{
-		DebugDrawShadowPrism(*g_pShadowPrism, g_ShadowDebugOpts);
+		static const ImU32 prismColors[] = {
+			IM_COL32(255, 50, 50, 220), 
+			IM_COL32(50, 255, 50, 220), 
+			IM_COL32(50, 50, 255, 220), 
+			IM_COL32(255, 255, 50, 220),
+			IM_COL32(255, 50, 255, 220),
+			IM_COL32(50, 255, 255, 220),
+		};
+		const int colorCount = sizeof(prismColors) / sizeof(prismColors[0]);
+
+		for (size_t i = 0; i < g_ShadowPrisms.size(); ++i)
+		{
+			if (g_ShadowPrisms[i] && g_ShadowPrisms[i]->isValid)
+			{
+				ShadowDebugOptions opts = g_ShadowDebugOpts;
+				opts.prismColor = prismColors[i % colorCount];
+				DebugDrawShadowPrism(*g_ShadowPrisms[i], opts);
+			}
+		}
 	}
-	// 追加デバッグボックス
+
 	for (const auto& box : g_ExtraBoxes)
 	{
 		if (box.isOBB)
