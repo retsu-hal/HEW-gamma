@@ -1,24 +1,21 @@
 #include "Player2D.h"
 #include "PlayerStatus.h"
-#include "keyboard.h"
+#include "KeyBind.h"
 #include "Camera.h"
 #include "shader.h"
-#include "sprite.h"
-#include "shader.h"
 #include "Collision.h"
+#include "sprite.h"
+
 
 //=========================================================================================================
 // デバッグ用
+//=========================================================================================================
 #include "debug.h"
-
-//=========================================================================================================
-// マクロ定義
-//=========================================================================================================
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
-PLAYER2D g_Player2D;
+PLAYER g_Player2D;
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
 static  ID3D11Buffer* g_VertexBuffer = NULL;
@@ -56,21 +53,7 @@ static Vertex3D Player2DVertex[4] = {
 	},
 };
 
-// キーボード定義
-// 移動
-static const auto RightKey = KK_D;		//右移動
-static const auto LeftKey = KK_A;		//左移動
-// 行動
-static const auto JumpKey = KK_SPACE;	//ジャンプ
-static const auto ActionKey = KK_F;		//アクション
-static const auto ChangeKey = KK_F;		//影変身
-// その他
-static const auto ResetKey = KK_R;		//リセット
-static const auto MenuKey = KK_ESCAPE;	//終了
-
-static bool debugMode = TRUE;
-
-
+//プレイヤー当たり判定サイズ
 static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 	PLAYER2D_SOLID_HALF_X,
 	PLAYER2D_SOLID_HALF_Y,
@@ -109,16 +92,6 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Vertex3D* vertex = (Vertex3D*)msr.pData;
 	CopyMemory(&vertex[0], &Player2DVertex[0], sizeof(Vertex3D) * 4);
 	g_pContext->Unmap(g_VertexBuffer, 0);
-
-	Firstposition = g_Player2D.Position = XMFLOAT3(0.0f, 1.5f, 0.0f);
-	FirstRotation = g_Player2D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	FirstScaling = g_Player2D.Scaling = XMFLOAT3(1.0f, 2.0f, 1.0f);
-	FirstVelocity = g_Player2D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	FirstAcceleration = g_Player2D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	FirstState = g_Player2D.state = PLAYER2D_STATE_MOVE;
-	FirstStopTime = g_StopTime = 0.0f;
-	FirstQuaternion = g_Player2D.Quaternion = XMQuaternionIdentity();
-
 }
 
 //=========================================================================================================
@@ -136,32 +109,28 @@ void Player2D_Update()
 {
 	if (!g_Player2DActive) return;
 
-
 	Player2D_Respawn();	//リスポーン
+
+	Player2D_Gravity();	//重力処理
 
 	// プレイヤー操作
 	Player2D_Move();	//移動
 	Player2D_Jump();	//ジャンプ
 	Player2D_Change();	//影変身
 
-	//Player2D_Gravity();	//重力処理
-	
-
-
 
 	switch (g_Player2D.state)
 	{
-	case PLAYER2D_STATE_IDLE:
-
+	case PLAYER_STATE_IDLE:
+		//Idleアニメーション
+		break;
+	case PLAYER_STATE_MOVE:
+		//Moveアニメーション
+		break;
+	case PLAYER_STATE_FALL:
+		//Fallアニメーション
 		break;
 
-	case PLAYER2D_STATE_MOVE:
-
-		break;
-
-	case PLAYER2D_STATE_FALL:
-
-		break;
 
 	default:
 		break;
@@ -189,27 +158,27 @@ XMFLOAT3 GetPlayer2DPosition()
 void Player2D_Gravity()
 {
 	// 横・縦・奥行きの加算
-	if (g_Player2D.Velocity.x >= maxMoveSpeed)
+	if (g_Player2D.Velocity.x >= g_Player2D.maxMoveSpeed)
 	{
-		g_Player2D.Velocity.x = maxMoveSpeed;
+		g_Player2D.Velocity.x = g_Player2D.maxMoveSpeed;
 	}
 	else
 	{
 		g_Player2D.Velocity.x += g_Player2D.Acceleration.x;
 	}
 
-	if (g_Player2D.Velocity.y < gravityPower)
+	if (g_Player2D.Velocity.y < g_Player2D.gravityPower)
 	{
-		g_Player2D.Velocity.y = gravityPower;
+		g_Player2D.Velocity.y = g_Player2D.gravityPower;
 	}
 	else
 	{
 		g_Player2D.Velocity.y += g_Player2D.Acceleration.y;
 	}
 
-	if (g_Player2D.Velocity.z >= maxMoveSpeed)
+	if (g_Player2D.Velocity.z >= g_Player2D.maxMoveSpeed)
 	{
-		g_Player2D.Velocity.z = maxMoveSpeed;
+		g_Player2D.Velocity.z = g_Player2D.maxMoveSpeed;
 	}
 	else
 	{
@@ -234,7 +203,7 @@ void Player2D_Gravity()
 		if (g_StopTime > (60.0f * 2))
 		{
 			g_Player2D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			g_Player2D.state = PLAYER2D_STATE_IDLE;
+			g_Player2D.state = PLAYER_STATE_IDLE;
 			g_StopTime = 0.0f;
 		}
 	}
@@ -250,7 +219,7 @@ void Player2D_Respawn()
 		Player2D_Reset();
 		return;
 	}
-	if (Keyboard_IsKeyDownTrigger(ResetKey))
+	if (IsInputDown(ResetKey, gPad))
 	{
 		Player2D_Reset();
 	}
@@ -258,11 +227,13 @@ void Player2D_Respawn()
 
 void Player2D_Move()
 {
+	XMFLOAT3 inputDir;
+	
 	// 前フレームの入力をリセット（キーを離したときに以前の入力が残らないようにする）
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	if (Keyboard_IsKeyDown(RightKey)) inputDir.x += +1.0f;
-	if (Keyboard_IsKeyDown(LeftKey))  inputDir.x += -1.0f;
+	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;
+	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;
 
 
 	// 長さ計算
@@ -272,15 +243,15 @@ void Player2D_Move()
 		// 正規化ベクトル × 加速
 		inputDir.x /= len;
 		inputDir.z /= len;
-		g_Player2D.Velocity.x += inputDir.x * moveSpeed;
-		g_Player2D.Velocity.z += inputDir.z * moveSpeed;
+		g_Player2D.Velocity.x += inputDir.x * g_Player2D.moveSpeed;
+		g_Player2D.Velocity.z += inputDir.z * g_Player2D.moveSpeed;
 
 		// 入力がある場合にのみ向きを更新
 		float targetYawRad = atan2f(inputDir.x, inputDir.z); //(x,z) -> 前方を Z とした角度
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
 
 		// モデルの初期向きに合わせるオフセット（必要なら調整）
-		const float yawOffset = FirstRotation.y;
+		const float yawOffset = g_Player2D.FirstRotation.y;
 		targetYawDeg += yawOffset;
 
 		// スムーズ回転（角度差を最短経路で求めて補間）
@@ -296,12 +267,12 @@ void Player2D_Move()
 
 void Player2D_Jump()
 {
-	if (Keyboard_IsKeyDownTrigger(JumpKey))
+	if (IsInputDown(JumpKey, gPad))
 	{
-		g_Player2D.Velocity.y += jumpPower;//テスト
-		if (isGround)
+		g_Player2D.Velocity.y += g_Player2D.jumpPower;//テスト
+		if (g_Player2D.isGround)
 		{
-			g_Player2D.Velocity.y += jumpPower;//上向きに初速を与える
+			g_Player2D.Velocity.y += g_Player2D.jumpPower;//上向きに初速を与える
 			// 空中にいる状態へ
 			// g_Player2D.state = PLAYER2D_STATE_FALL;
 		}
@@ -310,7 +281,7 @@ void Player2D_Jump()
 
 void Player2D_Change()
 {
-	if (Keyboard_IsKeyDownTrigger(ChangeKey))
+	if (IsInputDown(ChangeKey, gPad))
 	{
 		// ◆3Dに変身
 		// 
@@ -323,17 +294,17 @@ void Player2D_Change()
 
 void Player2D_Reset()
 {
-	g_Player2D.Position = Firstposition;
-	g_Player2D.Rotation = FirstRotation;
-	g_Player2D.Scaling = FirstScaling;
-	g_Player2D.Velocity = FirstVelocity;
-	g_Player2D.Acceleration = FirstAcceleration;
-	g_Player2D.state = FirstState;
-	g_StopTime = FirstStopTime;
-	g_Player2D.Quaternion = FirstQuaternion;
+	g_Player2D.Position = g_Player2D.Firstposition;
+	g_Player2D.Rotation = g_Player2D.FirstRotation;
+	g_Player2D.Scaling = g_Player2D.FirstScaling;
+	g_Player2D.Velocity = g_Player2D.FirstVelocity;
+	g_Player2D.Acceleration = g_Player2D.FirstAcceleration;
+	g_Player2D.state = g_Player2D.FirstState;
+	g_StopTime = g_Player2D.FirstStopTime;
+	g_Player2D.Quaternion = g_Player2D.FirstQuaternion;
 }
 
-PLAYER2D* GetPlayer2D()
+PLAYER* GetPlayer2D()
 {
 	return &g_Player2D;
 }
@@ -393,15 +364,15 @@ void Player2D_Draw(void)
 
 void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
 {
-	Firstposition = g_Player2D.Position = pos;
-	FirstRotation = g_Player2D.Rotation = rot;
+	g_Player2D.Firstposition = g_Player2D.Position = pos;
+	g_Player2D.FirstRotation = g_Player2D.Rotation = rot;
 
 	g_Player2D.Scaling = XMFLOAT3(1.0f, 2.0f, 1.0f);
 
 	g_Player2D.Velocity = XMFLOAT3(0, 0, 0);
 	g_Player2D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 
-	g_Player2D.state = PLAYER2D_STATE_MOVE;
+	g_Player2D.state = PLAYER_STATE_MOVE;
 	g_StopTime = 0.0f;
 
 	g_Player2D.Quaternion = XMQuaternionIdentity();
@@ -414,7 +385,7 @@ void Player2D_Uninit()
 	g_Player2DActive = false;
 
 	g_Player2D.Velocity = XMFLOAT3(0, 0, 0);
-	g_Player2D.state = PLAYER2D_STATE_IDLE;
+	g_Player2D.state = PLAYER_STATE_IDLE;
 	g_StopTime = 0.0f;
 }
 
