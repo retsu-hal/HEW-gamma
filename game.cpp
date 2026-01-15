@@ -17,6 +17,7 @@
 #include "PlayerModeSwitchManager.h"
 
 #include "debug.h"
+#include "ShadowColliderBox.h"
 
 static bool debugMode = TRUE;
 
@@ -26,6 +27,8 @@ LIGHTOBJECT g_BallLight;
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
+static ShadowPrism g_ShadowPrism;
+static ShadowBuildConfig g_ShadowConfig;
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -45,11 +48,22 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(false);
-	XMFLOAT4 para;
-	para = XMFLOAT4(0.08f, 0.08f, 0.1f, 1.0f);
-	g_BallLight.SetAmbient(para);
-	para = XMFLOAT4(1.0f, 0.95f, 0.85f, 1.0f);
-	g_BallLight.SetDiffuse(para);
+	g_BallLight.SetAmbient(XMFLOAT4(0.08f, 0.08f, 0.1f, 1.0f));
+	g_BallLight.SetDiffuse(XMFLOAT4(1.0f, 0.95f, 0.85f, 1.0f));
+
+	g_ShadowConfig.edgeSamples = 4;
+	g_ShadowConfig.thickness = 0.15f;
+	g_ShadowConfig.maxCastDist = 100.0f;
+
+	ShadowDebugOptions debugOpts;
+	debugOpts.drawPrism = true;
+	debugOpts.drawNormal = true;
+	debugOpts.drawVertices = true;
+	debugOpts.drawAABB = false;
+	debugOpts.prismColor = IM_COL32(255, 50, 50, 220);
+	debugOpts.normalColor = IM_COL32(255, 255, 0, 255);
+	debugOpts.vertexColor = IM_COL32(0, 255, 0, 255);
+	Collision_SetShadowDebugOptions(debugOpts);
 }
 
 
@@ -68,18 +82,55 @@ void Game_Finalize()
 
 void Game_Update()
 {
+	Collision_DebugClearExtraBoxes();
+
+
 	Light_Update();
+	field_Update();
+
 
 	PlayerModeSwitchManager_Update();
 
 	XMFLOAT3 LightPos = GetLight_Position();
 	//g_BallLight.SetEnable(true);
-	g_BallLight.SetDirection(XMFLOAT4(0, 0, 0, 0));
-	g_BallLight.Light.Direction = XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f);
-
+	g_BallLight.SetDirection(XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f));
 	g_ShadowLightPos = LightPos;
+
 	float shadowIntensity = 1.0f;
 	Shader_SetShadowLightData(LightPos, g_ShadowRadius, shadowIntensity);
+
+	auto& map = GetFieldMap();
+
+	int casterIdx = -1;
+	for (int i = 0; i < (int)map.size(); ++i)
+		if (map[i].no == FIELD_OBJ_2 ) { casterIdx = i; break; }
+
+
+	bool hasShadow = false;
+	if (casterIdx >= 0)
+	{
+		if (Shadow_NeedsRebuild(g_ShadowPrism, LightPos, map[casterIdx], 0.01f))
+		{
+			hasShadow = Shadow_Build(
+				g_ShadowPrism,
+				map[casterIdx],
+				LightPos,
+				map,
+				g_ShadowConfig);
+		}
+		else
+		{
+			hasShadow = g_ShadowPrism.isValid;
+		}
+	}
+	else
+	{
+		Shadow_Clear(g_ShadowPrism);
+	}
+
+	Collision_SetShadowPrism(hasShadow ? &g_ShadowPrism : nullptr);
+
+
 
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
@@ -94,11 +145,6 @@ void Game_Update()
 	}
 	Player3DCamera_Update();
 
-	
-	field_Update();
-
-
-
 }
 
 
@@ -112,23 +158,19 @@ void Game_Draw()
 	Shader_SetLight(g_BallLight.Light);
 	SetDepthTest(TRUE);
 
-
-	XMFLOAT3 lightPos = GetLight_Position();
 	if (debugMode)
 	{
-		
+
 	}
 
+	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
-
 
 
 	for (int face = 0; face < 6; face++)
 	{
 		Direct3D_BeginShadowPass(face);
-
 		Shader_Begin();
-
 		Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 1.0f);
 
 		XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, lightPos, lightRadius);
@@ -137,8 +179,6 @@ void Game_Draw()
 
 		{
 			XMMATRIX world = Light_GetWorldMatrix();
-			Shader_SetWorldMatrix(world);
-			Shader_SetMatrix(world * lightViewProj);
 			Light_DrawRaw(world, world * lightViewProj);
 		}
 
@@ -149,17 +189,11 @@ void Game_Draw()
 
 			for (size_t i = 0; i < Map.size(); ++i)
 			{
-				XMFLOAT3 objPos = Map[i].pos;
-
-				XMVECTOR v = XMLoadFloat3(&objPos) - XMLoadFloat3(&lightPos);
-				float distSq = XMVectorGetX(XMVector3LengthSq(v));
-
-				if (distSq > maxShadowDist * maxShadowDist)
-					continue; // skip shadow draw
+				XMVECTOR v = XMLoadFloat3(&Map[i].pos) - XMLoadFloat3(&lightPos);
+				if (XMVectorGetX(XMVector3LengthSq(v)) > maxShadowDist * maxShadowDist)
+					continue;
 
 				XMMATRIX world = Field_GetWorldMatrix((int)i);
-				//Shader_SetWorldMatrix(world);
-				//Shader_SetMatrix(world * lightViewProj);
 				Field_DrawShadowMap(world, world * lightViewProj, (int)i);
 			}
 		}
@@ -169,17 +203,12 @@ void Game_Draw()
 	
 
 	Shader_Begin();
-
 	Shader_SetLight(g_BallLight.Light);
-
-
 	Shader_SetShadowMap(g_pShadowCubemapSRV);
 	Shader_SetShadowSampler(g_pShadowSamplerState);
 	Shader_SetShadowLightData(lightPos, lightRadius, 1.0f, 0.0f);
 
 
-	
-	
 	{
 		field_Draw();
 	}

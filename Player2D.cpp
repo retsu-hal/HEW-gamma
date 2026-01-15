@@ -9,6 +9,8 @@
 //=========================================================================================================
 // デバッグ用
 #include "debug.h"
+#include "MathUtil.h"
+using namespace mu;
 
 //=========================================================================================================
 // マクロ定義
@@ -145,6 +147,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
+	SAFE_RELEASE(g_VertexBuffer);
 	SAFE_RELEASE(g_Texture);
 }
 
@@ -246,7 +249,7 @@ void Player2D_Gravity()
 
 
 	// 静止チェック
-	float len = (g_Player2D.Velocity.x * g_Player2D.Velocity.x + g_Player2D.Velocity.y * g_Player2D.Velocity.y + g_Player2D.Velocity.z * g_Player2D.Velocity.z);
+	float len = LengthSq(g_Player2D.Velocity);
 	if (len <= 0.0002f)
 	{
 		g_StopTime++;
@@ -285,12 +288,11 @@ void Player2D_Move()
 
 
 	// 長さ計算
-	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
+	float len = Length2D(inputDir);
 	if (len > 0.0001f)
 	{
 		// 正規化ベクトル × 加速
-		inputDir.x /= len;
-		inputDir.z /= len;
+		inputDir = Normalize2D(inputDir);
 		g_Player2D.Velocity.x += inputDir.x * moveSpeed;
 		g_Player2D.Velocity.z += inputDir.z * moveSpeed;
 

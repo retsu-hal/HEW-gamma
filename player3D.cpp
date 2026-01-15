@@ -8,6 +8,8 @@
 #include "Input.h"
 
 #include "debug.h"
+#include "MathUtil.h"
+using namespace mu;
 
 
 PLAYER3D g_Player3D;
@@ -228,57 +230,32 @@ void Player3D_Move()
 	}
 
 
-	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
+	float len = Length2D(inputDir);
 	if (len > 1e-6f)
 	{
 
-		inputDir.x /= len;
-		inputDir.z /= len;
-
+		inputDir = Normalize2D(inputDir);
 
 		XMFLOAT3 camPos = GetCameraPosition();
 		XMFLOAT3 camAt = GetCameraAtPosition();
+
 		XMFLOAT3 camFwd = XMFLOAT3(
 			camAt.x - camPos.x,
 			0.0f,
 			camAt.z - camPos.z
 		);
-		float flen = sqrtf(camFwd.x * camFwd.x + camFwd.z * camFwd.z);
-		if (flen > 1e-6f)
-		{
-			camFwd.x /= flen;
-			camFwd.z /= flen;
-		}
-		else
-		{
-			camFwd = XMFLOAT3(0.0f, 0.0f, 1.0f);
-		}
-
-
+		camFwd = Normalize2D(camFwd);
 		XMFLOAT3 camRight = XMFLOAT3(
 			camFwd.z,
 			0.0f,
 			-camFwd.x
 		);
-		float rlen = sqrtf(camRight.x * camRight.x + camRight.z * camRight.z);
-		if (rlen > 1e-6f)
-		{
-			camRight.x /= rlen;
-			camRight.z /= rlen;
-		}
-
-
 		XMFLOAT3 moveWorld = XMFLOAT3(
 			camFwd.x * inputDir.z + camRight.x * inputDir.x,
 			0.0f,
 			camFwd.z * inputDir.z + camRight.z * inputDir.x
 		);
-		float mlen = sqrtf(moveWorld.x * moveWorld.x + moveWorld.z * moveWorld.z);
-		if (mlen > 1e-6f)
-		{
-			moveWorld.x /= mlen;
-			moveWorld.z /= mlen;
-		}
+		moveWorld = Normalize2D(moveWorld);
 
 		g_Player3D.Velocity.x += moveWorld.x * moveSpeed;
 		g_Player3D.Velocity.z += moveWorld.z * moveSpeed;
