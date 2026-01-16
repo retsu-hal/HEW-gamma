@@ -230,7 +230,7 @@ static void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOpti
 // プレイヤーの固体コライダー中心を取得
 static XMFLOAT3 GetPlayerSolidCollider()
 {
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	XMFLOAT3 c = p->Position;
 	c.y += Player3D_GetSolidHalfSize().y;
 	return c;
@@ -238,7 +238,7 @@ static XMFLOAT3 GetPlayerSolidCollider()
 // プレイヤー2Dの固体コライダー中心を取得
 static XMFLOAT3 GetPlayer2DSolidCollider()
 {
-	PLAYER2D* p = GetPlayer2D();
+	PLAYER* p = GetPlayer2D();
 	XMFLOAT3 c = p->Position;
 	c.y += Player2D_GetSolidHalfSize().y + 0.1f;
 	return c;
@@ -246,7 +246,7 @@ static XMFLOAT3 GetPlayer2DSolidCollider()
 // プレイヤーのトリガーコライダー中心を取得
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	XMFLOAT3 c = p->Position;
 	c.y += Player3D_GetTriggerHalfSize().y;
 	return c;
@@ -379,7 +379,7 @@ static bool Resolve_Ellipsoid_OBB_Yaw(
 // トリガーが当たった面を計算（Player3d Yaw基準）
 static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
 {
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	if (!p) return TRIGGER_SIDE_NONE;
 
 	float yaw = XMConvertToRadians(p->Rotation.y);
@@ -433,7 +433,7 @@ int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
 
-	PLAYER3D* player = GetPlayer3D();
+	PLAYER* player = GetPlayer3D();
 	std::vector<MAPDATA>& map = GetFieldMap();
 	if (!player || map.empty()) return hit;
 
@@ -533,7 +533,7 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 void Collision_DebugDraw()
 {
 	// 3Dプレイヤーコライダー
-	PLAYER3D* player3D = GetPlayer3D();
+	PLAYER* player3D = GetPlayer3D();
 	if (player3D)
 	{
 		XMFLOAT3 pC = GetPlayerSolidCollider();
@@ -545,7 +545,7 @@ void Collision_DebugDraw()
 		DebugDrawOBB_Yaw(tC, tH, player3D->Rotation.y, IM_COL32(255, 255, 255, 255));
 	}
 	// 2Dプレイヤーコライダー
-	PLAYER2D* player2D = GetPlayer2D();
+	PLAYER* player2D = GetPlayer2D();
 	if (player2D)
 	{
 		XMFLOAT3 pC = GetPlayer2DSolidCollider();

@@ -248,8 +248,8 @@ void Player2D_Move()
 	{
 		// 正規化ベクトル × 加速
 		inputDir = Normalize2D(inputDir);
-		g_Player2D.Velocity.x += inputDir.x * moveSpeed;
-		g_Player2D.Velocity.z += inputDir.z * moveSpeed;
+		g_Player2D.Velocity.x += inputDir.x * g_Player2D.moveSpeed;
+		g_Player2D.Velocity.z += inputDir.z * g_Player2D.moveSpeed;
 
 		// 入力がある場合にのみ向きを更新
 		float targetYawRad = atan2f(inputDir.x, inputDir.z); //(x,z) -> 前方を Z とした角度
