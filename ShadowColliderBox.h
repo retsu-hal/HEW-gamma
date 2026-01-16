@@ -12,7 +12,7 @@ struct ShadowPrism
     DirectX::XMFLOAT3 origin{};
 	DirectX::XMFLOAT3 n{};// 法線（単位ベクトル）
     DirectX::XMFLOAT3 u{}, v{};// 接線（単位ベクトル）
-    float thickness = 0.2f;
+    float thickness = 0.15f;
 
 	// プリズムの断面ポリゴン（ローカル2D座標系）
     std::vector<DirectX::XMFLOAT2> poly;

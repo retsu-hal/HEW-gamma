@@ -163,46 +163,38 @@ XMFLOAT3 GetPlayer2DPosition()
 //=========================================================================================================
 void Player2D_Gravity()
 {
-	// 横・縦・奥行きの加算
-	if (g_Player2D.Velocity.x >= g_Player2D.maxMoveSpeed)
-	{
-		g_Player2D.Velocity.x = g_Player2D.maxMoveSpeed;
-	}
-	else
-	{
-		g_Player2D.Velocity.x += g_Player2D.Acceleration.x;
-	}
+	bool wasGround = g_Player2D.isGround;
+	g_Player2D.isGround = false;
 
-	if (g_Player2D.Velocity.y < g_Player2D.gravityPower)
-	{
-		g_Player2D.Velocity.y = g_Player2D.gravityPower;
-	}
-	else
+	if (!wasGround)
 	{
 		g_Player2D.Velocity.y += g_Player2D.Acceleration.y;
+
+		if (g_Player2D.Velocity.y < g_Player2D.gravityPower)
+		{
+			g_Player2D.Velocity.y = g_Player2D.gravityPower;
+		}
 	}
 
-	if (g_Player2D.Velocity.z >= g_Player2D.maxMoveSpeed)
-	{
-		g_Player2D.Velocity.z = g_Player2D.maxMoveSpeed;
-	}
-	else
-	{
-		g_Player2D.Velocity.z += g_Player2D.Acceleration.z;
-	}
-
-	// 摩擦による減速
+	// X-Z平面の摩擦による減速
 	g_Player2D.Velocity.x *= 0.925f;
-	//g_Player2D.Velocity.y *= 0.98f;
+	g_Player2D.Velocity.z *= 0.925f;
 
-	// 座標に速度を加算
 	g_Player2D.Position.x += g_Player2D.Velocity.x;
 	g_Player2D.Position.y += g_Player2D.Velocity.y;
+	g_Player2D.Position.z += g_Player2D.Velocity.z;
+
+	int hit = Player2DField_Collision();
+	Player2DShadow_Collision();
 
 
-
-	// 静止チェック
-	float len = LengthSq(g_Player2D.Velocity);
+	if (g_Player2D.isGround && g_Player2D.Velocity.y < 0.0f)
+	{
+		g_Player2D.Velocity.y = 0.0f;
+	}
+	float len = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
+		g_Player2D.Velocity.y * g_Player2D.Velocity.y +
+		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
 	if (len <= 0.0002f)
 	{
 		g_StopTime++;
@@ -213,8 +205,10 @@ void Player2D_Gravity()
 			g_StopTime = 0.0f;
 		}
 	}
-
-	int hit = Player3DField_Collision();
+	else
+	{
+		g_StopTime = 0.0f;
+	}
 }
 
 void Player2D_Respawn()
@@ -233,53 +227,57 @@ void Player2D_Respawn()
 
 void Player2D_Move()
 {
-	XMFLOAT3 inputDir;
-	
-	// 前フレームの入力をリセット（キーを離したときに以前の入力が残らないようにする）
-	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	XMFLOAT3 inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;
-	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;
+	// 入力取得（左右のみ）
+	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;  // 右
+	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;  // 左
 
-
-	// 長さ計算
-	float len = Length2D(inputDir);
-	if (len > 0.0001f)
+	if (fabsf(inputDir.x) > 0.0001f)
 	{
-		// 正規化ベクトル × 加速
-		inputDir = Normalize2D(inputDir);
-		g_Player2D.Velocity.x += inputDir.x * moveSpeed;
-		g_Player2D.Velocity.z += inputDir.z * moveSpeed;
+		// プレイヤーのY回転角度を取得（壁の向きを決定）
+		// Rotation.y は壁の法線方向を向いている
+		float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
 
-		// 入力がある場合にのみ向きを更新
-		float targetYawRad = atan2f(inputDir.x, inputDir.z); //(x,z) -> 前方を Z とした角度
-		float targetYawDeg = XMConvertToDegrees(targetYawRad);
+		// 壁に沿った「右方向」ベクトルを計算
+		// 法線方向:  (sin(yaw), 0, cos(yaw))
+		// 右方向: 法線を Y軸周りに -90度回転 = (cos(yaw), 0, -sin(yaw))
+		// または単純に:  右 = (cos(yaw), 0, -sin(yaw))
+		float rightX = cosf(yawRad);
+		float rightZ = -sinf(yawRad);
 
-		// モデルの初期向きに合わせるオフセット（必要なら調整）
-		const float yawOffset = g_Player2D.FirstRotation.y;
-		targetYawDeg += yawOffset;
+		// 入力方向（左右）をワールド座標に変換
+		float worldX = inputDir.x * rightX;
+		float worldZ = inputDir.x * rightZ;
 
-		// スムーズ回転（角度差を最短経路で求めて補間）
-		float currentYaw = g_Player2D.Rotation.y;
-		float delta = targetYawDeg - currentYaw;
-		while (delta > 180.0f) delta -= 360.0f;
-		while (delta < -180.0f) delta += 360.0f;
-
-		const float rotateLerp = 0.2f; //0..1（1で即時回転）
+		// 速度に加算（X軸とZ軸、Y軸は重力で制御）
+		g_Player2D.Velocity.x += worldX * g_Player2D.moveSpeed;
+		g_Player2D.Velocity.z += worldZ * g_Player2D.moveSpeed;
 	}
-	// 入力無しのときは回転を変更しない（最後に向いていた方向を保持）
+
+	// 速度制限（X-Z平面）
+	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
+		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+	float maxSpeed = g_Player2D.maxMoveSpeed;
+	if (speedSq > maxSpeed * maxSpeed)
+	{
+		float speed = sqrtf(speedSq);
+		g_Player2D.Velocity.x = (g_Player2D.Velocity.x / speed) * maxSpeed;
+		g_Player2D.Velocity.z = (g_Player2D.Velocity.z / speed) * maxSpeed;
+	}
 }
 
 void Player2D_Jump()
 {
 	if (IsInputDown(JumpKey, gPad))
 	{
-		g_Player2D.Velocity.y += g_Player2D.jumpPower;//テスト
 		if (g_Player2D.isGround)
 		{
-			g_Player2D.Velocity.y += g_Player2D.jumpPower;//上向きに初速を与える
-			// 空中にいる状態へ
-			// g_Player2D.state = PLAYER2D_STATE_FALL;
+			// Y軸方向にジャンプ（壁に貼り付いた状態での上方向）
+			g_Player2D.Velocity.y = g_Player2D.jumpPower;
+
+			g_Player2D.isGround = false;
+			g_Player2D.state = PLAYER_STATE_FALL;
 		}
 	}
 }

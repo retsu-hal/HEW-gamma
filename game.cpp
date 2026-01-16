@@ -56,7 +56,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_BallLight.SetDiffuse(XMFLOAT4(1.0f, 0.95f, 0.85f, 1.0f));
 
 	g_ShadowConfig.edgeSamples = 4;
-	g_ShadowConfig.thickness = 0.15f;
+	g_ShadowConfig.thickness = 1.0f;
 	g_ShadowConfig.maxCastDist = 100.0f;
 
 	ShadowDebugOptions debugOpts;

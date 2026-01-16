@@ -40,7 +40,7 @@ static XMFLOAT3			FirstRotation;
 static XMFLOAT3			FirstScaling;
 static XMFLOAT3			FirstVelocity;
 static XMFLOAT3			FirstAcceleration;
-static PLAYER3D_STATE	FirstState;
+static PLAYER_STATE	FirstState;
 static float			FirstStopTime;
 static XMVECTOR			FirstQuaternion;
 
@@ -53,23 +53,6 @@ static float gravityPower = -1.0f;		//�d�͉����x
 static float jumpPower = 0.175f;		//�W�����v��
 
 float FirstMaxMoveSpeed = maxMoveSpeed;
-
-
-static const auto UpKey = KK_W;			//�O�i
-static const auto RightKey = KK_D;		//�E�ړ�
-static const auto DownKey = KK_S;		//���
-static const auto LeftKey = KK_A;		//���ړ�
-
-static const auto JumpKey = KK_SPACE;	//�W�����v
-static const auto ActionKey = KK_F;		//�A�N�V����
-static const auto ChangeKey = KK_F;		//�e�ϐg
-
-static const auto ResetKey = KK_R;		//���Z�b�g
-static const auto MenuKey = KK_ESCAPE;	//���j���[
-
-static bool debugMode = true;
-static bool isTrigger = false;
-
 
 static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
 	PLAYER3D_SOLID_HALF_X,
@@ -84,7 +67,7 @@ static XMFLOAT3 g_TriggerHalfSize = XMFLOAT3(
 
 static bool g_Player3DActive = true;
 
-bool isTrigger = false;
+static bool isTrigger = false;
 
 //=========================================================================================================
 // ����������
@@ -102,7 +85,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	FirstState = g_Player3D.state = PLAYER3D_STATE_MOVE;
+	FirstState = g_Player3D.state = PLAYER_STATE_MOVE;
 	FirstStopTime = g_StopTime = 0.0f;
 	FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
 
@@ -138,16 +121,16 @@ void Player3D_Update()
 
 	switch (g_Player3D.state)
 	{
-	case PLAYER3D_STATE_IDLE:
+	case PLAYER_STATE_IDLE:
 		//Idle�A�j���[�V����
 		break;
-	case PLAYER3D_STATE_MOVE:
+	case PLAYER_STATE_MOVE:
 		//Move�A�j���[�V����
 		break;
-	case PLAYER3D_STATE_FALL:
+	case PLAYER_STATE_FALL:
 		//Fall�A�j���[�V����
 		break;
-	case PLAYER3D_STATE_ACTION:
+	case PLAYER_STATE_ACTION:
 		//Action�A�j���[�V����
 		break;
 	default:
@@ -234,10 +217,10 @@ void Player3D_Move()
 
 	if (!gPad.IsConnected())
 	{// �L�[�{�[�h����
-		if (Keyboard_IsKeyDown(UpKey))    inputDir.z += +1.0f;
-		if (Keyboard_IsKeyDown(DownKey))  inputDir.z += -1.0f;
-		if (Keyboard_IsKeyDown(RightKey)) inputDir.x += +1.0f;
-		if (Keyboard_IsKeyDown(LeftKey))  inputDir.x += -1.0f;
+		if (IsInputDown(UpKey, gPad))    inputDir.z += +1.0f;
+		if (IsInputDown(DownKey, gPad))  inputDir.z += -1.0f;
+		if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;
+		if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;
 	}
 	else
 	{// �R���g���[���[����
