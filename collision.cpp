@@ -27,7 +27,7 @@ static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 // プレイヤーの当たり判定中心座標を取得
 static XMFLOAT3 GetPlayerSolidCollider()
 {
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	XMFLOAT3 c = p->Position;
 
 	XMFLOAT3 half = Player3D_GetSolidHalfSize();
@@ -37,7 +37,7 @@ static XMFLOAT3 GetPlayerSolidCollider()
 // 2Dプレイヤーの当たり判定中心座標を取得
 static XMFLOAT3 GetPlayer2DSolidCollider()
 {
-	PLAYER2D* p = GetPlayer2D();
+	PLAYER* p = GetPlayer2D();
 	XMFLOAT3 c = p->Position;
 
 	XMFLOAT3 half = Player3D_GetSolidHalfSize();
@@ -48,7 +48,7 @@ static XMFLOAT3 GetPlayer2DSolidCollider()
 // プレイヤーのトリガー当たり判定中心座標を取得
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	XMFLOAT3 c = p->Position;
 
 	XMFLOAT3 half = Player3D_GetTriggerHalfSize();
@@ -94,7 +94,7 @@ static XMFLOAT3 RotateY(const XMFLOAT3& v, float yawRad)
 // トリガーが当たった面を計算（Player3d Yaw基準）
 static TRIGGER_SIDE CalcSide_ByCamera(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
 {
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	if (p)
 	{
 		const float yawRad = XMConvertToRadians(p->Rotation.y);
@@ -357,7 +357,7 @@ int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
 
-	PLAYER3D* player3D = GetPlayer3D();
+	PLAYER* player3D = GetPlayer3D();
 	std::vector<MAPDATA>& Map = GetFieldMap();
 	if (!player3D || Map.empty()) return hit;
 
@@ -425,7 +425,7 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
 
-	PLAYER3D* p = GetPlayer3D();
+	PLAYER* p = GetPlayer3D();
 	if (!p) return false;
 
 	auto& map = GetFieldMap();
@@ -606,7 +606,7 @@ static void DebugDrawEllipsoid(const XMFLOAT3& center, const XMFLOAT3& radii, Im
 void Collision_DebugDraw() {
 
 	// プレイヤーのAABB描画
-	PLAYER3D* player = GetPlayer3D();// プレイヤー取得
+	PLAYER* player = GetPlayer3D();// プレイヤー取得
 	XMFLOAT3 playerHalf = Player3D_GetSolidHalfSize();
 	XMFLOAT3 playerC = GetPlayerSolidCollider();
 
@@ -618,7 +618,7 @@ void Collision_DebugDraw() {
 		DebugDrawOBB_Yaw(playerC_t, playerHalf_t, player->Rotation.y, IM_COL32(255, 255, 255, 255));// プレイヤーのAABB描画
 	}
 
-	PLAYER2D* player2D = GetPlayer2D();
+	PLAYER* player2D = GetPlayer2D();
 	XMFLOAT3 player2DHalf = Player2D_GetSolidHalfSize();
 	XMFLOAT3 player2DC = GetPlayer2DSolidCollider();
 

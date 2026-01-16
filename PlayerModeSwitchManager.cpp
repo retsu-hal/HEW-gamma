@@ -283,7 +283,7 @@ static bool FindGroundTopY_OnXZ(float x, float z, float startY, float maxDown, f
 // プレイヤーモード切り替え管理
 static bool GetSwitchTargetFromPlayer3D(SWITCH_TARGET* outT)
 {
-    PLAYER3D* p3 = GetPlayer3D();
+    PLAYER* p3 = GetPlayer3D();
     if (!p3) return false;
 
     XMFLOAT3 rayO = p3->Position;
@@ -337,7 +337,7 @@ static bool TrySwitch3DTo2D()
     if (!CanFitOnFace(tgt.face, boxHalf, p2Half))
         return false;
 
-    PLAYER3D* p3 = GetPlayer3D();
+    PLAYER* p3 = GetPlayer3D();
     XMFLOAT3 p2Pos = Calc2DPositionOnFace_OBB(box, tgt.face, p3->Position, p2Half);
     XMFLOAT3 p2Rot = Calc2DRotationFromFace(box, tgt.face);
 
@@ -352,7 +352,7 @@ static bool TrySwitch3DTo2D()
 // 2D→3D変身試行
 static bool TrySwitch2DTo3D()
 {
-    PLAYER2D* p2 = GetPlayer2D();
+    PLAYER* p2 = GetPlayer2D();
     if (!p2) return false;
 
     float yawRad = XMConvertToRadians(p2->Rotation.y);

@@ -130,7 +130,7 @@ void Player3DCamera_Update()
 void Player2DCamera_Update()
 {
 	XMFLOAT3 pos = g_PlayerPosOld;
-	PLAYER2D* player2D = GetPlayer2D();
+	PLAYER* player2D = GetPlayer2D();
 
 	pos.x = g_PlayerPosOld.x - pos.x;
 	pos.y = g_PlayerPosOld.y - pos.y;
