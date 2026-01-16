@@ -9,6 +9,14 @@
 // コントローラー
 extern Controller gPad;
 
+enum PLAYER_ANIM {
+	PLAYER_ANIM_IDLE = 0,
+	PLAYER_ANIM_WALK,
+	PLAYER_ANIM_PUSH,
+
+	PLAYER_ANIM_MAX
+};
+
 // プレイヤーステート
 enum PLAYER_STATE
 {
@@ -32,6 +40,7 @@ public:
 	XMFLOAT3		FirstVelocity;
 	XMFLOAT3		FirstAcceleration;
 	PLAYER_STATE	FirstState;
+	PLAYER_ANIM		FirstAnim;
 	float			FirstStopTime;
 	XMVECTOR		FirstQuaternion;
 
@@ -41,7 +50,8 @@ public:
 	XMFLOAT3 Velocity;			//方向
 	XMFLOAT3 Acceleration;		//加速度
 	PLAYER_STATE state;			//状態
-	MODEL* Model;				//モデルデータ
+	PLAYER_ANIM CurrentAnimIndex;
+	MODEL* Model[PLAYER_ANIM_MAX];	//モデルデータ
 	XMVECTOR Quaternion;		//クォータニオン回転
 
 	// プレイヤーステータス
