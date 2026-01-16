@@ -37,17 +37,17 @@ void Light_Update(void)
 {
 	g_Light.m_velo = XMFLOAT3(0, 0, 0);
 	//Camera Movement
-	if (Keyboard_IsKeyDown(KK_NUMPAD8)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD8) || Keyboard_IsKeyDown(KK_UP)) {
 		g_Light.m_velo.z = 5.0f / 60.0f;
 	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD2)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD2) || Keyboard_IsKeyDown(KK_DOWN)) {
 		g_Light.m_velo.z = -5.0f / 60.0f;
 	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD7)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD7) || Keyboard_IsKeyDown(KK_LEFT)) {
 		g_Light.m_velo.y = -5.0f / 60.0f;
 
 	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD9)) {
+	if (Keyboard_IsKeyDown(KK_NUMPAD9) || Keyboard_IsKeyDown(KK_RIGHT)) {
 		g_Light.m_velo.y = 5.0f / 60.0f;
 	}
 	if (Keyboard_IsKeyDown(KK_NUMPAD4)) {
@@ -117,7 +117,10 @@ XMMATRIX Light_GetWorldMatrix()
 	// Using light's translation, rotation, scaling
 	LightSource* light = GetLight(); // Or your own way to fetch Light object
 	XMMATRIX scale = XMMatrixScaling(light->m_scaling.x, light->m_scaling.y, light->m_scaling.z);
-	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(light->m_rotation.x, light->m_rotation.y, light->m_rotation.z);
+	XMMATRIX rotation = XMMatrixRotationRollPitchYaw(
+		XMConvertToRadians(light->m_rotation.x),
+		XMConvertToRadians(light->m_rotation.y),
+		XMConvertToRadians(light->m_rotation.z));
 	XMMATRIX translate = XMMatrixTranslation(light->m_position.x, light->m_position.y, light->m_position.z);
 	return scale * rotation * translate;
 }

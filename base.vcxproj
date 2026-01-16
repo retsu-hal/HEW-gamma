@@ -171,6 +171,7 @@
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="score.cpp" />
     <ClCompile Include="shader.cpp" />
+    <ClCompile Include="ShadowColliderBox.cpp" />
     <ClCompile Include="sprite.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="Trail.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="manager.h" />
+    <ClInclude Include="MathUtil.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="Player3D.h" />
@@ -205,6 +207,7 @@
     <ClInclude Include="result.h" />
     <ClInclude Include="score.h" />
     <ClInclude Include="shader.h" />
+    <ClInclude Include="ShadowColliderBox.h" />
     <ClInclude Include="sprite.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="Trail.h" />
@@ -241,6 +244,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="ClassDiagram.cd" />
     <None Include="DirectXTex.inl" />
   </ItemGroup>
   <ItemGroup>
