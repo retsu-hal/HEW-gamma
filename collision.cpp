@@ -428,6 +428,153 @@ void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFL
 	box.color = MakeColor(r, g, b, a);
 	g_ExtraBoxes.push_back(box);
 }
+
+bool Resolve_OBB_OBB_ZY(
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // プレイヤー（Z回転）
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // フィールド（Y回転）
+	XMFLOAT3* outPush, XMFLOAT3* outNorm)
+{
+	// プレイヤーのZ回転行列（2D平面での回転）
+	XMMATRIX rotMatA = XMMatrixRotationZ(rotZRadA);
+
+	// フィールドのY回転行列
+	float rotYRadB = XMConvertToRadians(rotYDegB);
+	XMMATRIX rotMatB = XMMatrixRotationY(rotYRadB);
+
+	// 各OBBのローカル軸を取得
+	XMFLOAT3 axesA[3], axesB[3];
+
+	// プレイヤーの軸（Z回転）
+	XMVECTOR axA0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatA);
+	XMVECTOR axA1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatA);
+	XMVECTOR axA2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatA);
+	XMStoreFloat3(&axesA[0], axA0);
+	XMStoreFloat3(&axesA[1], axA1);
+	XMStoreFloat3(&axesA[2], axA2);
+
+	// フィールドの軸（Y回転）
+	XMVECTOR axB0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatB);
+	XMVECTOR axB1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatB);
+	XMVECTOR axB2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatB);
+	XMStoreFloat3(&axesB[0], axB0);
+	XMStoreFloat3(&axesB[1], axB1);
+	XMStoreFloat3(&axesB[2], axB2);
+
+	// 中心間ベクトル
+	XMVECTOR vD = XMVectorSet(posA.x - posB.x, posA.y - posB.y, posA.z - posB.z, 0);
+
+	float halfExtA[3] = { halfA.x, halfA.y, halfA.z };
+	float halfExtB[3] = { halfB.x, halfB.y, halfB.z };
+
+	float minPen = FLT_MAX;
+	XMFLOAT3 minAxis = { 0, 1, 0 };
+
+	// 15軸のSAT判定
+	auto TestAxis = [&](XMVECTOR axis) -> bool
+		{
+			float len = XMVectorGetX(XMVector3Length(axis));
+			if (len < 1e-6f) return true;  // 平行な軸はスキップ
+
+			axis = XMVector3Normalize(axis);
+
+			// 各OBBの投影半径
+			float rA = 0, rB = 0;
+			for (int i = 0; i < 3; i++)
+			{
+				XMVECTOR axi = XMLoadFloat3(&axesA[i]);
+				rA += halfExtA[i] * fabsf(XMVectorGetX(XMVector3Dot(axis, axi)));
+			}
+			for (int i = 0; i < 3; i++)
+			{
+				XMVECTOR axi = XMLoadFloat3(&axesB[i]);
+				rB += halfExtB[i] * fabsf(XMVectorGetX(XMVector3Dot(axis, axi)));
+			}
+
+			float dist = fabsf(XMVectorGetX(XMVector3Dot(vD, axis)));
+			float pen = (rA + rB) - dist;
+
+			if (pen < 0) return false;  // 分離軸発見 → 衝突なし
+
+			if (pen < minPen)
+			{
+				minPen = pen;
+				XMStoreFloat3(&minAxis, axis);
+			}
+			return true;
+		};
+
+	// A の3軸
+	if (!TestAxis(axA0)) return false;
+	if (!TestAxis(axA1)) return false;
+	if (!TestAxis(axA2)) return false;
+
+	// B の3軸
+	if (!TestAxis(axB0)) return false;
+	if (!TestAxis(axB1)) return false;
+	if (!TestAxis(axB2)) return false;
+
+	// 外積軸（9軸）
+	if (!TestAxis(XMVector3Cross(axA0, axB0))) return false;
+	if (!TestAxis(XMVector3Cross(axA0, axB1))) return false;
+	if (!TestAxis(XMVector3Cross(axA0, axB2))) return false;
+	if (!TestAxis(XMVector3Cross(axA1, axB0))) return false;
+	if (!TestAxis(XMVector3Cross(axA1, axB1))) return false;
+	if (!TestAxis(XMVector3Cross(axA1, axB2))) return false;
+	if (!TestAxis(XMVector3Cross(axA2, axB0))) return false;
+	if (!TestAxis(XMVector3Cross(axA2, axB1))) return false;
+	if (!TestAxis(XMVector3Cross(axA2, axB2))) return false;
+
+	// 押し出し方向を決定（AをBから離す方向）
+	XMVECTOR normAxis = XMLoadFloat3(&minAxis);
+	if (XMVectorGetX(XMVector3Dot(vD, normAxis)) < 0)
+	{
+		normAxis = XMVectorNegate(normAxis);
+	}
+
+	XMVECTOR pushVec = normAxis * minPen;
+	XMStoreFloat3(outPush, pushVec);
+	XMStoreFloat3(outNorm, XMVector3Normalize(normAxis));
+
+	return true;
+}
+
+bool OBB_Intersect_ZY(
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB)
+{
+	XMFLOAT3 push, norm;
+	return Resolve_OBB_OBB_ZY(posA, halfA, rotZRadA, posB, halfB, rotYDegB, &push, &norm);
+}
+
+//=========================================================================================================
+// 2D用トリガー方向判定（プレイヤーの回転を考慮）
+//=========================================================================================================
+static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRotZ, const XMFLOAT3& triggerPos)
+{
+	// プレイヤーからトリガーへのベクトル
+	float dx = triggerPos.x - playerPos.x;
+	float dy = triggerPos.y - playerPos.y;
+
+	// プレイヤーの回転を考慮してローカル座標に変換
+	float radZ = XMConvertToRadians(playerRotZ);
+	float cosZ = cosf(-radZ);  // 逆回転でローカル座標へ
+	float sinZ = sinf(-radZ);
+
+	float localX = dx * cosZ - dy * sinZ;
+	float localY = dx * sinZ + dy * cosZ;
+
+	// ローカル座標での方向判定
+	if (fabsf(localX) > fabsf(localY))
+	{
+		return (localX > 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
+	}
+	else
+	{
+		return (localY > 0) ? TRIGGER_SIDE_TOP : TRIGGER_SIDE_BOTTOM;
+	}
+}
+
+
 // プレイヤー3Dとフィールドの当たり判定
 int Player3DField_Collision()
 {
@@ -479,6 +626,87 @@ int Player3DField_Collision()
 
 	return hit;
 }
+
+int Player2DField_Collision()
+{
+	int hit = HIT_NONE;
+
+	PLAYER* player = GetPlayer2D();
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (!player || map.empty()) return hit;
+
+	player->isGround = false;
+	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
+
+	// 2Dプレイヤーの当たり判定中心（足元基準から中心基準へ変換）
+	XMFLOAT3 colliderCenter = XMFLOAT3(
+		player->Position.x,
+		player->Position.y + halfSize.y,
+		player->Position.z
+	);
+
+	// プレイヤーのZ軸回転角度（度→ラジアン）
+	float playerZRot = XMConvertToRadians(player->Rotation.z);
+
+	for (size_t i = 0; i < map.size(); ++i)
+	{
+		if (!Field_IsSolid(map[i].no)) continue;
+
+		XMFLOAT3 push, norm;
+
+		// OBB vs OBB（プレイヤーはZ回転、フィールドはY回転）
+		if (!Resolve_OBB_OBB_ZY(
+			colliderCenter, halfSize, playerZRot,      // プレイヤー（Z回転）
+			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // フィールド（Y回転）
+			&push, &norm))
+			continue;
+
+		colliderCenter = XMFLOAT3(
+			colliderCenter.x + push.x,
+			colliderCenter.y + push.y,
+			colliderCenter.z + push.z
+		);
+
+		float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
+
+		if (ay >= ax && ay >= az)
+		{
+			// 上下の衝突
+			if (norm.y > 0)
+			{
+				player->isGround = true;
+				player->Velocity.y = 0;
+				hit = HIT_GROUND;
+			}
+			else if (player->Velocity.y > 0)
+			{
+				player->Velocity.y = 0;
+			}
+		}
+		else if (ax >= az)
+		{
+			// 左右の壁衝突
+			player->Velocity.x = 0;
+			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
+		}
+		else
+		{
+			// 前後の壁衝突
+			player->Velocity.z = 0;
+			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
+		}
+	}
+
+	// 中心座標から足元座標へ戻す
+	player->Position.x = colliderCenter.x;
+	player->Position.y = colliderCenter.y - halfSize.y;
+	player->Position.z = colliderCenter.z;
+
+	return hit;
+}
+
+
+
 // プレイヤーのトリガー当たり判定
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
@@ -527,6 +755,249 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 	if (outHit) *outHit = best;
 	return true;
 }
+
+bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
+{
+	if (outHit) *outHit = TRIGGER_HIT{};
+
+	PLAYER* p = GetPlayer2D();
+	if (!p) return false;
+
+	auto& map = GetFieldMap();
+	if (map.empty()) return false;
+
+	XMFLOAT3 pHalf = Player2D_GetSolidHalfSize();
+	pHalf.x += extraRange;
+	pHalf.y += extraRange;
+	pHalf.z += extraRange;
+
+	XMFLOAT3 pC = XMFLOAT3(
+		p->Position.x,
+		p->Position.y + Player2D_GetSolidHalfSize().y,
+		p->Position.z
+	);
+
+	float pZRot = XMConvertToRadians(p->Rotation.z);
+
+	bool found = false;
+	float bestD2 = 1e30f;
+	TRIGGER_HIT best;
+
+	for (size_t i = 0; i < map.size(); ++i)
+	{
+		if (!Field_IsTrigger(map[i].no)) continue;
+
+		XMFLOAT3 tHalf = Field_GetHalfSize(map[i]);
+		tHalf.x += extraRange;
+		tHalf.y += extraRange;
+		tHalf.z += extraRange;
+
+		// OBB vs OBB 交差判定
+		if (!OBB_Intersect_ZY(pC, pHalf, pZRot,
+			map[i].pos, tHalf, map[i].rotate.y))
+			continue;
+
+		float dx = map[i].pos.x - pC.x;
+		float dy = map[i].pos.y - pC.y;
+		float d2 = dx * dx + dy * dy;
+
+		if (!found || d2 < bestD2)
+		{
+			found = true;
+			bestD2 = d2;
+			best.hit = true;
+			best.mapIndex = (int)i;
+			best.type = map[i].no;
+			best.side = CalcTriggerSide2D(pC, p->Rotation.z, map[i].pos);
+		}
+	}
+
+	if (!found) return false;
+	if (outHit) *outHit = best;
+	return true;
+}
+
+
+//=========================================================================================================
+// 点がプリズム内にあるかチェック（2D多角形判定）
+//=========================================================================================================
+static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& poly)
+{
+	if (poly.size() < 3) return false;
+
+	bool inside = false;
+	int n = (int)poly.size();
+
+	for (int i = 0, j = n - 1; i < n; j = i++)
+	{
+		float xi = poly[i].x, yi = poly[i].y;
+		float xj = poly[j].x, yj = poly[j].y;
+
+		if (((yi > py) != (yj > py)) &&
+			(px < (xj - xi) * (py - yi) / (yj - yi) + xi))
+		{
+			inside = !inside;
+		}
+	}
+	return inside;
+}
+
+//=========================================================================================================
+// プレイヤー2Dと影プリズムの当たり判定
+//=========================================================================================================
+bool Player2DShadow_Collision()
+{
+	PLAYER* player = GetPlayer2D();
+	if (!player) return false;
+
+	const std::vector<const ShadowPrism*>& prisms = Collision_GetShadowPrisms();
+	if (prisms.empty()) return false;
+
+	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
+
+	bool hitAny = false;
+
+	// 複数回の反復で安定させる
+	const int maxIterations = 4;
+
+	for (int iter = 0; iter < maxIterations; iter++)
+	{
+		bool hitThisIter = false;
+
+		// プレイヤーの中心位置（毎回更新）
+		XMFLOAT3 playerCenter = XMFLOAT3(
+			player->Position.x,
+			player->Position.y + halfSize.y,
+			player->Position.z
+		);
+
+		for (const ShadowPrism* prism : prisms)
+		{
+			if (!prism || !prism->isValid) continue;
+			if (prism->poly.size() < 3) continue;
+
+			// AABB早期キャンセル
+			float margin = halfSize.x + 0.1f;
+			if (playerCenter.x < prism->aabbMin.x - margin ||
+				playerCenter.x > prism->aabbMax.x + margin ||
+				playerCenter.y < prism->aabbMin.y - halfSize.y - margin ||
+				playerCenter.y > prism->aabbMax.y + margin ||
+				playerCenter.z < prism->aabbMin.z - margin ||
+				playerCenter.z > prism->aabbMax.z + margin)
+			{
+				continue;
+			}
+
+			// プレイヤー位置をプリズムのローカル座標に変換
+			XMFLOAT3 rel = playerCenter - prism->origin;
+			float localU = Dot(rel, prism->u);
+			float localV = Dot(rel, prism->v);
+			float localN = Dot(rel, prism->n);
+
+			// プリズムのU-V範囲を計算
+			float minU = FLT_MAX, maxU = -FLT_MAX;
+			float minV = FLT_MAX, maxV = -FLT_MAX;
+			for (const auto& p : prism->poly)
+			{
+				minU = (std::min)(minU, p.x);
+				maxU = (std::max)(maxU, p.x);
+				minV = (std::min)(minV, p.y);
+				maxV = (std::max)(maxV, p.y);
+			}
+
+			// プレイヤーの半径
+			float playerRadiusU = halfSize.x;
+			float playerRadiusV = halfSize.y;
+			float playerRadiusN = halfSize.z;
+
+			// 各方向の侵入量を計算
+			float penU_pos = (maxU + playerRadiusU) - localU;
+			float penU_neg = localU - (minU - playerRadiusU);
+			float penV_pos = (maxV + playerRadiusV) - localV;
+			float penV_neg = localV - (minV - playerRadiusV);
+			float penN_pos = (prism->thickness + playerRadiusN) - localN;
+			float penN_neg = localN + playerRadiusN;
+
+			// 全方向で侵入しているかチェック
+			if (penU_pos <= 0 || penU_neg <= 0 ||
+				penV_pos <= 0 || penV_neg <= 0 ||
+				penN_pos <= 0 || penN_neg <= 0)
+			{
+				continue;
+			}
+
+			// 最小侵入量の方向を見つける
+			float minPen = FLT_MAX;
+			int pushDir = 0;
+
+			if (penU_pos < minPen) { minPen = penU_pos; pushDir = 1; }
+			if (penU_neg < minPen) { minPen = penU_neg; pushDir = 2; }
+			if (penV_pos < minPen) { minPen = penV_pos; pushDir = 3; }
+			if (penV_neg < minPen) { minPen = penV_neg; pushDir = 4; }
+			if (penN_pos < minPen) { minPen = penN_pos; pushDir = 5; }
+			if (penN_neg < minPen) { minPen = penN_neg; pushDir = 6; }
+
+			if (pushDir == 0 || minPen <= 0.001f) continue;
+
+			// 押し出しベクトルを計算
+			XMFLOAT3 pushDir3 = { 0, 0, 0 };
+			bool isGroundHit = false;
+
+			switch (pushDir)
+			{
+			case 1:  // +U方向に押し出し
+				pushDir3 = prism->u;
+				break;
+			case 2:  // -U方向に押し出し
+				pushDir3 = { -prism->u.x, -prism->u.y, -prism->u.z };
+				break;
+			case 3:  // +V方向に押し出し（上方向＝着地の可能性）
+				pushDir3 = prism->v;
+				if (prism->v.y > 0.5f) isGroundHit = true;
+				break;
+			case 4:  // -V方向に押し出し（下から頭をぶつけた）
+				pushDir3 = { -prism->v.x, -prism->v.y, -prism->v.z };
+				break;
+			case 5:  // +N方向に押し出し
+				pushDir3 = prism->n;
+				if (prism->n.y > 0.5f) isGroundHit = true;
+				break;
+			case 6:  // -N方向に押し出し
+				pushDir3 = { -prism->n.x, -prism->n.y, -prism->n.z };
+				break;
+			}
+
+			// 押し出しを適用
+			player->Position.x += pushDir3.x * minPen;
+			player->Position.y += pushDir3.y * minPen;
+			player->Position.z += pushDir3.z * minPen;
+
+			// 速度の該当成分を停止
+			float velDot = Dot(player->Velocity, pushDir3);
+			if (velDot < 0)  // 衝突方向に向かっている場合のみ停止
+			{
+				player->Velocity.x -= velDot * pushDir3.x;
+				player->Velocity.y -= velDot * pushDir3.y;
+				player->Velocity.z -= velDot * pushDir3.z;
+			}
+
+			// 接地判定
+			if (isGroundHit && player->Velocity.y <= 0.01f)
+			{
+				player->isGround = true;
+			}
+
+			hitThisIter = true;
+			hitAny = true;
+		}
+
+		// この反復で衝突がなければ終了
+		if (!hitThisIter) break;
+	}
+
+	return hitAny;
+}
+
 
 
 // デバッグ描画

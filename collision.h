@@ -36,6 +36,8 @@ enum TRIGGER_SIDE//トリガーが当たった面
 	TRIGGER_SIDE_BACK,
 	TRIGGER_SIDE_LEFT,
 	TRIGGER_SIDE_RIGHT,
+	TRIGGER_SIDE_TOP,    
+	TRIGGER_SIDE_BOTTOM, 
 };
 
 struct TRIGGER_HIT//トリガーヒット情報
@@ -53,6 +55,19 @@ struct TRIGGER_HIT//トリガーヒット情報
 int Player3DField_Collision();
 
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
+
+int Player2DField_Collision();
+bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
+
+
+bool Resolve_OBB_OBB_ZY(
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,
+	XMFLOAT3* outPush, XMFLOAT3* outNorm);
+
+bool OBB_Intersect_ZY(
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB);
 
 
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms);
@@ -89,6 +104,8 @@ struct ShadowDebugOptions
 };
 
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options);
+
+bool Player2DShadow_Collision();
 
 
 

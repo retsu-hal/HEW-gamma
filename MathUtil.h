@@ -103,4 +103,5 @@ namespace mu
         const float s = std::sin(yawRad);
         return { v.x * c + v.z * s, v.y, -v.x * s + v.z * c };
     }
+
 }
