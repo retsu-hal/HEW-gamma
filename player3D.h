@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include "direct3d.h"
 #include "model.h"
+#include "PlayerStatus.h"
 
 //=========================================================================================================
 // マクロ定義
@@ -17,38 +18,6 @@
 #define PLAYER3D_TRIGGER_HALF_X (1.0f)
 #define PLAYER3D_TRIGGER_HALF_Y (1.0f)
 #define PLAYER3D_TRIGGER_HALF_Z (1.0f)
-
-//=========================================================================================================
-// 構造体
-//=========================================================================================================
-//プレイヤーステート
-enum PLAYER3D_STATE
-{
-	PLAYER3D_STATE_IDLE = 0,	//何もしない
-	PLAYER3D_STATE_MOVE,		//移動中
-	PLAYER3D_STATE_FALL,		//落下中
-	PLAYER3D_STATE_UP,			//上昇中
-	PLAYER3D_STATE_ACTION,		//アクション中
-
-
-	PLAYER3D_STATE_MAX,
-};
-
-class PLAYER3D
-{
-public:
-	XMFLOAT3 Position;			//座標
-	XMFLOAT3 Rotation;			//回転
-	XMFLOAT3 Scaling;			//サイズ
-	XMFLOAT3 Velocity;			//方向
-	XMFLOAT3 Acceleration;		//加速度
-	PLAYER3D_STATE state;		//状態
-	MODEL* Model;				//モデルデータ
-	XMVECTOR Quaternion;		//クォータニオン回転
-
-	bool isGround = false;             //地面にいるかどうか
-
-};
 
 //=========================================================================================================
 // プロトタイプ宣言
@@ -68,7 +37,7 @@ void Player3D_Action();
 void Player3D_Reset();
 void Player3D_Respawn();
 
-PLAYER3D* GetPlayer3D();
+PLAYER* GetPlayer3D();
 
 XMFLOAT3 Player3D_GetSolidHalfSize();
 XMFLOAT3 Player3D_GetTriggerHalfSize();
