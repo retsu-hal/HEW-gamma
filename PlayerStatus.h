@@ -52,6 +52,7 @@ public:
 	float dampingXZ = 0.925f;			//摩擦係数
 	float gravityPower = -1.0f;			//重力加速度（もしかしたら使う予定）
 	float jumpPower = 0.175f;			//ジャンプ力
+	float dashMoveSpeed = 1.5f;			//ダッシュ移動速度倍率	
 	bool  isGround = false;				//接地判定
 
 	float FirstMaxMoveSpeed = maxMoveSpeed;

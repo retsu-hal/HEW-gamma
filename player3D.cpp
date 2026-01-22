@@ -330,6 +330,20 @@ void Player3D_Change()
 	}
 }
 
+void Player3D_Dash()
+{
+	if (IsInputDown(DashKey, gPad))
+	{
+		// ダッシュ処理
+		// 最大移動速度を一時的に上げる
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * 1.5f;
+	}
+	else
+	{
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
+	}
+}
+
 void Player3D_Action()
 {
 	if (IsInputDown(ActionKey, gPad))
