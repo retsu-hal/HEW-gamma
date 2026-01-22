@@ -213,7 +213,7 @@ void Player2D_Respawn()
 		Player2D_Reset();
 		return;
 	}
-	if (IsInputDown(ResetKey, gPad))
+	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player2D_Reset();
 	}
@@ -226,8 +226,8 @@ void Player2D_Move()
 	// 前フレームの入力をリセット（キーを離したときに以前の入力が残らないようにする）
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;
-	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;
+	if (IsInputPress(RightKey, gPad)) inputDir.x += +1.0f;
+	if (IsInputPress(LeftKey, gPad))  inputDir.x += -1.0f;
 
 
 	// 長さ計算
@@ -261,12 +261,12 @@ void Player2D_Move()
 
 void Player2D_Jump()
 {
-	if (IsInputDown(JumpKey, gPad))
+	if (IsInputTrigger(JumpKey, gPad))
 	{
 		g_Player2D.Velocity.y += g_Player2D.jumpPower;//テスト
 		if (g_Player2D.isGround)
 		{
-			g_Player2D.Velocity.y += g_Player2D.jumpPower;//上向きに初速を与える
+			//g_Player2D.Velocity.y += g_Player2D.jumpPower;//上向きに初速を与える
 			// 空中にいる状態へ
 			// g_Player2D.state = PLAYER2D_STATE_FALL;
 		}
@@ -275,7 +275,7 @@ void Player2D_Jump()
 
 void Player2D_Change()
 {
-	if (IsInputDown(ChangeKey, gPad))
+	if (IsInputTrigger(ChangeKey, gPad))
 	{
 		// ◆3Dに変身
 		// 
