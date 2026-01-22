@@ -167,7 +167,7 @@ void Player3D_Respawn()
 		Player3D_Reset();
 		return;
 	}
-	if (IsInputDown(ResetKey, gPad))
+	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player3D_Reset();
 	}
@@ -304,7 +304,7 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-	if (IsInputDown(JumpKey, gPad)) 
+	if (IsInputTrigger(JumpKey, gPad))
 	{
 		if (g_Player3D.isGround)
 		{
@@ -317,7 +317,7 @@ void Player3D_Jump()
 
 void Player3D_Change()
 {
-	if (IsInputDown(ChangeKey, gPad))
+	if (IsInputTrigger(ChangeKey, gPad))
 	{
 		// ◆影に変身
 		// 
@@ -332,11 +332,11 @@ void Player3D_Change()
 
 void Player3D_Dash()
 {
-	if (IsInputDown(DashKey, gPad))
+	if (IsInputPress(DashKey, gPad))
 	{
 		// ダッシュ処理
 		// 最大移動速度を一時的に上げる
-		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * 1.5f;
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 	}
 	else
 	{
@@ -346,7 +346,7 @@ void Player3D_Dash()
 
 void Player3D_Action()
 {
-	if (IsInputDown(ActionKey, gPad))
+	if (IsInputTrigger(ActionKey, gPad))
 	{
 		// ◆箱を持つ
 		//

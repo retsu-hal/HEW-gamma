@@ -13,7 +13,7 @@ extern InputKey ChangeKey;
 extern InputKey ResetKey;
 extern InputKey MenuKey;
 
-bool IsInputDown(const InputKey& key, const Controller& controller);	//‰Ÿ‚³‚ê‚½Žž
+bool IsInputTrigger(const InputKey& key, const Controller& controller);	//‰Ÿ‚³‚ê‚½Žž
 
 bool IsInputPress(const InputKey& key, const Controller& controller);	//‰Ÿ‚³‚ê‚Ä‚¢‚éŠÔ
 

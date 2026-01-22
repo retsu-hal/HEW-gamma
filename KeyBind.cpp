@@ -16,7 +16,7 @@ InputKey ResetKey =		{ KK_R,			XINPUT_GAMEPAD_BACK };		//リセット
 InputKey MenuKey =		{ KK_ESCAPE,	XINPUT_GAMEPAD_START };		//メニュー
 
 
-bool IsInputPressed(const InputKey& key, const Controller& pad)
+bool IsInputPress(const InputKey& key, const Controller& pad)
 {
 	// キーボード
 	if (key.keyboard != KK_NONE)
@@ -52,7 +52,7 @@ bool IsInputTrigger(const InputKey& key, const Controller& pad)
 	return false;
 }
 
-bool IsInputReleased(const InputKey& key, const Controller& pad)
+bool IsInputUp(const InputKey& key, const Controller& pad)
 {
 	// キーボード
 	if (key.keyboard != KK_NONE)
