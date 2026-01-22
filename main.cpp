@@ -1,4 +1,4 @@
-
+//main.cpp
 //ウィンドウの表示
 #include <SDKDDKVer.h>	//利用できる最も上位の Windows プラットフォームが定義される
 #define WIN32_LEAN_AND_MEAN	//32bitアプリには不要な情報を抑止してコンパイル時間を短縮

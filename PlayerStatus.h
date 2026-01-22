@@ -1,3 +1,4 @@
+//PlayerStatus.h
 #pragma once
 
 #include "Keyboard.h"
@@ -45,8 +46,8 @@ public:
 	XMVECTOR Quaternion;		//クォータニオン回転
 
 	// プレイヤーステータス
-	float moveSpeed = 0.005f;			//移動速度
-	float maxMoveSpeed = 1.0f;			//最大移動速度
+	float moveSpeed = 0.01f;			//移動速度
+	float maxMoveSpeed = 2.0f;			//最大移動速度
 	float maxFallSpeed = -0.5f;			//最大落下速度
 	float dampingXZ = 0.925f;			//摩擦係数
 	float gravityPower = -1.0f;			//重力加速度（もしかしたら使う予定）

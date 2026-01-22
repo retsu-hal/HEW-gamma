@@ -1,3 +1,4 @@
+//fade.h
 #pragma once
 
 #include "direct3d.h"
