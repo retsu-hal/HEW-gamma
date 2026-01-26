@@ -235,13 +235,16 @@
     <FxCompile Include="shader_pixel_2d.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
-    <FxCompile Include="shader_vertex_2d.hlsl" />
+    <FxCompile Include="shader_vertex_2d.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTex.inl">
       <Filter>ヘッダー ファイル</Filter>
     </None>
     <None Include=".gitignore" />
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="DirectXTex_Debug.lib" />

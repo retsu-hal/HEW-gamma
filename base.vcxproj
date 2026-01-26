@@ -193,6 +193,7 @@
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="manager.h" />
+    <ClInclude Include="MathUtil.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="Player3D.h" />
@@ -239,6 +240,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
+    <None Include="ClassDiagram.cd" />
     <None Include="DirectXTex.inl" />
   </ItemGroup>
   <ItemGroup>
