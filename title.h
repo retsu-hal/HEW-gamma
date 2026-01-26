@@ -25,5 +25,4 @@ void Title_Finalize();
 void Title_Update();
 void Title_Draw();
 
-bool GetOption();
 
