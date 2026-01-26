@@ -2,10 +2,11 @@
 #include	"Manager.h"
 #include	"sprite.h"
 #include	"keyboard.h"
+#include	"Audio.h"
 #include	"Title.h"
-#include "fade.h"
-#include "shader.h"
-#include "mouse.h"
+#include	"fade.h"
+#include	"shader.h"
+#include	"mouse.h"
 
 //=========================================================================================================
 // 構造体宣言
@@ -16,8 +17,20 @@ static Mouse_State ms{};
 //グローバル変数
 //=========================================================================================================
 static	ID3D11ShaderResourceView* g_Texture = NULL;	//テクスチャ１枚を表すオブジェクト
+static	ID3D11ShaderResourceView* g_Arrow_Title = NULL;
+static	ID3D11ShaderResourceView* g_Option1_Title = NULL;
+static	ID3D11ShaderResourceView* g_Option2_Title = NULL;
+
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
+
+static	int	g_BgmID = NULL;
+
+static TITLE_OPTION g_SelectedOption = TITLE_OPTION_START;
+XMFLOAT2 Option_1_pos = { 0,0 };
+XMFLOAT2 Option_2_pos = { 0,0 };
+bool Option = false;
+static TITLE_OPTION_PAGE g_Page = PAGE_1;
 
 //=========================================================================================================
 //初期化処理
@@ -27,16 +40,51 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
+	g_BgmID = LoadAudio("asset\\Audio\\title_1.wav");	//サウンドロード
+	SetAudioVolume(g_BgmID, 0.05f);
+	PlayAudio(g_BgmID, true);	//再生開始（ループあり）
+
 	//テクスチャ読み込みなど
 	TexMetadata		metadata;
 	ScratchImage	image;
-	LoadFromWICFile(L"asset\\texture\\Result.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\Box_Title.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);//読み込み失敗時にダイアログを表示
 
+	LoadFromWICFile(L"asset\\texture\\Title_Arrow.png", WIC_FLAGS_NONE, &metadata, image);
+	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Arrow_Title);
+	assert(g_Arrow_Title);//読み込み失敗時にダイアログを表示
+
+	LoadFromWICFile(L"asset\\texture\\control.png", WIC_FLAGS_NONE, &metadata, image);
+	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Option1_Title);
+	assert(g_Option1_Title);//読み込み失敗時にダイアログを表示
+
+	LoadFromWICFile(L"asset\\texture\\control_2.png", WIC_FLAGS_NONE, &metadata, image);
+	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Option2_Title);
+	assert(g_Option2_Title);//読み込み失敗時にダイアログを表示
+
+	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
+	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
+
+	XMFLOAT2 arrowPos =
+	{
+		SCREEN_WIDTH * 0.35f,
+		SCREEN_HEIGHT * 0.48f
+	};
+
+	Option_1_pos = arrowPos;
+
+	arrowPos =
+	{
+		SCREEN_WIDTH * 0.35f,
+		SCREEN_HEIGHT * 0.63f
+	};
+
+	Option_2_pos = arrowPos;
+
 	//フェードインのセット
 	XMFLOAT4	color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
-	SetFade(60.0f, color, FADE_IN, SCENE_GAME);
+	SetFade(60.0f, color, FADE_IN, SCENE_TITLE);
 
 }
 
@@ -47,6 +95,11 @@ void Title_Finalize()
 {
 	//テクスチャの解放など
 	SAFE_RELEASE(g_Texture);
+	SAFE_RELEASE(g_Arrow_Title);
+	SAFE_RELEASE(g_Option1_Title);
+	SAFE_RELEASE(g_Option2_Title);
+
+	UnloadAudio(g_BgmID);//サウンドの解放
 
 }
 
@@ -55,15 +108,55 @@ void Title_Finalize()
 //=========================================================================================================
 void Title_Update()
 { 
+	if (GetFadeState() != FADE_NONE)
+		return;
+
+	if (Keyboard_IsKeyDownTrigger(KK_DOWN))
+	{
+		g_SelectedOption =
+			(TITLE_OPTION)((g_SelectedOption + 1) % TITLE_OPTION_MAX);
+	}
+
+	if (Keyboard_IsKeyDownTrigger(KK_UP))
+	{
+		g_SelectedOption =
+			(TITLE_OPTION)((g_SelectedOption - 1 + TITLE_OPTION_MAX) % TITLE_OPTION_MAX);
+	}
+
 	Mouse_GetState(&ms);
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE) && g_SelectedOption == TITLE_OPTION_START)
 	{
 		//フェードアウトさせてシーンを切り替える
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
 		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+	}
+	else if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE) && g_SelectedOption == TITLE_OPTION_HOWTO)
+	{
+		g_Page = PAGE_1;
+		Option = true;
+	}
+
+	if (Option)
+	{
+		if (Keyboard_IsKeyDownTrigger(KK_RIGHT))
+		{
+			g_Page =
+				(TITLE_OPTION_PAGE)((g_Page + 1) % PAGE_MAX);
+		}
+
+		if (Keyboard_IsKeyDownTrigger(KK_LEFT))
+		{
+			g_Page =
+				(TITLE_OPTION_PAGE)((g_Page - 1 + PAGE_MAX) % PAGE_MAX);
+		}
+
+		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE))
+		{
+			Option = false;
+		}
 	}
 
 	if (ms.leftButton)
@@ -99,7 +192,6 @@ void Title_Draw()
 		//テクスチャをセット
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);//g_Textureを使うように設定する
 
-	//static XMFLOAT2 texcoord = { 0.0f, 0.0f };
 
 	//スプライト描画
 	SetBlendState(BLENDSTATE_NONE);//ブレンド無し
@@ -108,6 +200,44 @@ void Title_Draw()
 	XMFLOAT2 size = { SCREEN_WIDTH, SCREEN_HEIGHT };
 	DrawSprite(pos, size, col);//1枚絵を表示
 
+	g_pContext->PSSetShaderResources(0, 1, &g_Arrow_Title);
+	SetBlendState(BLENDSTATE_ALFA);
+
+	XMFLOAT2 arrowSize =
+	{
+		64.0f,
+		64.0f
+	};
+
+	if (g_SelectedOption == TITLE_OPTION_START)
+	{
+		DrawSprite(Option_1_pos, arrowSize, col);
+	}
+	else
+	{
+		DrawSprite(Option_2_pos, arrowSize, col);
+	}
+
+	g_pContext->PSSetShaderResources(0, 1, &g_Option1_Title);
+	SetBlendState(BLENDSTATE_NONE);
+	size = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+	if (Option)
+	{
+		if (g_Page == PAGE_1)
+		{
+			DrawSprite(pos, size, col);
+		}
+		else
+		{
+			g_pContext->PSSetShaderResources(0, 1, &g_Option2_Title);
+			DrawSprite(pos, size, col);
+		}
+	}
+}
+
+bool GetOption()
+{
+	return Option;
 }
 
 

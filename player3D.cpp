@@ -40,7 +40,8 @@ static XMFLOAT3			FirstRotation;
 static XMFLOAT3			FirstScaling;
 static XMFLOAT3			FirstVelocity;
 static XMFLOAT3			FirstAcceleration;
-static PLAYER_STATE	FirstState;
+static PLAYER_STATE		FirstState;
+static PLAYER_ANIM		FirstAnim;
 static float			FirstStopTime;
 static XMVECTOR			FirstQuaternion;
 
@@ -78,7 +79,15 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 	
-	g_Player3D.Model = ModelLoad("asset\\model\\Hip_Hop_Dancing.fbx");
+	for (int i = 0; i < PLAYER_ANIM_MAX; i++) {
+		g_Player3D.Model[i] = NULL;
+	}
+
+	FirstAnim = g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+
+	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
+	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\Walking.fbx");
+	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
 
 	Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
 	FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -99,7 +108,12 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 //=========================================================================================================
 void Player3D_Finalize(void)
 {
-	ModelRelease(g_Player3D.Model);
+	for (int i = 0; i < PLAYER_ANIM_MAX; i++) {
+		if (g_Player3D.Model[i] != NULL) {
+			ModelRelease(g_Player3D.Model[i]);
+			g_Player3D.Model[i] = NULL;
+		}
+	}
 }
 
 //=========================================================================================================
@@ -211,16 +225,33 @@ void Player3D_Move()
 {
 	// 入力ベクトル
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+	bool isMoving = false;
 
 	// �O�t���[���̓��͂����Z�b�g�i�L�[�𗣂����Ƃ��ɈȑO�̓��͂��c��Ȃ��悤�ɂ���j
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (!gPad.IsConnected())
 	{// �L�[�{�[�h����
-		if (IsInputDown(UpKey, gPad))    inputDir.z += +1.0f;
-		if (IsInputDown(DownKey, gPad))  inputDir.z += -1.0f;
-		if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;
-		if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;
+		if (IsInputDown(UpKey, gPad))
+		{
+			inputDir.z += +1.0f;
+			isMoving = true;
+		}
+		if (IsInputDown(DownKey, gPad)) 
+		{
+			inputDir.z += -1.0f;
+			isMoving = true;
+		}
+		if (IsInputDown(RightKey, gPad))
+		{
+			inputDir.x += +1.0f;
+			isMoving = true;
+		}
+		if (IsInputDown(LeftKey, gPad))
+		{
+			inputDir.x += -1.0f;
+			isMoving = true;
+		}
 	}
 	else
 	{// �R���g���[���[����
@@ -238,6 +269,13 @@ void Player3D_Move()
 		inputDir.z = -ly;      // �O��
 	}
 
+	// Switch animation based on movement
+	if (isMoving) {
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+	}
+	else {
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE; // Or IDLE if you have it
+	}
 
 	float len = Length2D(inputDir);
 	if (len > 1e-6f)
@@ -424,6 +462,7 @@ void Player3D_Reset()
 	g_Player3D.Velocity = g_Player3D.FirstVelocity;
 	g_Player3D.Acceleration = g_Player3D.FirstAcceleration;
 	g_Player3D.state = g_Player3D.FirstState;
+	g_Player3D.CurrentAnimIndex = g_Player3D.FirstAnim;
 	g_StopTime = g_Player3D.FirstStopTime;
 	g_Player3D.Quaternion = g_Player3D.FirstQuaternion;
 
@@ -497,12 +536,16 @@ void Player3D_Draw(void)
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 
-	ModelUpdateAnimation(g_Player3D.Model, 10.0f / 600.0f);   
-	Shader_SetBones(g_Player3D.Model);	
+	MODEL* currentModel = g_Player3D.Model[g_Player3D.CurrentAnimIndex];
 
+	if (currentModel != NULL)
+	{
+		ModelUpdateAnimation(currentModel, 10.0f / 600.0f);
+		Shader_SetBones(currentModel);
+	}
 
 	// ���f���̕`�惊�N�G�X�g
-	ModelDraw(g_Player3D.Model);
+	ModelDraw(currentModel);
 }
 
 XMFLOAT3 Player3D_GetForward()

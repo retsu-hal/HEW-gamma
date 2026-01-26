@@ -152,6 +152,24 @@ void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene)
 
 }
 
+void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state)
+{
+	g_Fade.frame = fadeframe;
+	g_Fade.fadecolor = color;
+	g_Fade.state = state;
+
+	if (g_Fade.state == FADE_IN)
+	{
+		g_Fade.fadecolor.w = 1.0f;	//不透明にする
+	}
+	else
+	{
+		g_Fade.fadecolor.w = 0.0f;	//透明にする
+	}
+
+
+}
+
 //=========================================================================================================
 //フェード状態取得処理
 //=========================================================================================================

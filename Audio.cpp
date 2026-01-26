@@ -186,5 +186,21 @@ void PlayAudio(int Index, bool Loop)
 
 }
 
+void SetMasterVolume(float Volume)
+{
+	if (g_MasteringVoice)
+	{
+		g_MasteringVoice->SetVolume(Volume);
+	}
+}
+
+void SetAudioVolume(int Index, float Volume)
+{
+	if (g_Audio[Index].SourceVoice)
+	{
+		g_Audio[Index].SourceVoice->SetVolume(Volume);
+	}
+}
+
 
 
