@@ -1,6 +1,6 @@
+//Player2D.cpp
 #include "Player2D.h"
 #include "PlayerStatus.h"
-#include "KeyBind.h"
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
@@ -152,12 +152,6 @@ XMFLOAT3 GetPlayer2DPosition()
 }
 
 
-
-//=========================================================================================================
-// セッター
-//=========================================================================================================
-
-
 //=========================================================================================================
 // 処理
 //=========================================================================================================
@@ -219,7 +213,7 @@ void Player2D_Respawn()
 		Player2D_Reset();
 		return;
 	}
-	if (IsInputDown(ResetKey, gPad))
+	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player2D_Reset();
 	}
@@ -229,9 +223,8 @@ void Player2D_Move()
 {
 	XMFLOAT3 inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	// 入力取得（左右のみ）
-	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;  // 右
-	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;  // 左
+	if (IsInputPress(RightKey, gPad)) inputDir.x += +1.0f;
+	if (IsInputPress(LeftKey, gPad))  inputDir.x += -1.0f;
 
 	if (fabsf(inputDir.x) > 0.0001f)
 	{
@@ -269,22 +262,20 @@ void Player2D_Move()
 
 void Player2D_Jump()
 {
-	if (IsInputDown(JumpKey, gPad))
+	if (IsInputTrigger(JumpKey, gPad))
 	{
 		if (g_Player2D.isGround)
 		{
-			// Y軸方向にジャンプ（壁に貼り付いた状態での上方向）
-			g_Player2D.Velocity.y = g_Player2D.jumpPower;
-
-			g_Player2D.isGround = false;
-			g_Player2D.state = PLAYER_STATE_FALL;
+			//g_Player2D.Velocity.y += g_Player2D.jumpPower;//������ɏ�����^����
+			// �󒆂ɂ����Ԃ�
+			// g_Player2D.state = PLAYER2D_STATE_FALL;
 		}
 	}
 }
 
 void Player2D_Change()
 {
-	if (IsInputDown(ChangeKey, gPad))
+	if (IsInputTrigger(ChangeKey, gPad))
 	{
 		// ◆3Dに変身
 		// 

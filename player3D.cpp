@@ -1,7 +1,7 @@
+//Player3D.cpp
 #include "Player3D.h"
 #include "PlayerStatus.h"
 #include "Keyboard.h"
-#include "KeyBind.h"
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
@@ -201,7 +201,7 @@ void Player3D_Respawn()
 		Player3D_Reset();
 		return;
 	}
-	if (IsInputDown(ResetKey, gPad))
+	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player3D_Reset();
 	}
@@ -312,7 +312,7 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-	if (IsInputDown(JumpKey, gPad)) 
+	if (IsInputTrigger(JumpKey, gPad))
 	{
 		if (g_Player3D.isGround)
 		{
@@ -325,7 +325,7 @@ void Player3D_Jump()
 
 void Player3D_Change()
 {
-	if (IsInputDown(ChangeKey, gPad))
+	if (IsInputTrigger(ChangeKey, gPad))
 	{
 		// ���e�ɕϐg
 		// 
@@ -338,9 +338,23 @@ void Player3D_Change()
 	}
 }
 
+void Player3D_Dash()
+{
+	if (IsInputPress(DashKey, gPad))
+	{
+		// ダッシュ処理
+		// 最大移動速度を一時的に上げる
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
+	}
+	else
+	{
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
+	}
+}
+
 void Player3D_Action()
 {
-	if (IsInputDown(ActionKey, gPad))
+	if (IsInputTrigger(ActionKey, gPad))
 	{
 		// ����������
 		//

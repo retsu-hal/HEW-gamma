@@ -1,3 +1,4 @@
+//fade.cpp
 #include	"fade.h"
 #include	"shader.h"
 

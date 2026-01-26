@@ -1,3 +1,4 @@
+//Player3D.h
 #pragma once
 
 #include <d3d11.h>
@@ -5,6 +6,7 @@
 #include "direct3d.h"
 #include "model.h"
 #include "PlayerStatus.h"
+#include "KeyBind.h"
 
 //=========================================================================================================
 // É}ÉNÉçíËã`

@@ -1,3 +1,4 @@
+//manager.cpp
 #include "direct3d.h"
 #include "Manager.h"
 #include "keyboard.h"
