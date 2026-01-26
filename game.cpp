@@ -5,7 +5,7 @@
 #include	"keyboard.h"
 #include	"Polygon3D.h"
 #include	"Player3D.h"
-#include "Player2D.h"
+#include	"Player2D.h"
 #include	"LightSource.h"
 #include	"field.h"
 #include	"Effect.h"
@@ -13,7 +13,7 @@
 #include	"Audio.h"
 #include	"camera.h"
 #include	"direct3d.h"
-#include "Collision.h"
+#include	"Collision.h"
 
 #include "PlayerModeSwitchManager.h"
 
@@ -21,7 +21,7 @@
 
 static bool debugMode = TRUE;
 
-static	int		g_BgmID = NULL;
+static	int	g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
 
 static ID3D11Device* g_pDevice = nullptr;
