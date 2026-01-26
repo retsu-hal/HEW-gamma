@@ -175,6 +175,14 @@ void Player2D_Gravity()
 			g_Player2D.Velocity.y = g_Player2D.gravityPower;
 		}
 	}
+	else
+	{
+		// 接地中は下方向の速度をリセット（上方向は許可）
+		if (g_Player2D.Velocity.y < 0.0f)
+		{
+			g_Player2D.Velocity.y = 0.0f;
+		}
+	}
 
 	// X-Z平面の摩擦による減速
 	g_Player2D.Velocity.x *= 0.925f;
@@ -192,9 +200,11 @@ void Player2D_Gravity()
 	{
 		g_Player2D.Velocity.y = 0.0f;
 	}
+
 	float len = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
 		g_Player2D.Velocity.y * g_Player2D.Velocity.y +
 		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+
 	if (len <= 0.0002f)
 	{
 		g_StopTime++;

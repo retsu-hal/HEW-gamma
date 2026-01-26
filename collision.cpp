@@ -864,6 +864,8 @@ bool Player2DShadow_Collision()
 	{
 		bool hitThisIter = false;
 
+		float footY = player->Position.y;
+
 		// プレイヤーの中心位置（毎回更新）
 		XMFLOAT3 playerCenter = XMFLOAT3(
 			player->Position.x,
@@ -880,14 +882,49 @@ bool Player2DShadow_Collision()
 			float margin = halfSize.x + 0.1f;
 			if (playerCenter.x < prism->aabbMin.x - margin ||
 				playerCenter.x > prism->aabbMax.x + margin ||
-				playerCenter.y < prism->aabbMin.y - halfSize.y - margin ||
-				playerCenter.y > prism->aabbMax.y + margin ||
+				footY > prism->aabbMax.y + margin ||           // 足元が影より上すぎる
+				footY + halfSize.y * 2.0f < prism->aabbMin.y - margin ||  // 頭が影より下すぎる
 				playerCenter.z < prism->aabbMin.z - margin ||
 				playerCenter.z > prism->aabbMax.z + margin)
 			{
 				continue;
 			}
 
+			// 影の上面Y座標
+			float shadowTopY = prism->aabbMax.y;
+
+			// プレイヤーがX-Z範囲内にいるかチェック
+			bool inXZRange = (playerCenter.x >= prism->aabbMin.x - halfSize.x &&
+				playerCenter.x <= prism->aabbMax.x + halfSize.x &&
+				playerCenter.z >= prism->aabbMin.z - halfSize.z &&
+				playerCenter.z <= prism->aabbMax.z + halfSize.z);
+
+			if (!inXZRange) continue;
+
+			float footToShadowTop = footY - shadowTopY;
+
+			// 足元が影の上面より少し下～少し上の範囲にいる場合
+			if (footToShadowTop >= -halfSize.y && footToShadowTop <= 0.1f)
+			{
+				// 下降中または停止中の場合、着地
+				if (player->Velocity.y <= 0.01f)
+				{
+					// 足元を影の上面に配置
+					player->Position.y = shadowTopY;
+
+					// Y方向の速度を停止
+					player->Velocity.y = 0.0f;
+
+					// 接地フラグを設定
+					player->isGround = true;
+
+					hitThisIter = true;
+					hitAny = true;
+					continue;  // この影との処理は完了
+				}
+			}
+
+			// 側面・底面との衝突判定（従来のロジック）
 			// プレイヤー位置をプリズムのローカル座標に変換
 			XMFLOAT3 rel = playerCenter - prism->origin;
 			float localU = Dot(rel, prism->u);
@@ -926,13 +963,12 @@ bool Player2DShadow_Collision()
 				continue;
 			}
 
-			// 最小侵入量の方向を見つける
+			// 最小侵入量の方向を見つける（上面は除外、既に処理済み）
 			float minPen = FLT_MAX;
 			int pushDir = 0;
 
 			if (penU_pos < minPen) { minPen = penU_pos; pushDir = 1; }
 			if (penU_neg < minPen) { minPen = penU_neg; pushDir = 2; }
-			if (penV_pos < minPen) { minPen = penV_pos; pushDir = 3; }
 			if (penV_neg < minPen) { minPen = penV_neg; pushDir = 4; }
 			if (penN_pos < minPen) { minPen = penN_pos; pushDir = 5; }
 			if (penN_neg < minPen) { minPen = penN_neg; pushDir = 6; }
@@ -941,50 +977,62 @@ bool Player2DShadow_Collision()
 
 			// 押し出しベクトルを計算
 			XMFLOAT3 pushDir3 = { 0, 0, 0 };
-			bool isGroundHit = false;
+			bool isSideCollision = false;
 
 			switch (pushDir)
 			{
-			case 1:  // +U方向に押し出し
+			case 1:  // +U方向（側面）
 				pushDir3 = prism->u;
+				isSideCollision = true;
 				break;
-			case 2:  // -U方向に押し出し
+			case 2:  // -U方向（側面）
 				pushDir3 = { -prism->u.x, -prism->u.y, -prism->u.z };
+				isSideCollision = true;
 				break;
-			case 3:  // +V方向に押し出し（上方向＝着地の可能性）
-				pushDir3 = prism->v;
-				if (prism->v.y > 0.5f) isGroundHit = true;
-				break;
-			case 4:  // -V方向に押し出し（下から頭をぶつけた）
+			case 4:  // -V方向（下から頭をぶつけた）
 				pushDir3 = { -prism->v.x, -prism->v.y, -prism->v.z };
+				isSideCollision = false;  // 底面は弾き出し
 				break;
-			case 5:  // +N方向に押し出し
+			case 5:  // +N方向（側面）
 				pushDir3 = prism->n;
-				if (prism->n.y > 0.5f) isGroundHit = true;
+				isSideCollision = true;
 				break;
-			case 6:  // -N方向に押し出し
+			case 6:  // -N方向（側面）
 				pushDir3 = { -prism->n.x, -prism->n.y, -prism->n.z };
+				isSideCollision = true;
 				break;
 			}
 
-			// 押し出しを適用
-			player->Position.x += pushDir3.x * minPen;
-			player->Position.y += pushDir3.y * minPen;
-			player->Position.z += pushDir3.z * minPen;
 
-			// 速度の該当成分を停止
-			float velDot = Dot(player->Velocity, pushDir3);
-			if (velDot < 0)  // 衝突方向に向かっている場合のみ停止
+			if (isSideCollision)
 			{
-				player->Velocity.x -= velDot * pushDir3.x;
-				player->Velocity.y -= velDot * pushDir3.y;
-				player->Velocity.z -= velDot * pushDir3.z;
+				// 側面衝突：壁のように位置補正 + 速度停止
+				player->Position.x += pushDir3.x * minPen;
+				player->Position.y += pushDir3.y * minPen;
+				player->Position.z += pushDir3.z * minPen;
+
+				// X-Z方向の速度を完全停止（壁のように）
+				if (fabsf(pushDir3.x) > 0.3f)
+				{
+					player->Velocity.x = 0.0f;
+				}
+				if (fabsf(pushDir3.z) > 0.3f)
+				{
+					player->Velocity.z = 0.0f;
+				}
 			}
-
-			// 接地判定
-			if (isGroundHit && player->Velocity.y <= 0.01f)
+			else
 			{
-				player->isGround = true;
+				// 底面衝突：通常の押し出し
+				player->Position.x += pushDir3.x * minPen;
+				player->Position.y += pushDir3.y * minPen;
+				player->Position.z += pushDir3.z * minPen;
+
+				// 上昇速度を停止
+				if (player->Velocity.y > 0)
+				{
+					player->Velocity.y = 0.0f;
+				}
 			}
 
 			hitThisIter = true;
