@@ -152,7 +152,7 @@ void Title_Manager_Update()
 		Player2D_Update();
 		//Player2DCamera_Update();
 	}
-	Player3DCamera_Update();
+	Title_Camera_Update();
 }
 void Title_Manager_Draw()
 {

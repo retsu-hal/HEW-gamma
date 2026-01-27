@@ -151,6 +151,38 @@ void Player2DCamera_Update()
 
 }
 
+void Title_Camera_Update()
+{
+	XMFLOAT3 pos = g_PlayerPosOld;
+	g_PlayerPosOld = GetPlayer3DPosition();
+
+	pos.x = g_PlayerPosOld.x - pos.x;
+	pos.y = g_PlayerPosOld.y - pos.y;
+	pos.z = g_PlayerPosOld.z - pos.z;
+
+	CameraObject.Position.x += pos.x;
+	CameraObject.Position.y += pos.y;
+	CameraObject.Position.z += pos.z;
+
+	CameraObject.AtPosition.x = g_PlayerPosOld.x;
+	CameraObject.AtPosition.y = g_PlayerPosOld.y;
+	CameraObject.AtPosition.z = g_PlayerPosOld.z;
+
+
+	float Rotation = 0.0f;
+
+
+	XMFLOAT2 vec;
+	vec.x = CameraObject.Position.x - CameraObject.AtPosition.x;
+	vec.y = CameraObject.Position.z - CameraObject.AtPosition.z;
+	float cos = cosf(XMConvertToRadians(Rotation));
+	float sin = sinf(XMConvertToRadians(Rotation));
+	CameraObject.Position.x = (vec.x * cos - vec.y * sin);
+	CameraObject.Position.z = (vec.x * sin + vec.y * cos);
+	CameraObject.Position.x += CameraObject.AtPosition.x;
+	CameraObject.Position.z += CameraObject.AtPosition.z;
+}
+
 //=========================================================================================================
 // ï`âÊèàóù
 //=========================================================================================================
