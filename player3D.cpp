@@ -232,22 +232,22 @@ void Player3D_Move()
 
 	if (!gPad.IsConnected())
 	{// �L�[�{�[�h����
-		if (IsInputDown(UpKey, gPad))
+		if (Keyboard_IsKeyDown(KK_W))
 		{
 			inputDir.z += +1.0f;
 			isMoving = true;
 		}
-		if (IsInputDown(DownKey, gPad)) 
+		if (Keyboard_IsKeyDown(KK_S))
 		{
 			inputDir.z += -1.0f;
 			isMoving = true;
 		}
-		if (IsInputDown(RightKey, gPad))
+		if (Keyboard_IsKeyDown(KK_D))
 		{
 			inputDir.x += +1.0f;
 			isMoving = true;
 		}
-		if (IsInputDown(LeftKey, gPad))
+		if (Keyboard_IsKeyDown(KK_A))
 		{
 			inputDir.x += -1.0f;
 			isMoving = true;
