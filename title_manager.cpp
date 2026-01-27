@@ -58,6 +58,7 @@ void Title_Manager_Finalize()
 }
 void Title_Manager_Update()
 {
+	Title_Camera_Update();
 	Light_Update();
 	field_Update();
 
@@ -152,7 +153,7 @@ void Title_Manager_Update()
 		Player2D_Update();
 		//Player2DCamera_Update();
 	}
-	Title_Camera_Update();
+	
 }
 void Title_Manager_Draw()
 {

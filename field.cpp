@@ -253,11 +253,17 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
 	{
 		// Error:  could not load map
 		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
 	}
+
+	//if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+	//{
+	//	// Error:  could not load map
+	//	MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+	//}
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
@@ -477,6 +483,12 @@ bool LoadMapFromFile(const char* filename)
 		isMap1 = true;
 	}
 
+	bool isMapTitle = false;
+	if (strstr(filename, "title") != nullptr)
+	{
+		isMapTitle = true;
+	}
+
 	g_MapData.clear();
 	std::string line;
 	int y = 0;  // height layer
@@ -518,7 +530,7 @@ bool LoadMapFromFile(const char* filename)
 			if (valid)
 			{
 				MAPDATA data;
-				if (isMap1)
+				if (isMap1 || isMapTitle)
 				{
 					data.pos = XMFLOAT3(
 						(float)(x - 2),
