@@ -24,7 +24,11 @@
 
 static bool debugMode = TRUE;
 
+<<<<<<< HEAD
+static	int	g_BgmID = NULL;
+=======
 static	int g_BgmID = NULL;
+>>>>>>> origin/main
 LIGHTOBJECT g_BallLight;
 
 static ID3D11Device* g_pDevice = nullptr;

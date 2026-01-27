@@ -128,10 +128,13 @@ void Player3D_Update()
 	Player3D_Gravity();	//重力処理
 
 	// プレイヤー操作
+	
 	Player3D_Move();	//移動
+	Player3D_Dash();	//ダッシュ
 	Player3D_Jump();	//ジャンプ
 	Player3D_Change();	//影変身
 	Player3D_Action();	//アクション
+	
 
 	switch (g_Player3D.state)
 	{
@@ -232,22 +235,22 @@ void Player3D_Move()
 
 	if (!gPad.IsConnected())
 	{// �L�[�{�[�h����
-		if (IsInputDown(UpKey, gPad))
+		if (Keyboard_IsKeyDown(KK_W))
 		{
 			inputDir.z += +1.0f;
 			isMoving = true;
 		}
-		if (IsInputDown(DownKey, gPad)) 
+		if (Keyboard_IsKeyDown(KK_S))
 		{
 			inputDir.z += -1.0f;
 			isMoving = true;
 		}
-		if (IsInputDown(RightKey, gPad))
+		if (Keyboard_IsKeyDown(KK_D))
 		{
 			inputDir.x += +1.0f;
 			isMoving = true;
 		}
-		if (IsInputDown(LeftKey, gPad))
+		if (Keyboard_IsKeyDown(KK_A))
 		{
 			inputDir.x += -1.0f;
 			isMoving = true;
@@ -305,8 +308,17 @@ void Player3D_Move()
 		);
 		moveWorld = Normalize2D(moveWorld);
 
-		g_Player3D.Velocity.x += moveWorld.x * g_Player3D.moveSpeed;
-		g_Player3D.Velocity.z += moveWorld.z * g_Player3D.moveSpeed;
+		if (g_Player3D.isDash)
+		{
+			g_Player3D.Velocity.x += moveWorld.x * (g_Player3D.moveSpeed * g_Player3D.dashMoveSpeed);
+			g_Player3D.Velocity.z += moveWorld.z * (g_Player3D.moveSpeed * g_Player3D.dashMoveSpeed);
+		}
+		else
+		{
+			g_Player3D.Velocity.x += moveWorld.x * g_Player3D.moveSpeed;
+			g_Player3D.Velocity.z += moveWorld.z * g_Player3D.moveSpeed;
+		}
+		
 
 		// ���͂�����ꍇ�ɂ̂݌������X�V
 		float targetYawRad = atan2f(moveWorld.x, moveWorld.z);
@@ -382,10 +394,12 @@ void Player3D_Dash()
 	{
 		// ダッシュ処理
 		// 最大移動速度を一時的に上げる
+		g_Player3D.isDash = true;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 	}
 	else
 	{
+		g_Player3D.isDash = false;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
 	}
 }
