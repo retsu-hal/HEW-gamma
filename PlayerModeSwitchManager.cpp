@@ -7,7 +7,12 @@
 #include "Player2D.h"
 #include "keyboard.h"
 
+#include <cfloat>
+#include <algorithm>
+
 #include "debug.h"
+#include "MathUtil.h"
+using namespace mu;
 
 static bool debugMode = TRUE;
 
@@ -22,23 +27,6 @@ static PLAYER_MODE g_Mode = MODE_3D;
 
 static const auto TABKey = KK_TAB;
 
-//---------------------------------------------------------------------------------------------------------
-// ベクトル・当たり判定関連ユーティリティ
-static inline float ClampF(float v, float a, float b) { return (v < a) ? a : (v > b) ? b : v; }
-// 3Dベクトル演算
-static XMFLOAT3 Add(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
-static XMFLOAT3 Sub(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
-static XMFLOAT3 Mul(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
-// 内積
-static float Dot(const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-// 長さ
-static XMFLOAT3 Normalize(const XMFLOAT3& v)
-{
-    float len2 = v.x * v.x + v.y * v.y + v.z * v.z;
-    if (len2 <= 1e-8f) return { 0,0,1 };
-    float inv = 1.0f / sqrtf(len2);
-    return { v.x * inv, v.y * inv, v.z * inv };
-}
 // フィールドの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
@@ -232,9 +220,9 @@ static XMFLOAT3 Calc2DPositionOnFace_OBB(
     float maxZ = half.z - p2Half.z;
 
 	// クランプ
-    local.x = ClampF(local.x, minX, maxX);
-    local.y = ClampF(local.y, minY, maxY);
-    local.z = ClampF(local.z, minZ, maxZ);
+    local.x = Clamp(local.x, minX, maxX);
+    local.y = Clamp(local.y, minY, maxY);
+    local.z = Clamp(local.z, minZ, maxZ);
 
 	// 面に合わせて位置調整
     if (face == FACE_POS_X) local.x = half.x + (kPlayer2DThickness + kWallOffset);
@@ -361,7 +349,7 @@ static bool TrySwitch2DTo3D()
 
     XMFLOAT3 front = fwd;
 
-    XMFLOAT3 landing = Add(p2->Position, Mul(front, kTo3DFrontOffset));
+    XMFLOAT3 landing = p2->Position + front * kTo3DFrontOffset;
 
     float startY = p2->Position.y + kGroundSearchUp;
     float topY;

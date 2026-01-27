@@ -414,12 +414,14 @@ void CreateBox()
 
 XMMATRIX Field_GetWorldMatrix(int i)
 {
-	XMMATRIX ScalingMatrix = XMMatrixScaling(1.0f, 1.0f, 1.0f);
-	XMMATRIX TranslationMatrix = XMMatrixTranslation(g_MapData[i].pos.x, g_MapData[i].pos.y, g_MapData[i].pos.z);
+	const auto& m = g_MapData[i];
+
+	XMMATRIX ScalingMatrix = XMMatrixScaling(m.scale.x, m.scale.y, m.scale.z);
+	XMMATRIX TranslationMatrix = XMMatrixTranslation(m.pos.x, m.pos.y, m.pos.z);
 	XMMATRIX RotationMatrix = XMMatrixRotationRollPitchYaw(
-		XMConvertToRadians(0.0f),
-		XMConvertToRadians(0.0f),
-		XMConvertToRadians(0.0f));
+		XMConvertToRadians(m.rotate.x),
+		XMConvertToRadians(m.rotate.y),
+		XMConvertToRadians(m.rotate.z));
 	return ScalingMatrix * RotationMatrix * TranslationMatrix;
 }
 
@@ -428,23 +430,23 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(matrix);
 	// Set vertex and index buffers for box
+
+	if (g_MapData[i].no == FIELD_GROUND)
+		return; // skip shadow
+	
+	if (Model[g_MapData[i].no])
+	{
+		ModelDraw(Model[g_MapData[i].no]);
+		return;
+	}
+
 	UINT stride = sizeof(Vertex3D);
 	UINT offset = 0;
 	g_pContext->IASetVertexBuffers(0, 1, &g_VertexBuffer, &stride, &offset);
 	g_pContext->IASetIndexBuffer(g_IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	g_pContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	if (g_MapData[i].no == FIELD_GROUND)
-	{
-		return; // skip shadow
-		g_pContext->DrawIndexed(6 * 6, 0, 0); // ¨@—~‚µ‚¢‚È‚çreturn‚Ìã‚É‚¢‚ê‚Î‚¢‚¢
-	}
-	else if (g_MapData[i].no == FIELD_OBJ_2)
-	{
-		g_pContext->DrawIndexed(6 * 6, 0, 0);
-	}
-	else if (Model[g_MapData[i].no])
-		ModelDraw(Model[g_MapData[i].no]);
+	g_pContext->DrawIndexed(6 * 6, 0, 0);
 
 }
 

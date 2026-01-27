@@ -5,15 +5,22 @@
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
+#include "manager.h"
+#include "Input.h"
+
+#include "debug.h"
+#include "MathUtil.h"
+using namespace mu;
+
 
 //=========================================================================================================
-// デバッグ用
+// �}�N����`
 //=========================================================================================================
 #include "debug.h"
 static bool debugMode = TRUE;
 
 //=========================================================================================================
-// グローバル変数
+// �O���[�o���ϐ�
 //=========================================================================================================
 
 PLAYER g_Player3D;
@@ -21,7 +28,33 @@ ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 static float g_StopTime = 0.0f;
 
-// プレイヤー当たり判定サイズ
+// �R���g���[���[
+extern Controller gPad;
+
+// ���̓x�N�g��
+static XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+
+// ���Z�b�g�p
+static XMFLOAT3			Firstposition;
+static XMFLOAT3			FirstRotation;
+static XMFLOAT3			FirstScaling;
+static XMFLOAT3			FirstVelocity;
+static XMFLOAT3			FirstAcceleration;
+static PLAYER_STATE		FirstState;
+static PLAYER_ANIM		FirstAnim;
+static float			FirstStopTime;
+static XMVECTOR			FirstQuaternion;
+
+// �v���C���[�X�e�[�^�X
+static float moveSpeed = 0.005f;		//�ړ����x
+static float maxMoveSpeed = 1.0f;		//�ő�ړ����x
+static float maxFallSpeed = -0.5f;		//�ő嗎�����x
+static float  dampingXZ = 0.925f;		//���C�W��
+static float gravityPower = -1.0f;		//�d�͉����x
+static float jumpPower = 0.175f;		//�W�����v��
+
+float FirstMaxMoveSpeed = maxMoveSpeed;
+
 static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
 	PLAYER3D_SOLID_HALF_X,
 	PLAYER3D_SOLID_HALF_Y,
@@ -35,41 +68,56 @@ static XMFLOAT3 g_TriggerHalfSize = XMFLOAT3(
 
 static bool g_Player3DActive = true;
 
-bool isTrigger = false;
+static bool isTrigger = false;
 
 //=========================================================================================================
-// 初期化処理
+// ����������
 //=========================================================================================================
 void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// デバイスとデバイスコンテキストの保存
+	// �f�o�C�X�ƃf�o�C�X�R���e�L�X�g�̕ۑ�
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 	
-	g_Player3D.Model = ModelLoad("asset\\model\\Hip_Hop_Dancing.fbx");
+	for (int i = 0; i < PLAYER_ANIM_MAX; i++) {
+		g_Player3D.Model[i] = NULL;
+	}
 
-	g_Player3D.Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
-	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
-	g_Player3D.FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_Player3D.FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_Player3D.FirstState = g_Player3D.state = PLAYER_STATE_MOVE;
-	g_Player3D.FirstStopTime = g_StopTime = 0.0f;
-	g_Player3D.FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
+	FirstAnim = g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+
+	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
+	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\Walking.fbx");
+	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
+
+	Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
+	FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
+	FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
+	FirstState = g_Player3D.state = PLAYER_STATE_MOVE;
+	FirstStopTime = g_StopTime = 0.0f;
+	FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
+
+	FirstMaxMoveSpeed = maxMoveSpeed;	//�����ő�ړ����x
 
 	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//初期最大移動速度
 }
 
 //=========================================================================================================
-// 終了処理
+// �I������
 //=========================================================================================================
 void Player3D_Finalize(void)
 {
-	ModelRelease(g_Player3D.Model);
+	for (int i = 0; i < PLAYER_ANIM_MAX; i++) {
+		if (g_Player3D.Model[i] != NULL) {
+			ModelRelease(g_Player3D.Model[i]);
+			g_Player3D.Model[i] = NULL;
+		}
+	}
 }
 
 //=========================================================================================================
-// 更新処理
+// �X�V����
 //=========================================================================================================
 void Player3D_Update()
 {
@@ -91,16 +139,16 @@ void Player3D_Update()
 	switch (g_Player3D.state)
 	{
 	case PLAYER_STATE_IDLE:
-		//Idleアニメーション
+		//Idle�A�j���[�V����
 		break;
 	case PLAYER_STATE_MOVE:
-		//Moveアニメーション
+		//Move�A�j���[�V����
 		break;
 	case PLAYER_STATE_FALL:
-		//Fallアニメーション
+		//Fall�A�j���[�V����
 		break;
 	case PLAYER_STATE_ACTION:
-		//Actionアニメーション
+		//Action�A�j���[�V����
 		break;
 	default:
 		break;
@@ -109,7 +157,7 @@ void Player3D_Update()
 }
 
 //=========================================================================================================
-// ゲッター
+// �Q�b�^�[
 //=========================================================================================================
 XMFLOAT3 GetPlayer3DPosition()
 {
@@ -118,12 +166,12 @@ XMFLOAT3 GetPlayer3DPosition()
 
 
 //=========================================================================================================
-// 処理
+// ����
 //=========================================================================================================
 void Player3D_Gravity()
 {
-	// --- 重力加算（空中のみ） ---
-	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
+	// --- �d�͉��Z�i�󒆂̂݁j ---
+	if (g_Player3D.Velocity.x >= maxMoveSpeed) g_Player3D.Velocity.x = maxMoveSpeed;
 	else g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 
 	if (g_Player3D.Velocity.z >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.z = g_Player3D.maxMoveSpeed;
@@ -147,7 +195,7 @@ void Player3D_Gravity()
 			g_Player3D.Velocity.y = 0.0f;
 	}
 
-	// --- XZ移動（従来どおり） ---
+	// --- XZ�ړ��i�]���ǂ���j ---
 	g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 	g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
 
@@ -164,7 +212,7 @@ void Player3D_Gravity()
 
 void Player3D_Respawn()
 {
-	// 落下チェック
+	// �����`�F�b�N
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Reset();
@@ -180,87 +228,85 @@ void Player3D_Move()
 {
 	// 入力ベクトル
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+	bool isMoving = false;
 
-	// 前フレームの入力をリセット（キーを離したときに以前の入力が残らないようにする）
+	// �O�t���[���̓��͂����Z�b�g�i�L�[�𗣂����Ƃ��ɈȑO�̓��͂��c��Ȃ��悤�ɂ���j
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (!gPad.IsConnected())
-	{// キーボード入力
-		if (Keyboard_IsKeyDown(KK_W)) inputDir.z += +1.0f;
-		if (Keyboard_IsKeyDown(KK_S)) inputDir.z += -1.0f;
-		if (Keyboard_IsKeyDown(KK_D)) inputDir.x += +1.0f;
-		if (Keyboard_IsKeyDown(KK_A)) inputDir.x += -1.0f;
+	{// �L�[�{�[�h����
+		if (Keyboard_IsKeyDown(KK_W))
+		{
+			inputDir.z += +1.0f;
+			isMoving = true;
+		}
+		if (Keyboard_IsKeyDown(KK_S))
+		{
+			inputDir.z += -1.0f;
+			isMoving = true;
+		}
+		if (Keyboard_IsKeyDown(KK_D))
+		{
+			inputDir.x += +1.0f;
+			isMoving = true;
+		}
+		if (Keyboard_IsKeyDown(KK_A))
+		{
+			inputDir.x += -1.0f;
+			isMoving = true;
+		}
 	}
 	else
-	{// コントローラー入力
+	{// �R���g���[���[����
 		float lx = gPad.GetLeftStickX();
 		float ly = gPad.GetLeftStickY();
 
-		// デッドゾーンを入れて微小入力を無視
+		// �f�b�h�]�[�������Ĕ������͂𖳎�
 		const float deadzone = 0.20f;
 		if (fabsf(lx) < deadzone) lx = 0.0f;
 		if (fabsf(ly) < deadzone) ly = 0.0f;
 
-		inputDir.x = -lx;      // 左右
-		inputDir.y = 0.0f;     // 3Dなら Y は高さとして使わない
-		inputDir.z = -ly;      // 前後
+		// ���E���t�ɂȂ�����C���i�X�e�B�b�N�E�� x �����ɂȂ�悤�����𔽓]�j
+		inputDir.x = -lx;      // ���E
+		inputDir.y = 0.0f;     // 3D�Ȃ� Y �͍����Ƃ��Ďg��Ȃ�
+		inputDir.z = -ly;      // �O��
 	}
 
-	// 長さ計算
-	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
+	// Switch animation based on movement
+	if (isMoving) {
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+	}
+	else {
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE; // Or IDLE if you have it
+	}
+
+	float len = Length2D(inputDir);
 	if (len > 1e-6f)
 	{
-		// 正規化ベクトル × 加速
-		inputDir.x /= len;
-		inputDir.z /= len;
 
-		// カメラの向きに合わせて移動方向を変換
+		inputDir = Normalize2D(inputDir);
+
+		// �J�����̌����ɍ��킹�Ĉړ�������ϊ�
 		XMFLOAT3 camPos = GetCameraPosition();
 		XMFLOAT3 camAt = GetCameraAtPosition();
+
 		XMFLOAT3 camFwd = XMFLOAT3(
 			camAt.x - camPos.x,
 			0.0f,
 			camAt.z - camPos.z
-		);// カメラの前方向ベクトル
-
-		float flen = sqrtf(camFwd.x * camFwd.x + camFwd.z * camFwd.z);
-		if (flen > 1e-6f)
-		{
-			camFwd.x /= flen;
-			camFwd.z /= flen;
-		}
-		else
-		{
-			camFwd = XMFLOAT3(0.0f, 0.0f, 1.0f);
-		}
-
-		// カメラの右方向ベクトル
-
+		);
+		camFwd = Normalize2D(camFwd);
 		XMFLOAT3 camRight = XMFLOAT3(
 			camFwd.z,
 			0.0f,
 			-camFwd.x
 		);
-		float rlen = sqrtf(camRight.x * camRight.x + camRight.z * camRight.z);
-		if (rlen > 1e-6f)
-		{
-			camRight.x /= rlen;
-			camRight.z /= rlen;
-		}
-
-		// 移動方向をワールド座標に変換
-
 		XMFLOAT3 moveWorld = XMFLOAT3(
 			camFwd.x * inputDir.z + camRight.x * inputDir.x,
 			0.0f,
 			camFwd.z * inputDir.z + camRight.z * inputDir.x
 		);
-		float mlen = sqrtf(moveWorld.x * moveWorld.x + moveWorld.z * moveWorld.z);
-		if (mlen > 1e-6f)
-		{
-			moveWorld.x /= mlen;
-			moveWorld.z /= mlen;
-		}
+		moveWorld = Normalize2D(moveWorld);
 
 		if (g_Player3D.isDash)
 		{
@@ -274,15 +320,15 @@ void Player3D_Move()
 		}
 		
 
-		// 入力がある場合にのみ向きを更新
+		// ���͂�����ꍇ�ɂ̂݌������X�V
 		float targetYawRad = atan2f(moveWorld.x, moveWorld.z);
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
 
-		// モデルの初期向きに合わせるオフセット（必要なら調整）
-		const float yawOffset = g_Player3D.FirstRotation.y;
+		// ���f���̏��������ɍ��킹��I�t�Z�b�g�i�K�v�Ȃ璲���j
+		const float yawOffset = FirstRotation.y;
 		targetYawDeg += yawOffset;
 
-		// スムーズ回転（角度差を最短経路で求めて補間）
+		// �X���[�Y��]�i�p�x�����ŒZ�o�H�ŋ��߂ĕ�ԁj
 
 		float currentYaw = g_Player3D.Rotation.y;
 		float delta = targetYawDeg - currentYaw;
@@ -292,10 +338,10 @@ void Player3D_Move()
 		const float rotateLerp = 0.2f;
 		g_Player3D.Rotation.y = currentYaw + delta * rotateLerp;
 	}
-	// 入力無しのときは回転を変更しない（最後に向いていた方向を保持）
+	// ���͖����̂Ƃ��͉�]��ύX���Ȃ��i�Ō�Ɍ����Ă���������ێ��j
 
-	//速度制限
-	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed)
+	//���x����
+	if (g_Player3D.Velocity.x >= maxMoveSpeed)
 	{
 		g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
 	}
@@ -331,13 +377,13 @@ void Player3D_Change()
 {
 	if (IsInputTrigger(ChangeKey, gPad))
 	{
-		// ◆影に変身
+		// ���e�ɕϐg
 		// 
-		// 壁に近づいたときに反応
-		// ↓
-		// 2Dキャラクターを3Dプレイヤーの座標を参照して生成
-		// ↓
-		// 3Dプレイヤーを削除する
+		// �ǂɋ߂Â����Ƃ��ɔ���
+		// ��
+		// 2D�L�����N�^�[��3D�v���C���[�̍��W���Q�Ƃ��Đ���
+		// ��
+		// 3D�v���C���[���폜����
 		// 
 	}
 }
@@ -362,40 +408,40 @@ void Player3D_Action()
 {
 	if (IsInputTrigger(ActionKey, gPad))
 	{
-		// ◆箱を持つ
+		// ����������
 		//
-		// アニメーション
-		// ↓
-		// 箱をプレイヤーの座標に追従させる
-		// ↓
-		// 箱持ち状態をtrueにする
+		// �A�j���[�V����
+		// ��
+		// �����v���C���[�̍��W�ɒǏ]������
+		// ��
+		// ��������Ԃ�true�ɂ���
 		// 
 		// 
-		// ◆箱を離す
+		// �����𗣂�
 		// 
-		// アニメーション
-		// ↓
-		// 箱をプレイヤーに追従させるのをやめる
-		// ↓
-		// 箱持ち状態をfalseにする
+		// �A�j���[�V����
+		// ��
+		// �����v���C���[�ɒǏ]������̂���߂�
+		// ��
+		// ��������Ԃ�false�ɂ���
 		// 
 		// 
-		// ◆照明操作を始める
+		// ���Ɩ�������n�߂�
 		// 
-		// アニメーション
-		// ↓
-		// 照明操作状態をtrueにする
-		// ↓
-		// 移動入力を受け付けなくする
+		// �A�j���[�V����
+		// ��
+		// �Ɩ������Ԃ�true�ɂ���
+		// ��
+		// �ړ����͂��󂯕t���Ȃ�����
 		// 
 		//  
-		// ◆照明操作をやめる
+		// ���Ɩ��������߂�
 		// 
-		// アニメーション
-		// ↓
-		// 照明操作状態をfalseにする
-		// ↓
-		// 移動入力を受け付ける
+		// �A�j���[�V����
+		// ��
+		// �Ɩ������Ԃ�false�ɂ���
+		// ��
+		// �ړ����͂��󂯕t����
 		// 
 		// 
 
@@ -404,8 +450,8 @@ void Player3D_Action()
 
 	TRIGGER_HIT hit;
 	if (!Collision_PlayerTrigger(&hit, 0.2f)) return;
-	if (hit.side != TRIGGER_SIDE_FRONT) return;// 前面以外は無視
-	switch (hit.type)// 当たったオブジェクトの種類で処理分岐
+	if (hit.side != TRIGGER_SIDE_FRONT) return;// �O�ʈȊO�͖���
+	switch (hit.type)// ���������I�u�W�F�N�g�̎�ނŏ�������
 	{
 	case FIELD_GOAL:
 
@@ -430,6 +476,7 @@ void Player3D_Reset()
 	g_Player3D.Velocity = g_Player3D.FirstVelocity;
 	g_Player3D.Acceleration = g_Player3D.FirstAcceleration;
 	g_Player3D.state = g_Player3D.FirstState;
+	g_Player3D.CurrentAnimIndex = g_Player3D.FirstAnim;
 	g_StopTime = g_Player3D.FirstStopTime;
 	g_Player3D.Quaternion = g_Player3D.FirstQuaternion;
 
@@ -452,7 +499,7 @@ XMFLOAT3 Player3D_GetTriggerHalfSize()
 }
 
 //=========================================================================================================
-// 描画処理
+// �`�揈��
 //=========================================================================================================
 void Player3D_Draw(void)
 {
@@ -499,16 +546,20 @@ void Player3D_Draw(void)
 	XMMATRIX projection = GetProjectionMatrix();
 	XMMATRIX wvp = world * view * projection;
 
-	// 変換行列を頂点シェーダへセット
+	// �ϊ��s��𒸓_�V�F�[�_�փZ�b�g
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 
-	ModelUpdateAnimation(g_Player3D.Model, 10.0f / 600.0f);   
-	Shader_SetBones(g_Player3D.Model);	
+	MODEL* currentModel = g_Player3D.Model[g_Player3D.CurrentAnimIndex];
 
+	if (currentModel != NULL)
+	{
+		ModelUpdateAnimation(currentModel, 10.0f / 600.0f);
+		Shader_SetBones(currentModel);
+	}
 
-	// モデルの描画リクエスト
-	ModelDraw(g_Player3D.Model);
+	// ���f���̕`�惊�N�G�X�g
+	ModelDraw(currentModel);
 }
 
 XMFLOAT3 Player3D_GetForward()

@@ -1,21 +1,67 @@
 #include "Collision.h"
 #include "player3D.h"
-
-
 #include "camera.h"
 #include "direct3d.h"
-#include "debug.h"
 #include "Player2D.h"
+#include "debug.h"
+#include "MathUtil.h"
+
+#include <vector>
+
+
 using namespace DirectX;
+using namespace mu;
 
 static bool debugMode = TRUE;
 
+static std::vector<const ShadowPrism*> g_ShadowPrisms;
+static ShadowDebugOptions g_ShadowDebugOpts;
+
+struct ExtraDebugBox
+{
+	bool isOBB = false;
+	XMFLOAT3 center{};
+	XMFLOAT3 half{};
+	XMFLOAT3 rotDeg{};
+	ImU32 color = 0;
+};
+
+static std::vector<ExtraDebugBox> g_ExtraBoxes;
 
 //=========================================================================================================
-// É{Å[ÉãÇ∆ÉtÉBÅ[ÉãÉhÇÃìñÇΩÇËîªíË
+// „Éú„Éº„É´„Å®„Éï„Ç£„Éº„É´„Éâ„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö
 //=========================================================================================================
 
-// É{ÉbÉNÉXÇÃîºï™ÇÃÉTÉCÉYÇéÊìæ
+void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms)
+{
+	g_ShadowPrisms = prisms;
+}
+
+const std::vector<const ShadowPrism*>& Collision_GetShadowPrisms()
+{
+	return g_ShadowPrisms;
+}
+
+void Collision_SetShadowPrism(const ShadowPrism* prism)
+{
+	g_ShadowPrisms.clear();
+	if (prism && prism->isValid)
+	{
+		g_ShadowPrisms.push_back(prism);
+	}
+}
+
+const ShadowPrism* Collision_GetShadowPrism()
+{
+	return g_ShadowPrisms.empty() ? nullptr : g_ShadowPrisms[0];
+}
+
+static ImU32 MakeColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+	return ((ImU32)a << 24) | ((ImU32)b << 16) | ((ImU32)g << 8) | (ImU32)r;
+}
+
+// „Éú„ÉÉ„ÇØ„Çπ„ÅÆÂçäÂàÜ„ÅÆ„Çµ„Ç§„Ç∫„ÇíÂèñÂæó
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
 	return XMFLOAT3{
@@ -24,111 +70,189 @@ static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 	BOX_RADIUS * m.scale.z
 	};
 }
-// ÉvÉåÉCÉÑÅ[ÇÃìñÇΩÇËîªíËíÜêSç¿ïWÇéÊìæ
+
+// „ÉØ„Éº„É´„ÉâÂ∫ßÊ®ô„Çí„Çπ„ÇØ„É™„Éº„É≥Â∫ßÊ®ô„Å´Â§âÊèõ
+struct ScreenPt { ImVec2 pos; bool valid; };
+static ScreenPt WorldToScreen(const XMFLOAT3& p)
+{
+	ScreenPt out{};
+	out.valid = false;
+
+	XMMATRIX vp = GetViewMatrix() * GetProjectionMatrix();
+
+	XMVECTOR vW = XMVectorSet(p.x, p.y, p.z, 1.0f);
+	XMVECTOR vV = XMVector3TransformCoord(vW, GetViewMatrix());
+
+	if (XMVectorGetZ(vV) <= 0.01f) return out;
+
+	XMVECTOR vC = XMVector3TransformCoord(vW, vp);
+	XMFLOAT3 ndc;
+	XMStoreFloat3(&ndc, vC);
+
+	if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f)
+		return out;
+
+	ImGuiViewport* vp_ = ImGui::GetMainViewport();
+	float w = (float)Direct3D_GetBackBufferWidth();
+	float h = (float)Direct3D_GetBackBufferHeight();
+
+	out.pos.x = vp_->Pos.x + (ndc.x * 0.5f + 0.5f) * w;
+	out.pos.y = vp_->Pos.y + (-ndc.y * 0.5f + 0.5f) * h;
+	out.valid = true;
+	return out;
+}
+
+// 3D„É©„Ç§„É≥„ÇíÊèèÁîª
+static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick = 1.0f)
+{
+	ScreenPt sa = WorldToScreen(a);
+	ScreenPt sb = WorldToScreen(b);
+	if (sa.valid && sb.valid)
+		ImGui::GetBackgroundDrawList()->AddLine(sa.pos, sb.pos, col, thick);
+}
+// 3D„Éù„Ç§„É≥„Éà„ÇíÊèèÁîª
+static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
+{
+	ScreenPt sp = WorldToScreen(p);
+	if (sp.valid)
+		ImGui::GetBackgroundDrawList()->AddCircleFilled(sp.pos, size, col);
+}
+
+
+// AABB„ÇíÊèèÁîª
+static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
+{
+	XMFLOAT3 corners[8] = {
+		{c.x - h.x, c.y - h.y, c.z - h.z}, {c.x + h.x, c.y - h.y, c.z - h.z},
+		{c.x + h.x, c.y + h.y, c.z - h.z}, {c.x - h.x, c.y + h.y, c.z - h.z},
+		{c.x - h.x, c.y - h.y, c.z + h.z}, {c.x + h.x, c.y - h.y, c.z + h.z},
+		{c.x + h.x, c.y + h.y, c.z + h.z}, {c.x - h.x, c.y + h.y, c.z + h.z},
+	};
+
+	const int edges[12][2] = {
+		{0,1},{1,2},{2,3},{3,0}, {4,5},{5,6},{6,7},{7,4}, {0,4},{1,5},{2,6},{3,7}
+	};
+
+	for (int i = 0; i < 12; i++)
+		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
+}
+
+// OBB„ÇíYawÂõûËª¢„ÅßÊèèÁîª
+static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg, ImU32 col)
+{
+	float yaw = XMConvertToRadians(yawDeg);
+
+	XMFLOAT3 local[8] = {
+		{-h.x,-h.y,-h.z}, {+h.x,-h.y,-h.z}, {+h.x,+h.y,-h.z}, {-h.x,+h.y,-h.z},
+		{-h.x,-h.y,+h.z}, {+h.x,-h.y,+h.z}, {+h.x,+h.y,+h.z}, {-h.x,+h.y,+h.z},
+	};
+
+	XMFLOAT3 corners[8];
+	for (int i = 0; i < 8; i++)
+		corners[i] = c + RotateY(local[i], yaw);
+
+	const int edges[12][2] = {
+		{0,1},{1,2},{2,3},{3,0}, {4,5},{5,6},{6,7},{7,4}, {0,4},{1,5},{2,6},{3,7}
+	};
+
+	for (int i = 0; i < 12; i++)
+		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
+}
+
+// Ê•ïÂÜÜ‰Ωì„ÇíÊèèÁîª
+static void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, int seg = 24)
+{
+	const float PI2 = 6.28318530718f;
+
+	auto drawRing = [&](int plane) {
+		XMFLOAT3 prev;
+		for (int i = 0; i <= seg; i++)
+		{
+			float t = PI2 * i / seg;
+			XMFLOAT3 p = c;
+			if (plane == 0) { p.x += cosf(t) * r.x; p.z += sinf(t) * r.z; }
+			if (plane == 1) { p.x += cosf(t) * r.x; p.y += sinf(t) * r.y; }
+			if (plane == 2) { p.y += cosf(t) * r.y; p.z += sinf(t) * r.z; }
+			if (i > 0) DrawLine3D(prev, p, col);
+			prev = p;
+		}
+		};
+
+	drawRing(0); drawRing(1); drawRing(2);
+}
+
+
+static void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOptions& opts)
+{
+	if (!prism.isValid || prism.poly.size() < 3) return;
+
+	int n = (int)prism.baseWorld.size();
+	ImU32 colPrism = opts.prismColor;
+	ImU32 colFaded = (colPrism & 0x00FFFFFF) | 0x60000000;
+
+	if (opts.drawPrism)
+	{
+		for (int i = 0; i < n; i++)
+			DrawLine3D(prism.baseWorld[i], prism.baseWorld[(i + 1) % n], colPrism, 2.0f);
+
+		if (!prism.topWorld.empty())
+		{
+			for (int i = 0; i < n; i++)
+				DrawLine3D(prism.topWorld[i], prism.topWorld[(i + 1) % n], colPrism, 2.0f);
+
+			for (int i = 0; i < n; i++)
+				DrawLine3D(prism.baseWorld[i], prism.topWorld[i], colFaded, 1.0f);
+		}
+	}
+
+	if (opts.drawNormal)
+	{
+		XMFLOAT3 nEnd = prism.origin + prism.n * 0.5f;
+		DrawLine3D(prism.origin, nEnd, opts.normalColor, 2.0f);
+		DrawPoint3D(prism.origin, opts.normalColor, 5.0f);
+	}
+
+	if (opts.drawVertices)
+	{
+		for (const auto& p : prism.baseWorld)
+			DrawPoint3D(p, opts.vertexColor, 4.0f);
+	}
+
+	if (opts.drawAABB)
+	{
+		XMFLOAT3 c = (prism.aabbMin + prism.aabbMax) * 0.5f;
+		XMFLOAT3 h = (prism.aabbMax - prism.aabbMin) * 0.5f;
+		DebugDrawAABB(c, h, opts.aabbColor);
+	}
+}
+
+
+// „Éó„É¨„Ç§„É§„Éº„ÅÆÂõ∫‰Ωì„Ç≥„É©„Ç§„ÉÄ„Éº‰∏≠ÂøÉ„ÇíÂèñÂæó
 static XMFLOAT3 GetPlayerSolidCollider()
 {
 	PLAYER* p = GetPlayer3D();
 	XMFLOAT3 c = p->Position;
-
-	XMFLOAT3 half = Player3D_GetSolidHalfSize();
-	c.y += half.y;
+	c.y += Player3D_GetSolidHalfSize().y;
 	return c;
 }
-// 2DÉvÉåÉCÉÑÅ[ÇÃìñÇΩÇËîªíËíÜêSç¿ïWÇéÊìæ
+// „Éó„É¨„Ç§„É§„Éº2D„ÅÆÂõ∫‰Ωì„Ç≥„É©„Ç§„ÉÄ„Éº‰∏≠ÂøÉ„ÇíÂèñÂæó
 static XMFLOAT3 GetPlayer2DSolidCollider()
 {
 	PLAYER* p = GetPlayer2D();
 	XMFLOAT3 c = p->Position;
-
-	XMFLOAT3 half = Player3D_GetSolidHalfSize();
-	c.y += half.y + 0.1f;
+	c.y += Player2D_GetSolidHalfSize().y + 0.1f;
 	return c;
 }
-
-// ÉvÉåÉCÉÑÅ[ÇÃÉgÉäÉKÅ[ìñÇΩÇËîªíËíÜêSç¿ïWÇéÊìæ
+// „Éó„É¨„Ç§„É§„Éº„ÅÆ„Éà„É™„Ç¨„Éº„Ç≥„É©„Ç§„ÉÄ„Éº‰∏≠ÂøÉ„ÇíÂèñÂæó
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
 	PLAYER* p = GetPlayer3D();
 	XMFLOAT3 c = p->Position;
-
-	XMFLOAT3 half = Player3D_GetTriggerHalfSize();
-	c.y += half.y;
+	c.y += Player3D_GetTriggerHalfSize().y;
 	return c;
 }
 
-// 2DÉxÉNÉgÉãÇÃì‡êœÅEí∑Ç≥ÅEê≥ãKâª
-static float Dot2D(const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.z * b.z; }
-static float Len2D(const XMFLOAT3& v) { return sqrtf(v.x * v.x + v.z * v.z); }
-static XMFLOAT3 Normalize2D(XMFLOAT3 v)
-{
-	float l = Len2D(v);
-	if (l < 1e-6f) return XMFLOAT3(0, 0, 1);
-	v.x /= l; v.z /= l; v.y = 0.0f;
-	return v;
-}
-// ílÇîÕàÕì‡Ç…é˚ÇﬂÇÈ
-static float Clampf(float v, float a, float b) { return (v < a) ? a : (v > b) ? b : v; }
-// 3DÉxÉNÉgÉãÇÃâ¡éZÅEå∏éZÅEèÊéZ
-static XMFLOAT3 Add3(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x + b.x, a.y + b.y, a.z + b.z }; }
-static XMFLOAT3 Sub3(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x - b.x, a.y - b.y, a.z - b.z }; }
-static XMFLOAT3 Mul3(const XMFLOAT3& a, const XMFLOAT3& b) { return { a.x * b.x, a.y * b.y, a.z * b.z }; }
-static XMFLOAT3 Mul3f(const XMFLOAT3& a, float s) { return { a.x * s, a.y * s, a.z * s }; }
-// 3DÉxÉNÉgÉãÇÃì‡êœÅEí∑Ç≥ÅEê≥ãKâª
-static float Len3(const XMFLOAT3& v) { return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); }
-static XMFLOAT3 Normalize3(XMFLOAT3 v)
-{
-	float l = Len3(v);
-	if (l < 1e-6f) return { 0,1,0 };
-	v.x /= l; v.y /= l; v.z /= l;
-	return v;
-}
-// Yé≤âÒì]
-static XMFLOAT3 RotateY(const XMFLOAT3& v, float yawRad)
-{
-	const float c = cosf(yawRad);
-	const float s = sinf(yawRad);
-	return { v.x * c + v.z * s, v.y, -v.x * s + v.z * c };
-}
-
-
-// ÉgÉäÉKÅ[Ç™ìñÇΩÇ¡ÇΩñ ÇåvéZÅiPlayer3d YawäÓèÄÅj
-static TRIGGER_SIDE CalcSide_ByCamera(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
-{
-	PLAYER* p = GetPlayer3D();
-	if (p)
-	{
-		const float yawRad = XMConvertToRadians(p->Rotation.y);
-
-		XMFLOAT3 forward = Normalize2D({ sinf(yawRad), 0.0f, cosf(yawRad) });
-		XMFLOAT3 right = { forward.z, 0.0f, -forward.x };
-
-		XMFLOAT3 to = { targetC.x - playerC.x, 0.0f, targetC.z - playerC.z };
-		float f = Dot2D(to, forward);
-		float r = Dot2D(to, right);
-
-		if (fabsf(f) < 1e-5f && fabsf(r) < 1e-5f) return TRIGGER_SIDE_NONE;
-
-		if (fabsf(f) >= fabsf(r)) return (f >= 0.0f) ? TRIGGER_SIDE_FRONT : TRIGGER_SIDE_BACK;
-		return (r >= 0.0f) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
-	}
-
-	XMFLOAT3 camPos = GetCameraPosition();
-	XMFLOAT3 camAt = GetCameraAtPosition();
-
-	XMFLOAT3 forward = Normalize2D({ camAt.x - camPos.x, 0, camAt.z - camPos.z });
-	XMFLOAT3 right = { forward.z, 0, -forward.x };
-
-	XMFLOAT3 to = { targetC.x - playerC.x, 0, targetC.z - playerC.z };
-	float f = Dot2D(to, forward);
-	float r = Dot2D(to, right);
-
-	if (fabsf(f) < 1e-5f && fabsf(r) < 1e-5f) return TRIGGER_SIDE_NONE;
-
-	if (fabsf(f) >= fabsf(r)) return (f >= 0) ? TRIGGER_SIDE_FRONT : TRIGGER_SIDE_BACK;
-	return (r >= 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
-}
-
-// ÉtÉBÅ[ÉãÉhÇ™å≈ëÃÇ©Ç«Ç§Ç©ÇéÊìæ
+// „Éï„Ç£„Éº„É´„Éâ„ÅåÂõ∫‰Ωì„Åã„Å©„ÅÜ„Åã„ÇíÂèñÂæó
 static bool Field_IsSolid(FIELD t)
 {
 	switch (t)
@@ -142,7 +266,7 @@ static bool Field_IsSolid(FIELD t)
 		return false;
 	}
 }
-// ÉtÉBÅ[ÉãÉhÇ™ÉgÉäÉKÅ[Ç©Ç«Ç§Ç©ÇéÊìæ
+// „Éï„Ç£„Éº„É´„Éâ„Åå„Éà„É™„Ç¨„Éº„Åã„Å©„ÅÜ„Åã„ÇíÂèñÂæó
 static bool Field_IsTrigger(FIELD t)
 {
 	switch (t)
@@ -156,271 +280,434 @@ static bool Field_IsTrigger(FIELD t)
 	}
 }
 
-
-// ÉèÅ[ÉãÉhç¿ïWÇÉXÉNÉäÅ[Éìç¿ïWÇ…ïœä∑Åià¿ëSî≈Åj
-struct ScreenPoint// ÉXÉNÉäÅ[Éìç¿ïW
-{
-	ImVec2 pos;
-	bool   valid;
-};
-static ScreenPoint WorldToScreenSafe(const XMFLOAT3& pWS)
-{
-	using namespace DirectX;
-
-	ScreenPoint out{};
-	out.valid = false;
-
-	XMMATRIX view = GetViewMatrix();
-	XMMATRIX proj = GetProjectionMatrix();
-	XMMATRIX vp = XMMatrixMultiply(view, proj);
-
-	XMVECTOR vWS = XMVectorSet(pWS.x, pWS.y, pWS.z, 1.0f);
-	XMVECTOR vView = XMVector3TransformCoord(vWS, view);
-	float zView = XMVectorGetZ(vView);
-	if (zView <= 0.01f) {
-		return out;
-	}
-
-	XMVECTOR vClip = XMVector3TransformCoord(vWS, vp);
-	XMFLOAT3 ndc;
-	XMStoreFloat3(&ndc, vClip);
-
-	if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f) {
-		return out;
-	}
-
-	ImGuiViewport* vpIm = ImGui::GetMainViewport();
-	const ImVec2   pos = vpIm->Pos;
-	const float SCREEN_WIDTH = (float)Direct3D_GetBackBufferWidth();
-	const float SCREEN_HEIGHT = (float)Direct3D_GetBackBufferHeight();
-
-	float x = pos.x + (ndc.x * 0.5f + 0.5f) * SCREEN_WIDTH;
-	float y = pos.y + (-ndc.y * 0.5f + 0.5f) * SCREEN_HEIGHT;
-
-	out.pos = ImVec2(x, y);
-	out.valid = true;
-	return out;
-}
-
-// AABBìØémÇÃìñÇΩÇËîªíË
-static bool AABB_Intersect(const XMFLOAT3& c0, const XMFLOAT3& h0,
-	const XMFLOAT3& c1, const XMFLOAT3& h1) {
-
-	if (fabsf(c0.x - c1.x) > (h0.x + h1.x)) return false;
-	if (fabsf(c0.y - c1.y) > (h0.y + h1.y)) return false;
-	if (fabsf(c0.z - c1.z) > (h0.z + h1.z)) return false;
-	return true;
-}
-
-// OBBÅiYé≤âÒì]ÇÃÇ›ÅjÇ…ëŒÇ∑ÇÈç≈ãﬂê⁄ì_ÇåvéZ
-static XMFLOAT3 ClosestPointOBB_Yaw(const XMFLOAT3& p, const XMFLOAT3& c, const XMFLOAT3& h, float yawRad)
-{
-	XMFLOAT3 d = Sub3(p, c);
-	XMFLOAT3 dl = RotateY(d, -yawRad);
-
-	dl.x = Clampf(dl.x, -h.x, +h.x);
-	dl.y = Clampf(dl.y, -h.y, +h.y);
-	dl.z = Clampf(dl.z, -h.z, +h.z);
-
-	XMFLOAT3 dw = RotateY(dl, yawRad);
-	return Add3(c, dw);
-}
-// OBBÇÃÉçÅ[ÉJÉãX/Zé≤ÇéÊìæÅiYé≤âÒì]ÇÃÇ›Åj
-static void OBB_GetAxes_Yaw(float yawDeg, XMFLOAT3* outAxisX, XMFLOAT3* outAxisZ)
-{
-	const float yaw = XMConvertToRadians(yawDeg);
-
-	// forward: yaw=0 -> +Z
-	XMFLOAT3 forward = Normalize2D({ sinf(yaw), 0.0f, cosf(yaw) });
-	// right
-	XMFLOAT3 right = { forward.z, 0.0f, -forward.x };
-
-	*outAxisX = right;   // local X axis in world (XZ)
-	*outAxisZ = forward; // local Z axis in world (XZ)
-}
-// OBBìØémÇÃìñÇΩÇËîªíËÅiYé≤âÒì]ÇÃÇ›Åj
-static bool OBB_Intersect_Yaw(const XMFLOAT3& cA, const XMFLOAT3& hA, float yawA,
+// OBB vs OBB Ëß£ÁÆóÔºàYawÂõûËª¢„ÅÆ„ÅøÂØæÂøúÔºâ
+static bool OBB_Intersect_Yaw(
+	const XMFLOAT3& cA, const XMFLOAT3& hA, float yawA,
 	const XMFLOAT3& cB, const XMFLOAT3& hB, float yawB)
 {
 	if (fabsf(cA.y - cB.y) > (hA.y + hB.y)) return false;
 
+	auto getAxes = [](float yaw, XMFLOAT3& ax, XMFLOAT3& az) {
+		float y = XMConvertToRadians(yaw);
+		XMFLOAT3 fwd = { sinf(y), 0, cosf(y) };
+		ax = { fwd.z, 0, -fwd.x };
+		az = fwd;
+		};
+
 	XMFLOAT3 Ax, Az, Bx, Bz;
-	OBB_GetAxes_Yaw(yawA, &Ax, &Az);
-	OBB_GetAxes_Yaw(yawB, &Bx, &Bz);
+	getAxes(yawA, Ax, Az);
+	getAxes(yawB, Bx, Bz);
 
-	XMFLOAT3 T = { cB.x - cA.x, 0.0f, cB.z - cA.z };
+	XMFLOAT3 T = { cB.x - cA.x, 0, cB.z - cA.z };
 
-	float t0 = Dot2D(T, Ax);
-	float t1 = Dot2D(T, Az);
-
-	float R00 = Dot2D(Ax, Bx);
-	float R01 = Dot2D(Ax, Bz);
-	float R10 = Dot2D(Az, Bx);
-	float R11 = Dot2D(Az, Bz);
+	float t0 = Dot2D(T, Ax), t1 = Dot2D(T, Az);
+	float R00 = Dot2D(Ax, Bx), R01 = Dot2D(Ax, Bz);
+	float R10 = Dot2D(Az, Bx), R11 = Dot2D(Az, Bz);
 
 	const float eps = 1e-6f;
-	float AbsR00 = fabsf(R00) + eps;
-	float AbsR01 = fabsf(R01) + eps;
-	float AbsR10 = fabsf(R10) + eps;
-	float AbsR11 = fabsf(R11) + eps;
+	float aR00 = fabsf(R00) + eps, aR01 = fabsf(R01) + eps;
+	float aR10 = fabsf(R10) + eps, aR11 = fabsf(R11) + eps;
 
-	float a0 = hA.x;
-	float a1 = hA.z;
-
-	float b0 = hB.x;
-	float b1 = hB.z;
-
-	if (fabsf(t0) > (a0 + b0 * AbsR00 + b1 * AbsR01)) return false;
-	if (fabsf(t1) > (a1 + b0 * AbsR10 + b1 * AbsR11)) return false;
-
-	float tB0 = fabsf(t0 * R00 + t1 * R10);
-	if (tB0 > (b0 + a0 * AbsR00 + a1 * AbsR10)) return false;
-
-	float tB1 = fabsf(t0 * R01 + t1 * R11);
-	if (tB1 > (b1 + a0 * AbsR01 + a1 * AbsR11)) return false;
+	if (fabsf(t0) > hA.x + hB.x * aR00 + hB.z * aR01) return false;
+	if (fabsf(t1) > hA.z + hB.x * aR10 + hB.z * aR11) return false;
+	if (fabsf(t0 * R00 + t1 * R10) > hB.x + hA.x * aR00 + hA.z * aR10) return false;
+	if (fabsf(t0 * R01 + t1 * R11) > hB.z + hA.x * aR01 + hA.z * aR11) return false;
 
 	return true;
 }
-// ë»â~ëÃ vs OBBÅiYé≤âÒì]ÇÃÇ›Åj ÇÃìñÇΩÇËîªíËÇ∆âåà
-static bool Resolve_Ellipsoid_OBB_Yaw(const XMFLOAT3& ellCenterW, const XMFLOAT3& ellRadiiW,
-	const XMFLOAT3& boxCenterW,const XMFLOAT3& boxHalfW, float boxYawDeg, XMFLOAT3* outPushW,
-	XMFLOAT3* outNormalW)
+
+// Ê•ïÂÜÜ‰Ωì vs OBB Ëß£ÁÆóÔºàYawÂõûËª¢„ÅÆ„ÅøÂØæÂøúÔºâ
+static bool Resolve_Ellipsoid_OBB_Yaw(
+	const XMFLOAT3& ellC, const XMFLOAT3& ellR,
+	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYaw,
+	XMFLOAT3* outPush, XMFLOAT3* outNormal)
 {
-	if (outPushW)  *outPushW = { 0,0,0 };
-	if (outNormalW) *outNormalW = { 0,1,0 };
+	if (outPush) *outPush = { 0,0,0 };
+	if (outNormal) *outNormal = { 0,1,0 };
 
-	XMFLOAT3 invR = { 1.0f / ellRadiiW.x, 1.0f / ellRadiiW.y, 1.0f / ellRadiiW.z };
+	XMFLOAT3 invR = { 1.0f / ellR.x, 1.0f / ellR.y, 1.0f / ellR.z };
+	XMFLOAT3 cS = Mul(ellC, invR);
+	XMFLOAT3 bS = Mul(boxC, invR);
+	XMFLOAT3 hS = Mul(boxH, invR);
 
-	XMFLOAT3 cS = Mul3(ellCenterW, invR);
-	XMFLOAT3 bS = Mul3(boxCenterW, invR);
-	XMFLOAT3 hS = Mul3(boxHalfW, invR);
+	float yawRad = XMConvertToRadians(boxYaw);
 
-	const float yawRad = XMConvertToRadians(boxYawDeg);
+	XMFLOAT3 d = cS - bS;
+	XMFLOAT3 dl = RotateY(d, -yawRad);
+	dl.x = Clamp(dl.x, -hS.x, hS.x);
+	dl.y = Clamp(dl.y, -hS.y, hS.y);
+	dl.z = Clamp(dl.z, -hS.z, hS.z);
+	XMFLOAT3 qS = bS + RotateY(dl, yawRad);
 
-	XMFLOAT3 qS = ClosestPointOBB_Yaw(cS, bS, hS, yawRad);
-	XMFLOAT3 dS = Sub3(cS, qS);
-	float dist = Len3(dS);
-
-	XMFLOAT3 nS = { 0,1,0 };
-	float pen = 0.0f;
+	XMFLOAT3 dS = cS - qS;
+	float dist = Length(dS);
 
 	if (dist >= 1.0f) return false;
 
+	XMFLOAT3 nS;
+	float pen;
+
 	if (dist > 1e-6f)
 	{
-		nS = Mul3f(dS, 1.0f / dist);
+		nS = dS * (1.0f / dist);
 		pen = 1.0f - dist;
 	}
 	else
 	{
-		XMFLOAT3 lp = RotateY(Sub3(cS, bS), -yawRad);
+		XMFLOAT3 lp = RotateY(cS - bS, -yawRad);
+		float dx = hS.x - fabsf(lp.x);
+		float dy = hS.y - fabsf(lp.y);
+		float dz = hS.z - fabsf(lp.z);
 
-		float dxFace = hS.x - fabsf(lp.x);
-		float dyFace = hS.y - fabsf(lp.y);
-		float dzFace = hS.z - fabsf(lp.z);
+		XMFLOAT3 ln = { 0,1,0 };
+		if (dx <= dy && dx <= dz) { ln = { (lp.x >= 0) ? 1.0f : -1.0f, 0, 0 }; pen = 1.0f + dx; }
+		else if (dy <= dz) { ln = { 0, (lp.y >= 0) ? 1.0f : -1.0f, 0 }; pen = 1.0f + dy; }
+		else { ln = { 0, 0, (lp.z >= 0) ? 1.0f : -1.0f }; pen = 1.0f + dz; }
 
-		XMFLOAT3 localN = { 0,1,0 };
-
-		if (dxFace <= dyFace && dxFace <= dzFace)
-		{
-			localN = { (lp.x >= 0.0f) ? 1.0f : -1.0f, 0, 0 };
-			pen = 1.0f + dxFace;
-		}
-		else if (dyFace <= dzFace)
-		{
-			localN = { 0, (lp.y >= 0.0f) ? 1.0f : -1.0f, 0 };
-			pen = 1.0f + dyFace;
-		}
-		else
-		{
-			localN = { 0, 0, (lp.z >= 0.0f) ? 1.0f : -1.0f };
-			pen = 1.0f + dzFace;
-		}
-
-		nS = RotateY(localN, yawRad);
+		nS = RotateY(ln, yawRad);
 	}
 
-	XMFLOAT3 pushS = Mul3f(nS, pen);
+	XMFLOAT3 pushS = nS * pen;
+	XMFLOAT3 pushW = { pushS.x * ellR.x, pushS.y * ellR.y, pushS.z * ellR.z };
+	XMFLOAT3 nW = Normalize(XMFLOAT3{ nS.x * ellR.x, nS.y * ellR.y, nS.z * ellR.z });
 
-	XMFLOAT3 pushW = { pushS.x * ellRadiiW.x, pushS.y * ellRadiiW.y, pushS.z * ellRadiiW.z };
-
-	XMFLOAT3 nW = Normalize3({ nS.x * ellRadiiW.x, nS.y * ellRadiiW.y, nS.z * ellRadiiW.z });
-
-	if (outPushW) *outPushW = pushW;
-	if (outNormalW) *outNormalW = nW;
+	if (outPush) *outPush = pushW;
+	if (outNormal) *outNormal = nW;
 	return true;
 }
 
+// „Éà„É™„Ç¨„Éº„ÅåÂΩì„Åü„Å£„ÅüÈù¢„ÇíË®àÁÆóÔºàPlayer3d YawÂü∫Ê∫ñÔºâ
+static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
+{
+	PLAYER* p = GetPlayer3D();
+	if (!p) return TRIGGER_SIDE_NONE;
 
-// ÉvÉåÉCÉÑÅ[Ç∆ÉtÉBÅ[ÉãÉhÇÃìñÇΩÇËîªíË
+	float yaw = XMConvertToRadians(p->Rotation.y);
+	XMFLOAT3 fwd = Normalize2D({ sinf(yaw), 0, cosf(yaw) });
+	XMFLOAT3 right = { fwd.z, 0, -fwd.x };
+	XMFLOAT3 to = { targetC.x - playerC.x, 0, targetC.z - playerC.z };
+
+	float f = Dot2D(to, fwd);
+	float r = Dot2D(to, right);
+
+	if (fabsf(f) < 1e-5f && fabsf(r) < 1e-5f) return TRIGGER_SIDE_NONE;
+	if (fabsf(f) >= fabsf(r)) return (f >= 0) ? TRIGGER_SIDE_FRONT : TRIGGER_SIDE_BACK;
+	return (r >= 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
+}
+
+
+void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options)
+{
+	g_ShadowDebugOpts = options;
+}
+
+void Collision_DebugClearExtraBoxes()
+{
+	g_ExtraBoxes.clear();
+}
+// AABB„Çí„Éá„Éê„ÉÉ„Ç∞ÊèèÁîª„É™„Çπ„Éà„Å´ËøΩÂä†
+void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
+	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+	ExtraDebugBox box;
+	box.isOBB = false;
+	box.center = c;
+	box.half = h;
+	box.color = MakeColor(r, g, b, a);
+	g_ExtraBoxes.push_back(box);
+}
+// OBB„Çí„Éá„Éê„ÉÉ„Ç∞ÊèèÁîª„É™„Çπ„Éà„Å´ËøΩÂä†
+void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFLOAT3& rot,
+	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+{
+	ExtraDebugBox box;
+	box.isOBB = true;
+	box.center = c;
+	box.half = h;
+	box.rotDeg = rot;
+	box.color = MakeColor(r, g, b, a);
+	g_ExtraBoxes.push_back(box);
+}
+
+bool Resolve_OBB_OBB_ZY(
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // „Éó„É¨„Ç§„É§„ÉºÔºàZÂõûËª¢Ôºâ
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // „Éï„Ç£„Éº„É´„ÉâÔºàYÂõûËª¢Ôºâ
+	XMFLOAT3* outPush, XMFLOAT3* outNorm)
+{
+	// „Éó„É¨„Ç§„É§„Éº„ÅÆZÂõûËª¢Ë°åÂàóÔºà2DÂπ≥Èù¢„Åß„ÅÆÂõûËª¢Ôºâ
+	XMMATRIX rotMatA = XMMatrixRotationZ(rotZRadA);
+
+	// „Éï„Ç£„Éº„É´„Éâ„ÅÆYÂõûËª¢Ë°åÂàó
+	float rotYRadB = XMConvertToRadians(rotYDegB);
+	XMMATRIX rotMatB = XMMatrixRotationY(rotYRadB);
+
+	// ÂêÑOBB„ÅÆ„É≠„Éº„Ç´„É´Ëª∏„ÇíÂèñÂæó
+	XMFLOAT3 axesA[3], axesB[3];
+
+	// „Éó„É¨„Ç§„É§„Éº„ÅÆËª∏ÔºàZÂõûËª¢Ôºâ
+	XMVECTOR axA0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatA);
+	XMVECTOR axA1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatA);
+	XMVECTOR axA2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatA);
+	XMStoreFloat3(&axesA[0], axA0);
+	XMStoreFloat3(&axesA[1], axA1);
+	XMStoreFloat3(&axesA[2], axA2);
+
+	// „Éï„Ç£„Éº„É´„Éâ„ÅÆËª∏ÔºàYÂõûËª¢Ôºâ
+	XMVECTOR axB0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatB);
+	XMVECTOR axB1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatB);
+	XMVECTOR axB2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatB);
+	XMStoreFloat3(&axesB[0], axB0);
+	XMStoreFloat3(&axesB[1], axB1);
+	XMStoreFloat3(&axesB[2], axB2);
+
+	// ‰∏≠ÂøÉÈñì„Éô„ÇØ„Éà„É´
+	XMVECTOR vD = XMVectorSet(posA.x - posB.x, posA.y - posB.y, posA.z - posB.z, 0);
+
+	float halfExtA[3] = { halfA.x, halfA.y, halfA.z };
+	float halfExtB[3] = { halfB.x, halfB.y, halfB.z };
+
+	float minPen = FLT_MAX;
+	XMFLOAT3 minAxis = { 0, 1, 0 };
+
+	// 15Ëª∏„ÅÆSATÂà§ÂÆö
+	auto TestAxis = [&](XMVECTOR axis) -> bool
+		{
+			float len = XMVectorGetX(XMVector3Length(axis));
+			if (len < 1e-6f) return true;  // Âπ≥Ë°å„Å™Ëª∏„ÅØ„Çπ„Ç≠„ÉÉ„Éó
+
+			axis = XMVector3Normalize(axis);
+
+			// ÂêÑOBB„ÅÆÊäïÂΩ±ÂçäÂæÑ
+			float rA = 0, rB = 0;
+			for (int i = 0; i < 3; i++)
+			{
+				XMVECTOR axi = XMLoadFloat3(&axesA[i]);
+				rA += halfExtA[i] * fabsf(XMVectorGetX(XMVector3Dot(axis, axi)));
+			}
+			for (int i = 0; i < 3; i++)
+			{
+				XMVECTOR axi = XMLoadFloat3(&axesB[i]);
+				rB += halfExtB[i] * fabsf(XMVectorGetX(XMVector3Dot(axis, axi)));
+			}
+
+			float dist = fabsf(XMVectorGetX(XMVector3Dot(vD, axis)));
+			float pen = (rA + rB) - dist;
+
+			if (pen < 0) return false;  // ÂàÜÈõ¢Ëª∏Áô∫Ë¶ã ‚Üí Ë°ùÁ™Å„Å™„Åó
+
+			if (pen < minPen)
+			{
+				minPen = pen;
+				XMStoreFloat3(&minAxis, axis);
+			}
+			return true;
+		};
+
+	// A „ÅÆ3Ëª∏
+	if (!TestAxis(axA0)) return false;
+	if (!TestAxis(axA1)) return false;
+	if (!TestAxis(axA2)) return false;
+
+	// B „ÅÆ3Ëª∏
+	if (!TestAxis(axB0)) return false;
+	if (!TestAxis(axB1)) return false;
+	if (!TestAxis(axB2)) return false;
+
+	// Â§ñÁ©çËª∏Ôºà9Ëª∏Ôºâ
+	if (!TestAxis(XMVector3Cross(axA0, axB0))) return false;
+	if (!TestAxis(XMVector3Cross(axA0, axB1))) return false;
+	if (!TestAxis(XMVector3Cross(axA0, axB2))) return false;
+	if (!TestAxis(XMVector3Cross(axA1, axB0))) return false;
+	if (!TestAxis(XMVector3Cross(axA1, axB1))) return false;
+	if (!TestAxis(XMVector3Cross(axA1, axB2))) return false;
+	if (!TestAxis(XMVector3Cross(axA2, axB0))) return false;
+	if (!TestAxis(XMVector3Cross(axA2, axB1))) return false;
+	if (!TestAxis(XMVector3Cross(axA2, axB2))) return false;
+
+	// Êäº„ÅóÂá∫„ÅóÊñπÂêë„ÇíÊ±∫ÂÆöÔºàA„ÇíB„Åã„ÇâÈõ¢„ÅôÊñπÂêëÔºâ
+	XMVECTOR normAxis = XMLoadFloat3(&minAxis);
+	if (XMVectorGetX(XMVector3Dot(vD, normAxis)) < 0)
+	{
+		normAxis = XMVectorNegate(normAxis);
+	}
+
+	XMVECTOR pushVec = normAxis * minPen;
+	XMStoreFloat3(outPush, pushVec);
+	XMStoreFloat3(outNorm, XMVector3Normalize(normAxis));
+
+	return true;
+}
+
+bool OBB_Intersect_ZY(
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB)
+{
+	XMFLOAT3 push, norm;
+	return Resolve_OBB_OBB_ZY(posA, halfA, rotZRadA, posB, halfB, rotYDegB, &push, &norm);
+}
+
+//=========================================================================================================
+// 2DÁî®„Éà„É™„Ç¨„ÉºÊñπÂêëÂà§ÂÆöÔºà„Éó„É¨„Ç§„É§„Éº„ÅÆÂõûËª¢„ÇíËÄÉÊÖÆÔºâ
+//=========================================================================================================
+static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRotZ, const XMFLOAT3& triggerPos)
+{
+	// „Éó„É¨„Ç§„É§„Éº„Åã„Çâ„Éà„É™„Ç¨„Éº„Å∏„ÅÆ„Éô„ÇØ„Éà„É´
+	float dx = triggerPos.x - playerPos.x;
+	float dy = triggerPos.y - playerPos.y;
+
+	// „Éó„É¨„Ç§„É§„Éº„ÅÆÂõûËª¢„ÇíËÄÉÊÖÆ„Åó„Å¶„É≠„Éº„Ç´„É´Â∫ßÊ®ô„Å´Â§âÊèõ
+	float radZ = XMConvertToRadians(playerRotZ);
+	float cosZ = cosf(-radZ);  // ÈÄÜÂõûËª¢„Åß„É≠„Éº„Ç´„É´Â∫ßÊ®ô„Å∏
+	float sinZ = sinf(-radZ);
+
+	float localX = dx * cosZ - dy * sinZ;
+	float localY = dx * sinZ + dy * cosZ;
+
+	// „É≠„Éº„Ç´„É´Â∫ßÊ®ô„Åß„ÅÆÊñπÂêëÂà§ÂÆö
+	if (fabsf(localX) > fabsf(localY))
+	{
+		return (localX > 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
+	}
+	else
+	{
+		return (localY > 0) ? TRIGGER_SIDE_TOP : TRIGGER_SIDE_BOTTOM;
+	}
+}
+
+
+// „Éó„É¨„Ç§„É§„Éº3D„Å®„Éï„Ç£„Éº„É´„Éâ„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö
 int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
 
-	PLAYER* player3D = GetPlayer3D();
-	std::vector<MAPDATA>& Map = GetFieldMap();
-	if (!player3D || Map.empty()) return hit;
+	PLAYER* player = GetPlayer3D();
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (!player || map.empty()) return hit;
 
-	player3D->isGround = false;
-
-	const XMFLOAT3 ellR = Player3D_GetSolidHalfSize();
-
+	player->isGround = false;
+	XMFLOAT3 ellR = Player3D_GetSolidHalfSize();
 	XMFLOAT3 ellC = GetPlayerSolidCollider();
 
-	for (size_t i = 0; i < Map.size(); ++i)
+	for (size_t i = 0; i < map.size(); ++i)
 	{
-		if (!Field_IsSolid(Map[i].no)) continue;
+		if (!Field_IsSolid(map[i].no)) continue;
 
-		const XMFLOAT3 boxC = Map[i].pos;
-		const XMFLOAT3 boxH = Field_GetHalfSize(Map[i]);
+		float boxYaw = (map[i].no == FIELD_OBJ_1) ? map[i].rotate.y : 0.0f;
 
-		float boxYawDeg = 0.0f;
-		if (Map[i].no == FIELD_OBJ_1)
-		{
-			boxYawDeg = Map[i].rotate.y;
-		}
-
-		XMFLOAT3 pushW{}, nW{};
-		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, boxC, boxH, boxYawDeg, &pushW, &nW))
+		XMFLOAT3 push, norm;
+		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, map[i].pos,
+			Field_GetHalfSize(map[i]), boxYaw, &push, &norm))
 			continue;
 
-		ellC = Add3(ellC, pushW);
+		ellC = ellC + push;
 
-		float ax = fabsf(nW.x), ay = fabsf(nW.y), az = fabsf(nW.z);
+		float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
 
 		if (ay >= ax && ay >= az)
 		{
-			if (nW.y > 0.0f)
-			{
-				player3D->isGround = true;
-				player3D->Velocity.y = 0.0f;
-				hit = HIT_GROUND;
-			}
-			else
-			{
-				if (player3D->Velocity.y > 0.0f) player3D->Velocity.y = 0.0f;
-			}
+			if (norm.y > 0) { player->isGround = true; player->Velocity.y = 0; hit = HIT_GROUND; }
+			else if (player->Velocity.y > 0) player->Velocity.y = 0;
 		}
 		else if (ax >= az)
 		{
-			player3D->Velocity.x = 0.0f;
-			hit = (nW.x > 0.0f) ? HIT_WALL_PlusX : HIT_WALL_NegX;
+			player->Velocity.x = 0;
+			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
 		}
 		else
 		{
-			player3D->Velocity.z = 0.0f;
-			hit = (nW.z > 0.0f) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
+			player->Velocity.z = 0;
+			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
 		}
 	}
 
-	player3D->Position.x = ellC.x;
-	player3D->Position.y = ellC.y - ellR.y;
-	player3D->Position.z = ellC.z;
+	player->Position.x = ellC.x;
+	player->Position.y = ellC.y - ellR.y;
+	player->Position.z = ellC.z;
 
 	return hit;
 }
 
-// ÉvÉåÉCÉÑÅ[Ç∆ÉgÉäÉKÅ[ÇÃìñÇΩÇËîªíË
+int Player2DField_Collision()
+{
+	int hit = HIT_NONE;
+
+	PLAYER* player = GetPlayer2D();
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (!player || map.empty()) return hit;
+
+	player->isGround = false;
+	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
+
+	// 2D„Éó„É¨„Ç§„É§„Éº„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö‰∏≠ÂøÉÔºàË∂≥ÂÖÉÂü∫Ê∫ñ„Åã„Çâ‰∏≠ÂøÉÂü∫Ê∫ñ„Å∏Â§âÊèõÔºâ
+	XMFLOAT3 colliderCenter = XMFLOAT3(
+		player->Position.x,
+		player->Position.y + halfSize.y,
+		player->Position.z
+	);
+
+	// „Éó„É¨„Ç§„É§„Éº„ÅÆZËª∏ÂõûËª¢ËßíÂ∫¶ÔºàÂ∫¶‚Üí„É©„Ç∏„Ç¢„É≥Ôºâ
+	float playerZRot = XMConvertToRadians(player->Rotation.z);
+
+	for (size_t i = 0; i < map.size(); ++i)
+	{
+		if (!Field_IsSolid(map[i].no)) continue;
+
+		XMFLOAT3 push, norm;
+
+		// OBB vs OBBÔºà„Éó„É¨„Ç§„É§„Éº„ÅØZÂõûËª¢„ÄÅ„Éï„Ç£„Éº„É´„Éâ„ÅØYÂõûËª¢Ôºâ
+		if (!Resolve_OBB_OBB_ZY(
+			colliderCenter, halfSize, playerZRot,      // „Éó„É¨„Ç§„É§„ÉºÔºàZÂõûËª¢Ôºâ
+			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // „Éï„Ç£„Éº„É´„ÉâÔºàYÂõûËª¢Ôºâ
+			&push, &norm))
+			continue;
+
+		colliderCenter = XMFLOAT3(
+			colliderCenter.x + push.x,
+			colliderCenter.y + push.y,
+			colliderCenter.z + push.z
+		);
+
+		float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
+
+		if (ay >= ax && ay >= az)
+		{
+			// ‰∏ä‰∏ã„ÅÆË°ùÁ™Å
+			if (norm.y > 0)
+			{
+				player->isGround = true;
+				player->Velocity.y = 0;
+				hit = HIT_GROUND;
+			}
+			else if (player->Velocity.y > 0)
+			{
+				player->Velocity.y = 0;
+			}
+		}
+		else if (ax >= az)
+		{
+			// Â∑¶Âè≥„ÅÆÂ£ÅË°ùÁ™Å
+			player->Velocity.x = 0;
+			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
+		}
+		else
+		{
+			// ÂâçÂæå„ÅÆÂ£ÅË°ùÁ™Å
+			player->Velocity.z = 0;
+			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
+		}
+	}
+
+	// ‰∏≠ÂøÉÂ∫ßÊ®ô„Åã„ÇâË∂≥ÂÖÉÂ∫ßÊ®ô„Å∏Êàª„Åô
+	player->Position.x = colliderCenter.x;
+	player->Position.y = colliderCenter.y - halfSize.y;
+	player->Position.z = colliderCenter.z;
+
+	return hit;
+}
+
+
+
+// „Éó„É¨„Ç§„É§„Éº„ÅÆ„Éà„É™„Ç¨„ÉºÂΩì„Åü„ÇäÂà§ÂÆö
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
@@ -431,10 +718,9 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 	auto& map = GetFieldMap();
 	if (map.empty()) return false;
 
-	// ÉvÉåÉCÉÑÅ[ÇÃÉgÉäÉKÅ[OBB
-	const XMFLOAT3 pHalf = Player3D_GetTriggerHalfSize();
-	const XMFLOAT3 pC = GetPlayerTriggerCollider();
-	const float pYaw = p->Rotation.y;
+	XMFLOAT3 pHalf = Player3D_GetTriggerHalfSize();
+	XMFLOAT3 pC = GetPlayerTriggerCollider();
+	float pYaw = p->Rotation.y;
 
 	bool found = false;
 	float bestD2 = 1e30f;
@@ -444,20 +730,14 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 	{
 		if (!Field_IsTrigger(map[i].no)) continue;
 
-		// ÉtÉBÅ[ÉãÉhÇÃOBB
-		const XMFLOAT3 tC = map[i].pos;
-
 		XMFLOAT3 tHalf = Field_GetHalfSize(map[i]);
-		tHalf.x += extraRange;
-		tHalf.y += extraRange;
-		tHalf.z += extraRange;
+		tHalf.x += extraRange; tHalf.y += extraRange; tHalf.z += extraRange;
 
-		const float tYaw = map[i].rotate.y;
+		if (!OBB_Intersect_Yaw(pC, pHalf, pYaw, map[i].pos, tHalf, map[i].rotate.y))
+			continue;
 
-		if (!OBB_Intersect_Yaw(pC, pHalf, pYaw, tC, tHalf, tYaw)) continue;
-
-		float dx = tC.x - pC.x;
-		float dz = tC.z - pC.z;
+		float dx = map[i].pos.x - pC.x;
+		float dz = map[i].pos.z - pC.z;
 		float d2 = dx * dx + dz * dz;
 
 		if (!found || d2 < bestD2)
@@ -467,7 +747,7 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 			best.hit = true;
 			best.mapIndex = i;
 			best.type = map[i].no;
-			best.side = CalcSide_ByCamera(pC, tC);
+			best.side = CalcTriggerSide(pC, map[i].pos);
 		}
 	}
 
@@ -476,192 +756,321 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 	return true;
 }
 
-// AABBÇÉfÉoÉbÉOï`âÊ
-static void DebugDrawAABB(const XMFLOAT3& center,
-	const XMFLOAT3& half, ImU32 color) {
-
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-
-	XMFLOAT3 c = center;
-	XMFLOAT3 h = half;
-
-	XMFLOAT3 corners[8] =
-	{
-		{c.x - h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y - h.y, c.z - h.z},
-		{c.x + h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y + h.y, c.z - h.z},
-		{c.x - h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y - h.y, c.z + h.z},
-		{c.x + h.x, c.y + h.y, c.z + h.z},
-		{c.x - h.x, c.y + h.y, c.z + h.z},
-	};
-
-	ScreenPoint pts[8];
-	for (int i = 0; i < 8; ++i)
-		pts[i] = WorldToScreenSafe(corners[i]);
-
-	auto Line = [&](int a, int b)
-		{
-			if (pts[a].valid && pts[b].valid)
-			{
-				draw->AddLine(pts[a].pos, pts[b].pos, color, 1.0f);
-			}
-		};
-
-
-	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
-
-	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
-
-	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
-}
-// OBBÇYawâÒì]ïtÇ´Ç≈ÉfÉoÉbÉOï`âÊ
-static void DebugDrawOBB_Yaw(const XMFLOAT3& center,
-	const XMFLOAT3& half, float yawDeg, ImU32 color)
+bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
+	if (outHit) *outHit = TRIGGER_HIT{};
 
-	const float yaw = XMConvertToRadians(yawDeg);
-	const float c = cosf(yaw);
-	const float s = sinf(yaw);
+	PLAYER* p = GetPlayer2D();
+	if (!p) return false;
 
-	XMFLOAT3 local[8] =
-	{
-		{-half.x, -half.y, -half.z},
-		{+half.x, -half.y, -half.z},
-		{+half.x, +half.y, -half.z},
-		{-half.x, +half.y, -half.z},
-		{-half.x, -half.y, +half.z},
-		{+half.x, -half.y, +half.z},
-		{+half.x, +half.y, +half.z},
-		{-half.x, +half.y, +half.z},
-	};
+	auto& map = GetFieldMap();
+	if (map.empty()) return false;
 
-	XMFLOAT3 corners[8];
-	for (int i = 0; i < 8; ++i)
-	{
-		const float x = local[i].x;
-		const float z = local[i].z;
+	XMFLOAT3 pHalf = Player2D_GetSolidHalfSize();
+	pHalf.x += extraRange;
+	pHalf.y += extraRange;
+	pHalf.z += extraRange;
 
-		const float rx = x * c + z * s;
-		const float rz = -x * s + z * c;
+	XMFLOAT3 pC = XMFLOAT3(
+		p->Position.x,
+		p->Position.y + Player2D_GetSolidHalfSize().y,
+		p->Position.z
+	);
 
-		corners[i] = { center.x + rx, center.y + local[i].y, center.z + rz };
-	}
+	float pZRot = XMConvertToRadians(p->Rotation.z);
 
-	ScreenPoint pts[8];
-	for (int i = 0; i < 8; ++i)
-		pts[i] = WorldToScreenSafe(corners[i]);
+	bool found = false;
+	float bestD2 = 1e30f;
+	TRIGGER_HIT best;
 
-	auto Line = [&](int a, int b)
-		{
-			if (pts[a].valid && pts[b].valid)
-				draw->AddLine(pts[a].pos, pts[b].pos, color, 1.0f);
-		};
-
-	Line(0, 1); Line(1, 2); Line(2, 3); Line(3, 0);
-	Line(4, 5); Line(5, 6); Line(6, 7); Line(7, 4);
-	Line(0, 4); Line(1, 5); Line(2, 6); Line(3, 7);
-}
-// ë»â~ëÃÇÉfÉoÉbÉOï`âÊ
-static void DebugDrawEllipsoid(const XMFLOAT3& center, const XMFLOAT3& radii, ImU32 color, int segments = 32)
-{
-	ImDrawList* draw = ImGui::GetBackgroundDrawList();
-	const float twoPi = 6.28318530718f;
-
-	auto DrawRing = [&](int plane)
-		{
-			XMFLOAT3 prev{};
-			bool hasPrev = false;
-
-			for (int i = 0; i <= segments; ++i)
-			{
-				float t = twoPi * (float)i / (float)segments;
-				float ct = cosf(t), st = sinf(t);
-
-				XMFLOAT3 p = center;
-				if (plane == 0) { p.x += ct * radii.x; p.z += st * radii.z; }
-				if (plane == 1) { p.x += ct * radii.x; p.y += st * radii.y; }
-				if (plane == 2) { p.y += ct * radii.y; p.z += st * radii.z; }
-
-				ScreenPoint sp = WorldToScreenSafe(p);
-				if (hasPrev)
-				{
-					ScreenPoint spPrev = WorldToScreenSafe(prev);
-					if (spPrev.valid && sp.valid)
-						draw->AddLine(spPrev.pos, sp.pos, color, 1.0f);
-				}
-				prev = p;
-				hasPrev = true;
-			}
-		};
-
-	DrawRing(0);
-	DrawRing(1);
-	DrawRing(2);
-}
-
-// ìñÇΩÇËîªíËÇÃÉfÉoÉbÉOï`âÊ
-void Collision_DebugDraw() {
-
-	// ÉvÉåÉCÉÑÅ[ÇÃAABBï`âÊ
-	PLAYER* player = GetPlayer3D();// ÉvÉåÉCÉÑÅ[éÊìæ
-	XMFLOAT3 playerHalf = Player3D_GetSolidHalfSize();
-	XMFLOAT3 playerC = GetPlayerSolidCollider();
-
-	XMFLOAT3 playerHalf_t = Player3D_GetTriggerHalfSize();
-	XMFLOAT3 playerC_t = GetPlayerTriggerCollider();
-	if (player)
-	{
-		DebugDrawEllipsoid(playerC, playerHalf, IM_COL32(0, 255, 0, 255));// ÉvÉåÉCÉÑÅ[ÇÃAABBï`âÊ
-		DebugDrawOBB_Yaw(playerC_t, playerHalf_t, player->Rotation.y, IM_COL32(255, 255, 255, 255));// ÉvÉåÉCÉÑÅ[ÇÃAABBï`âÊ
-	}
-
-	PLAYER* player2D = GetPlayer2D();
-	XMFLOAT3 player2DHalf = Player2D_GetSolidHalfSize();
-	XMFLOAT3 player2DC = GetPlayer2DSolidCollider();
-
-	if (player2D)
-	{
-		DebugDrawOBB_Yaw(player2DC, player2DHalf, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));// ÉvÉåÉCÉÑÅ[ÇÃAABBï`âÊ
-	}
-	
-
-	// ÉtÉBÅ[ÉãÉhÇÃAABBï`âÊ
-	std::vector<MAPDATA>& map = GetFieldMap();
-	if (map.size() == 0) return;
 	for (size_t i = 0; i < map.size(); ++i)
 	{
 		if (!Field_IsTrigger(map[i].no)) continue;
-		const XMFLOAT3 boxHalf = Field_GetHalfSize(map[i]);
-		const XMFLOAT3& boxC = map[i].pos;
-		const float boxYaw = map[i].rotate.y;
-		bool triggered_t = OBB_Intersect_Yaw(playerC_t, playerHalf_t, player->Rotation.y, boxC, boxHalf, boxYaw);
-		ImU32 col = triggered_t ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
-		DebugDrawOBB_Yaw(boxC, boxHalf,map[i].rotate.y, col);
-	}
 
+		XMFLOAT3 tHalf = Field_GetHalfSize(map[i]);
+		tHalf.x += extraRange;
+		tHalf.y += extraRange;
+		tHalf.z += extraRange;
 
-	if (debugMode)
-	{
-		/*ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("Collision.cpp"))
+		// OBB vs OBB ‰∫§Â∑ÆÂà§ÂÆö
+		if (!OBB_Intersect_ZY(pC, pHalf, pZRot,
+			map[i].pos, tHalf, map[i].rotate.y))
+			continue;
+
+		float dx = map[i].pos.x - pC.x;
+		float dy = map[i].pos.y - pC.y;
+		float d2 = dx * dx + dy * dy;
+
+		if (!found || d2 < bestD2)
 		{
-			
-
-			ImGui::TreePop();
+			found = true;
+			bestD2 = d2;
+			best.hit = true;
+			best.mapIndex = (int)i;
+			best.type = map[i].no;
+			best.side = CalcTriggerSide2D(pC, p->Rotation.z, map[i].pos);
 		}
-		ImGui::End();*/
 	}
 
+	if (!found) return false;
+	if (outHit) *outHit = best;
+	return true;
+}
 
-	/*for (size_t i = 0; i < map.size(); i++)
+
+//=========================================================================================================
+// ÁÇπ„Åå„Éó„É™„Ç∫„É†ÂÜÖ„Å´„ÅÇ„Çã„Åã„ÉÅ„Çß„ÉÉ„ÇØÔºà2DÂ§öËßíÂΩ¢Âà§ÂÆöÔºâ
+//=========================================================================================================
+static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& poly)
+{
+	if (poly.size() < 3) return false;
+
+	bool inside = false;
+	int n = (int)poly.size();
+
+	for (int i = 0, j = n - 1; i < n; j = i++)
 	{
-		if (!Field_IsSolid(map[i].no)) continue;
-		const XMFLOAT3& boxHalf = Field_GetHalfSize(map[i]);
-		const XMFLOAT3& boxC = map[i].pos;
-		ImU32 col = IM_COL32(0, 255, 255, 255);
-		DebugDrawAABB(boxC, boxHalf, col);
-	}*/
+		float xi = poly[i].x, yi = poly[i].y;
+		float xj = poly[j].x, yj = poly[j].y;
+
+		if (((yi > py) != (yj > py)) &&
+			(px < (xj - xi) * (py - yi) / (yj - yi) + xi))
+		{
+			inside = !inside;
+		}
+	}
+	return inside;
+}
+
+//=========================================================================================================
+// „Éó„É¨„Ç§„É§„Éº2D„Å®ÂΩ±„Éó„É™„Ç∫„É†„ÅÆÂΩì„Åü„ÇäÂà§ÂÆö
+//=========================================================================================================
+bool Player2DShadow_Collision()
+{
+	PLAYER* player = GetPlayer2D();
+	if (!player) return false;
+
+	const std::vector<const ShadowPrism*>& prisms = Collision_GetShadowPrisms();
+	if (prisms.empty()) return false;
+
+	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
+
+	bool hitAny = false;
+
+	// Ë§áÊï∞Âõû„ÅÆÂèçÂæ©„ÅßÂÆâÂÆö„Åï„Åõ„Çã
+	const int maxIterations = 4;
+
+	for (int iter = 0; iter < maxIterations; iter++)
+	{
+		bool hitThisIter = false;
+
+		// „Éó„É¨„Ç§„É§„Éº„ÅÆ‰∏≠ÂøÉ‰ΩçÁΩÆÔºàÊØéÂõûÊõ¥Êñ∞Ôºâ
+		XMFLOAT3 playerCenter = XMFLOAT3(
+			player->Position.x,
+			player->Position.y + halfSize.y,
+			player->Position.z
+		);
+
+		for (const ShadowPrism* prism : prisms)
+		{
+			if (!prism || !prism->isValid) continue;
+			if (prism->poly.size() < 3) continue;
+
+			// AABBÊó©Êúü„Ç≠„É£„É≥„Çª„É´
+			float margin = halfSize.x + 0.1f;
+			if (playerCenter.x < prism->aabbMin.x - margin ||
+				playerCenter.x > prism->aabbMax.x + margin ||
+				playerCenter.y < prism->aabbMin.y - halfSize.y - margin ||
+				playerCenter.y > prism->aabbMax.y + margin ||
+				playerCenter.z < prism->aabbMin.z - margin ||
+				playerCenter.z > prism->aabbMax.z + margin)
+			{
+				continue;
+			}
+
+			// „Éó„É¨„Ç§„É§„Éº‰ΩçÁΩÆ„Çí„Éó„É™„Ç∫„É†„ÅÆ„É≠„Éº„Ç´„É´Â∫ßÊ®ô„Å´Â§âÊèõ
+			XMFLOAT3 rel = playerCenter - prism->origin;
+			float localU = Dot(rel, prism->u);
+			float localV = Dot(rel, prism->v);
+			float localN = Dot(rel, prism->n);
+
+			// „Éó„É™„Ç∫„É†„ÅÆU-VÁØÑÂõ≤„ÇíË®àÁÆó
+			float minU = FLT_MAX, maxU = -FLT_MAX;
+			float minV = FLT_MAX, maxV = -FLT_MAX;
+			for (const auto& p : prism->poly)
+			{
+				minU = (std::min)(minU, p.x);
+				maxU = (std::max)(maxU, p.x);
+				minV = (std::min)(minV, p.y);
+				maxV = (std::max)(maxV, p.y);
+			}
+
+			// „Éó„É¨„Ç§„É§„Éº„ÅÆÂçäÂæÑ
+			float playerRadiusU = halfSize.x;
+			float playerRadiusV = halfSize.y;
+			float playerRadiusN = halfSize.z;
+
+			// ÂêÑÊñπÂêë„ÅÆ‰æµÂÖ•Èáè„ÇíË®àÁÆó
+			float penU_pos = (maxU + playerRadiusU) - localU;
+			float penU_neg = localU - (minU - playerRadiusU);
+			float penV_pos = (maxV + playerRadiusV) - localV;
+			float penV_neg = localV - (minV - playerRadiusV);
+			float penN_pos = (prism->thickness + playerRadiusN) - localN;
+			float penN_neg = localN + playerRadiusN;
+
+			// ÂÖ®ÊñπÂêë„Åß‰æµÂÖ•„Åó„Å¶„ÅÑ„Çã„Åã„ÉÅ„Çß„ÉÉ„ÇØ
+			if (penU_pos <= 0 || penU_neg <= 0 ||
+				penV_pos <= 0 || penV_neg <= 0 ||
+				penN_pos <= 0 || penN_neg <= 0)
+			{
+				continue;
+			}
+
+			// ÊúÄÂ∞è‰æµÂÖ•Èáè„ÅÆÊñπÂêë„ÇíË¶ã„Å§„Åë„Çã
+			float minPen = FLT_MAX;
+			int pushDir = 0;
+
+			if (penU_pos < minPen) { minPen = penU_pos; pushDir = 1; }
+			if (penU_neg < minPen) { minPen = penU_neg; pushDir = 2; }
+			if (penV_pos < minPen) { minPen = penV_pos; pushDir = 3; }
+			if (penV_neg < minPen) { minPen = penV_neg; pushDir = 4; }
+			if (penN_pos < minPen) { minPen = penN_pos; pushDir = 5; }
+			if (penN_neg < minPen) { minPen = penN_neg; pushDir = 6; }
+
+			if (pushDir == 0 || minPen <= 0.001f) continue;
+
+			// Êäº„ÅóÂá∫„Åó„Éô„ÇØ„Éà„É´„ÇíË®àÁÆó
+			XMFLOAT3 pushDir3 = { 0, 0, 0 };
+			bool isGroundHit = false;
+
+			switch (pushDir)
+			{
+			case 1:  // +UÊñπÂêë„Å´Êäº„ÅóÂá∫„Åó
+				pushDir3 = prism->u;
+				break;
+			case 2:  // -UÊñπÂêë„Å´Êäº„ÅóÂá∫„Åó
+				pushDir3 = { -prism->u.x, -prism->u.y, -prism->u.z };
+				break;
+			case 3:  // +VÊñπÂêë„Å´Êäº„ÅóÂá∫„ÅóÔºà‰∏äÊñπÂêëÔºùÁùÄÂú∞„ÅÆÂèØËÉΩÊÄßÔºâ
+				pushDir3 = prism->v;
+				if (prism->v.y > 0.5f) isGroundHit = true;
+				break;
+			case 4:  // -VÊñπÂêë„Å´Êäº„ÅóÂá∫„ÅóÔºà‰∏ã„Åã„ÇâÈ†≠„Çí„Å∂„Å§„Åë„ÅüÔºâ
+				pushDir3 = { -prism->v.x, -prism->v.y, -prism->v.z };
+				break;
+			case 5:  // +NÊñπÂêë„Å´Êäº„ÅóÂá∫„Åó
+				pushDir3 = prism->n;
+				if (prism->n.y > 0.5f) isGroundHit = true;
+				break;
+			case 6:  // -NÊñπÂêë„Å´Êäº„ÅóÂá∫„Åó
+				pushDir3 = { -prism->n.x, -prism->n.y, -prism->n.z };
+				break;
+			}
+
+			// Êäº„ÅóÂá∫„Åó„ÇíÈÅ©Áî®
+			player->Position.x += pushDir3.x * minPen;
+			player->Position.y += pushDir3.y * minPen;
+			player->Position.z += pushDir3.z * minPen;
+
+			// ÈÄüÂ∫¶„ÅÆË©≤ÂΩìÊàêÂàÜ„ÇíÂÅúÊ≠¢
+			float velDot = Dot(player->Velocity, pushDir3);
+			if (velDot < 0)  // Ë°ùÁ™ÅÊñπÂêë„Å´Âêë„Åã„Å£„Å¶„ÅÑ„ÇãÂ†¥Âêà„ÅÆ„ÅøÂÅúÊ≠¢
+			{
+				player->Velocity.x -= velDot * pushDir3.x;
+				player->Velocity.y -= velDot * pushDir3.y;
+				player->Velocity.z -= velDot * pushDir3.z;
+			}
+
+			// Êé•Âú∞Âà§ÂÆö
+			if (isGroundHit && player->Velocity.y <= 0.01f)
+			{
+				player->isGround = true;
+			}
+
+			hitThisIter = true;
+			hitAny = true;
+		}
+
+		// „Åì„ÅÆÂèçÂæ©„ÅßË°ùÁ™Å„Åå„Å™„Åë„Çå„Å∞ÁµÇ‰∫Ü
+		if (!hitThisIter) break;
+	}
+
+	return hitAny;
+}
+
+
+
+// „Éá„Éê„ÉÉ„Ç∞ÊèèÁîª
+void Collision_DebugDraw()
+{
+	// 3D„Éó„É¨„Ç§„É§„Éº„Ç≥„É©„Ç§„ÉÄ„Éº
+	PLAYER* player3D = GetPlayer3D();
+	if (player3D)
+	{
+		XMFLOAT3 pC = GetPlayerSolidCollider();
+		XMFLOAT3 pH = Player3D_GetSolidHalfSize();
+		DebugDrawEllipsoid(pC, pH, IM_COL32(0, 255, 0, 255));
+
+		XMFLOAT3 tC = GetPlayerTriggerCollider();
+		XMFLOAT3 tH = Player3D_GetTriggerHalfSize();
+		DebugDrawOBB_Yaw(tC, tH, player3D->Rotation.y, IM_COL32(255, 255, 255, 255));
+	}
+	// 2D„Éó„É¨„Ç§„É§„Éº„Ç≥„É©„Ç§„ÉÄ„Éº
+	PLAYER* player2D = GetPlayer2D();
+	if (player2D)
+	{
+		XMFLOAT3 pC = GetPlayer2DSolidCollider();
+		XMFLOAT3 pH = Player2D_GetSolidHalfSize();
+		DebugDrawOBB_Yaw(pC, pH, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));
+	}
+
+	// „Éï„Ç£„Éº„É´„Éâ„Éà„É™„Ç¨„Éº
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (player3D && !map.empty())
+	{
+		XMFLOAT3 tC = GetPlayerTriggerCollider();
+		XMFLOAT3 tH = Player3D_GetTriggerHalfSize();
+
+		for (size_t i = 0; i < map.size(); ++i)
+		{
+			if (!Field_IsTrigger(map[i].no)) continue;
+
+			XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
+			bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
+				map[i].pos, boxH, map[i].rotate.y);
+			ImU32 col = hit ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
+			DebugDrawOBB_Yaw(map[i].pos, boxH, map[i].rotate.y, col);
+		}
+	}
+
+	if (!g_ShadowPrisms.empty())
+	{
+		static const ImU32 prismColors[] = {
+			IM_COL32(255, 50, 50, 220), 
+			IM_COL32(50, 255, 50, 220), 
+			IM_COL32(50, 50, 255, 220), 
+			IM_COL32(255, 255, 50, 220),
+			IM_COL32(255, 50, 255, 220),
+			IM_COL32(50, 255, 255, 220),
+		};
+		const int colorCount = sizeof(prismColors) / sizeof(prismColors[0]);
+
+		for (size_t i = 0; i < g_ShadowPrisms.size(); ++i)
+		{
+			if (g_ShadowPrisms[i] && g_ShadowPrisms[i]->isValid)
+			{
+				ShadowDebugOptions opts = g_ShadowDebugOpts;
+				opts.prismColor = prismColors[i % colorCount];
+				DebugDrawShadowPrism(*g_ShadowPrisms[i], opts);
+			}
+		}
+	}
+
+	for (const auto& box : g_ExtraBoxes)
+	{
+		if (box.isOBB)
+			DebugDrawOBB_Yaw(box.center, box.half, box.rotDeg.y, box.color);
+		else
+			DebugDrawAABB(box.center, box.half, box.color);
+	}
 }
