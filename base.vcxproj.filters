@@ -130,15 +130,12 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClCompile>
     <ClCompile Include="KeyBind.cpp">
-<<<<<<< HEAD
-=======
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="title_manager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
     <ClCompile Include="ShadowColliderBox.cpp">
->>>>>>> origin/main
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -239,8 +236,6 @@
     <ClInclude Include="PlayerModeSwitchManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-<<<<<<< HEAD
-=======
     <ClInclude Include="MathUtil.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
@@ -250,7 +245,6 @@
     <ClInclude Include="ShadowColliderBox.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
->>>>>>> origin/main
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shader_pixel_2d.hlsl">
