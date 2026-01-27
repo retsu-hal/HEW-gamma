@@ -260,6 +260,7 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_GROUND:
 	case FIELD_WALL:
 	case FIELD_OBJ_BOX:
+	case FIELD_EMPTY_BOX:
 	case FIELD_OBJ_1:
 		return true;
 	default:
@@ -1033,7 +1034,8 @@ void Collision_DebugDraw()
 
 		for (size_t i = 0; i < map.size(); ++i)
 		{
-			if (!Field_IsTrigger(map[i].no)) continue;
+
+			//if (!Field_IsTrigger(map[i].no)) continue;
 
 			XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
 			bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
