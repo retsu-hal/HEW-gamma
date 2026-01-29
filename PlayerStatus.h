@@ -18,6 +18,7 @@ enum PLAYER_STATE
 	PLAYER_STATE_UP,			//上昇中
 	PLAYER_STATE_ACTION,		//アクション中(3D限定)
 
+
 	PLAYER_STATE_MAX,
 };
 
@@ -57,6 +58,9 @@ public:
 
 	// プレイヤー変身フラグ
 	bool isChange = false;
+
+	bool blockMovement = false; // 移動禁止フラグ
+
 	//  true: 2D状態
 	//  false:3D状態
 };

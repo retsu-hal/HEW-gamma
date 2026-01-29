@@ -7,58 +7,58 @@
 #include "sprite.h"
 
 //=========================================================================================================
-// ãƒ‡ãƒãƒƒã‚°ç”¨
+// ƒfƒoƒbƒO—p
 #include "debug.h"
 #include "MathUtil.h"
 using namespace mu;
 
 //=========================================================================================================
-// ãƒ‡ãƒãƒƒã‚°ç”¨
+// ƒfƒoƒbƒO—p
 //=========================================================================================================
 #include "debug.h"
 
 //=========================================================================================================
-// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+// ƒOƒ[ƒoƒ‹•Ï”
 //=========================================================================================================
 PLAYER g_Player2D;
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
 static  ID3D11Buffer* g_VertexBuffer = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//ãƒ†ã‚¯ã‚¹ãƒãƒ£å¤‰æ•°
+static ID3D11ShaderResourceView* g_Texture;		//ƒeƒNƒXƒ`ƒƒ•Ï”
 
 static float g_StopTime = 0.0f;
 
 static Vertex3D Player2DVertex[4] = {
-	{//é ‚ç‚¹0 LEFT-TOP
-		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//åº§æ¨™
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//æ³•ç·š
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ã‚«ãƒ©ãƒ¼
-		XMFLOAT2(0.0f,0.0f)					//ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	{//’¸“_0 LEFT-TOP
+		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//À•W
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//–@ü
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ƒJƒ‰[
+		XMFLOAT2(0.0f,0.0f)					//ƒeƒNƒXƒ`ƒƒÀ•W
 	},
 
-	{//é ‚ç‚¹1 RIGHT-TOP
-		XMFLOAT3(1.0f, 1.0f, 0.0f),		//åº§æ¨™
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//æ³•ç·š
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ã‚«ãƒ©ãƒ¼
-		XMFLOAT2(1.0f,0.0f)					//ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	{//’¸“_1 RIGHT-TOP
+		XMFLOAT3(1.0f, 1.0f, 0.0f),		//À•W
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//–@ü
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ƒJƒ‰[
+		XMFLOAT2(1.0f,0.0f)					//ƒeƒNƒXƒ`ƒƒÀ•W
 	},
 
-	{//é ‚ç‚¹2 LEFT-BOTTOM
-		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//åº§æ¨™
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//æ³•ç·š
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ã‚«ãƒ©ãƒ¼
-		XMFLOAT2(0.0f,1.0f)					//ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	{//’¸“_2 LEFT-BOTTOM
+		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//À•W
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//–@ü
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ƒJƒ‰[
+		XMFLOAT2(0.0f,1.0f)					//ƒeƒNƒXƒ`ƒƒÀ•W
 	},
 
-	{//é ‚ç‚¹3 RIGHT-BOTTOM
-		XMFLOAT3(1.0f, 0.0f, 0.0f),		//åº§æ¨™
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//æ³•ç·š
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ã‚«ãƒ©ãƒ¼
-		XMFLOAT2(1.0f,1.0f)					//ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	{//’¸“_3 RIGHT-BOTTOM
+		XMFLOAT3(1.0f, 0.0f, 0.0f),		//À•W
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//–@ü
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ƒJƒ‰[
+		XMFLOAT2(1.0f,1.0f)					//ƒeƒNƒXƒ`ƒƒÀ•W
 	},
 };
 
-//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å½“ãŸã‚Šåˆ¤å®šã‚µã‚¤ã‚º
+//ƒvƒŒƒCƒ„[“–‚½‚è”»’èƒTƒCƒY
 static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 	PLAYER2D_SOLID_HALF_X,
 	PLAYER2D_SOLID_HALF_Y,
@@ -68,26 +68,26 @@ static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 static bool g_Player2DActive = false;
 
 //=========================================================================================================
-// åˆæœŸåŒ–å‡¦ç†
+// ‰Šú‰»ˆ—
 //=========================================================================================================
 void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// ãƒ‡ãƒã‚¤ã‚¹ã¨ãƒ‡ãƒã‚¤ã‚¹ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ä¿å­˜
+	// ƒfƒoƒCƒX‚ÆƒfƒoƒCƒXƒRƒ“ƒeƒLƒXƒg‚Ì•Û‘¶
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// ãƒ†ã‚¯ã‚¹ãƒãƒ£
+	// ƒeƒNƒXƒ`ƒƒ
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\player2d.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ã®ç”Ÿæˆ
+	//’¸“_ƒoƒbƒtƒ@‚Ì¶¬
 	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));//0ã§ã‚¯ãƒªã‚¢
+	ZeroMemory(&bd, sizeof(bd));//0‚ÅƒNƒŠƒA
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(Vertex3D) * 4;//æ ¼ç´ã§ãã‚‹é ‚ç‚¹æ•°*é ‚ç‚¹ã‚µã‚¤ã‚º
+	bd.ByteWidth = sizeof(Vertex3D) * 4;//Ši”[‚Å‚«‚é’¸“_”*’¸“_ƒTƒCƒY
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
@@ -100,7 +100,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 }
 
 //=========================================================================================================
-// çµ‚äº†å‡¦ç†
+// I—¹ˆ—
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
@@ -109,32 +109,32 @@ void Player2D_Finalize(void)
 }
 
 //=========================================================================================================
-// æ›´æ–°å‡¦ç†
+// XVˆ—
 //=========================================================================================================
 void Player2D_Update()
 {
 	if (!g_Player2DActive) return;
 
-	Player2D_Respawn();	//ãƒªã‚¹ãƒãƒ¼ãƒ³
+	Player2D_Respawn();	//ƒŠƒXƒ|[ƒ“
 
-	Player2D_Gravity();	//é‡åŠ›å‡¦ç†
+	Player2D_Gravity();	//d—Íˆ—
 
-	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ“ä½œ
-	Player2D_Move();	//ç§»å‹•
-	Player2D_Jump();	//ã‚¸ãƒ£ãƒ³ãƒ—
-	Player2D_Change();	//å½±å¤‰èº«
+	// ƒvƒŒƒCƒ„[‘€ì
+	Player2D_Move();	//ˆÚ“®
+	Player2D_Jump();	//ƒWƒƒƒ“ƒv
+	Player2D_Change();	//‰e•Ïg
 
 
 	switch (g_Player2D.state)
 	{
 	case PLAYER_STATE_IDLE:
-		//Idleã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+		//IdleƒAƒjƒ[ƒVƒ‡ƒ“
 		break;
 	case PLAYER_STATE_MOVE:
-		//Moveã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+		//MoveƒAƒjƒ[ƒVƒ‡ƒ“
 		break;
 	case PLAYER_STATE_FALL:
-		//Fallã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+		//FallƒAƒjƒ[ƒVƒ‡ƒ“
 		break;
 
 
@@ -144,7 +144,7 @@ void Player2D_Update()
 }
 
 //=========================================================================================================
-// ã‚²ãƒƒã‚¿ãƒ¼
+// ƒQƒbƒ^[
 //=========================================================================================================
 XMFLOAT3 GetPlayer2DPosition()
 {
@@ -154,15 +154,17 @@ XMFLOAT3 GetPlayer2DPosition()
 
 
 //=========================================================================================================
-// ã‚»ãƒƒã‚¿ãƒ¼
+// ƒZƒbƒ^[
 //=========================================================================================================
 
 
 //=========================================================================================================
-// å‡¦ç†
+// ˆ—
 //=========================================================================================================
 void Player2D_Gravity()
 {
+	g_Player2D.blockMovement = false;
+
 	bool wasGround = g_Player2D.isGround;
 	g_Player2D.isGround = false;
 
@@ -177,14 +179,14 @@ void Player2D_Gravity()
 	}
 	else
 	{
-		// æ¥åœ°ä¸­ã¯ä¸‹æ–¹å‘ã®é€Ÿåº¦ã‚’ãƒªã‚»ãƒƒãƒˆï¼ˆä¸Šæ–¹å‘ã¯è¨±å¯ï¼‰
+		// Ú’n’†‚Í‰º•ûŒü‚Ì‘¬“x‚ğƒŠƒZƒbƒgiã•ûŒü‚Í‹–‰Âj
 		if (g_Player2D.Velocity.y < 0.0f)
 		{
 			g_Player2D.Velocity.y = 0.0f;
 		}
 	}
 
-	// X-Zå¹³é¢ã®æ‘©æ“¦ã«ã‚ˆã‚‹æ¸›é€Ÿ
+	// X-Z•½–Ê‚Ì–€C‚É‚æ‚éŒ¸‘¬
 	g_Player2D.Velocity.x *= 0.925f;
 	g_Player2D.Velocity.z *= 0.925f;
 
@@ -223,7 +225,7 @@ void Player2D_Gravity()
 
 void Player2D_Respawn()
 {
-	// è½ä¸‹ãƒã‚§ãƒƒã‚¯
+	// —‰ºƒ`ƒFƒbƒN
 	if (g_Player2D.Position.y < -10.0f)
 	{
 		Player2D_Reset();
@@ -237,35 +239,41 @@ void Player2D_Respawn()
 
 void Player2D_Move()
 {
+
+	if (g_Player2D.blockMovement)
+	{
+		return;
+	}
+
 	XMFLOAT3 inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
-	// å…¥åŠ›å–å¾—ï¼ˆå·¦å³ã®ã¿ï¼‰
-	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;  // å³
-	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;  // å·¦
+	// “ü—Íæ“¾i¶‰E‚Ì‚İj
+	if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;  // ‰E
+	if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;  // ¶
 
 	if (fabsf(inputDir.x) > 0.0001f)
 	{
-		// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®Yå›è»¢è§’åº¦ã‚’å–å¾—ï¼ˆå£ã®å‘ãã‚’æ±ºå®šï¼‰
-		// Rotation.y ã¯å£ã®æ³•ç·šæ–¹å‘ã‚’å‘ã„ã¦ã„ã‚‹
+		// ƒvƒŒƒCƒ„[‚ÌY‰ñ“]Šp“x‚ğæ“¾i•Ç‚ÌŒü‚«‚ğŒˆ’èj
+		// Rotation.y ‚Í•Ç‚Ì–@ü•ûŒü‚ğŒü‚¢‚Ä‚¢‚é
 		float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
 
-		// å£ã«æ²¿ã£ãŸã€Œå³æ–¹å‘ã€ãƒ™ã‚¯ãƒˆãƒ«ã‚’è¨ˆç®—
-		// æ³•ç·šæ–¹å‘:  (sin(yaw), 0, cos(yaw))
-		// å³æ–¹å‘: æ³•ç·šã‚’ Yè»¸å‘¨ã‚Šã« -90åº¦å›è»¢ = (cos(yaw), 0, -sin(yaw))
-		// ã¾ãŸã¯å˜ç´”ã«:  å³ = (cos(yaw), 0, -sin(yaw))
+		// •Ç‚É‰ˆ‚Á‚½u‰E•ûŒüvƒxƒNƒgƒ‹‚ğŒvZ
+		// –@ü•ûŒü:  (sin(yaw), 0, cos(yaw))
+		// ‰E•ûŒü: –@ü‚ğ Y²ü‚è‚É -90“x‰ñ“] = (cos(yaw), 0, -sin(yaw))
+		// ‚Ü‚½‚Í’Pƒ‚É:  ‰E = (cos(yaw), 0, -sin(yaw))
 		float rightX = cosf(yawRad);
 		float rightZ = -sinf(yawRad);
 
-		// å…¥åŠ›æ–¹å‘ï¼ˆå·¦å³ï¼‰ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã«å¤‰æ›
+		// “ü—Í•ûŒüi¶‰Ej‚ğƒ[ƒ‹ƒhÀ•W‚É•ÏŠ·
 		float worldX = inputDir.x * rightX;
 		float worldZ = inputDir.x * rightZ;
 
-		// é€Ÿåº¦ã«åŠ ç®—ï¼ˆXè»¸ã¨Zè»¸ã€Yè»¸ã¯é‡åŠ›ã§åˆ¶å¾¡ï¼‰
+		// ‘¬“x‚É‰ÁZiX²‚ÆZ²AY²‚Íd—Í‚Å§Œäj
 		g_Player2D.Velocity.x += worldX * g_Player2D.moveSpeed;
 		g_Player2D.Velocity.z += worldZ * g_Player2D.moveSpeed;
 	}
 
-	// é€Ÿåº¦åˆ¶é™ï¼ˆX-Zå¹³é¢ï¼‰
+	// ‘¬“x§ŒÀiX-Z•½–Êj
 	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
 		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
 	float maxSpeed = g_Player2D.maxMoveSpeed;
@@ -283,7 +291,7 @@ void Player2D_Jump()
 	{
 		if (g_Player2D.isGround)
 		{
-			// Yè»¸æ–¹å‘ã«ã‚¸ãƒ£ãƒ³ãƒ—ï¼ˆå£ã«è²¼ã‚Šä»˜ã„ãŸçŠ¶æ…‹ã§ã®ä¸Šæ–¹å‘ï¼‰
+			// Y²•ûŒü‚ÉƒWƒƒƒ“ƒvi•Ç‚É“\‚è•t‚¢‚½ó‘Ô‚Å‚Ìã•ûŒüj
 			g_Player2D.Velocity.y = g_Player2D.jumpPower;
 
 			g_Player2D.isGround = false;
@@ -296,11 +304,11 @@ void Player2D_Change()
 {
 	if (IsInputDown(ChangeKey, gPad))
 	{
-		// â—†3Dã«å¤‰èº«
+		// Ÿ3D‚É•Ïg
 		// 
-		// 3Dã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’2Dãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®åº§æ¨™ã‚’å‚ç…§ã—ã¦ç”Ÿæˆ
-		// â†“
-		// 2Dãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’å‰Šé™¤ã™ã‚‹
+		// 3DƒLƒƒƒ‰ƒNƒ^[‚ğ2DƒvƒŒƒCƒ„[‚ÌÀ•W‚ğQÆ‚µ‚Ä¶¬
+		// «
+		// 2DƒvƒŒƒCƒ„[‚ğíœ‚·‚é
 		//
 	}
 }
@@ -328,7 +336,7 @@ XMFLOAT3 Player2D_GetSolidHalfSize()
 }
 
 //=========================================================================================================
-// æç”»å‡¦ç†
+// •`‰æˆ—
 //=========================================================================================================
 void Player2D_Draw(void)
 {
@@ -361,7 +369,7 @@ void Player2D_Draw(void)
 	XMMATRIX projection = GetProjectionMatrix();
 	XMMATRIX wvp = world * view * projection;
 
-	// å¤‰æ›è¡Œåˆ—ã‚’é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ã¸ã‚»ãƒƒãƒˆ
+	// •ÏŠ·s—ñ‚ğ’¸“_ƒVƒF[ƒ_‚ÖƒZƒbƒg
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);
