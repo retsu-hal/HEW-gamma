@@ -857,128 +857,10 @@ static float ProjectRadiusOnAxis_Yaw(const XMFLOAT3& axis, const XMFLOAT3& half,
 	const XMFLOAT3 fwd = { sinf(yaw), 0.0f,  cosf(yaw) };
 	const XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
 
-	// axis is expected to be unit length (ShadowPrism builds an orthonormal basis)
 	return fabsf(Dot(axis, right)) * half.x
 		+ fabsf(Dot(axis, up)) * half.y
 		+ fabsf(Dot(axis, fwd)) * half.z;
 }
-
-// Stop horizontal movement BEFORE we enter the prism (prevents "walk in then snap back").
-// Call this BEFORE Position += Velocity in Player2D_Gravity().
-bool Player2DShadow_BlockMoveAtContact(float skin)
-{
-	PLAYER* player = GetPlayer2D();
-	if (!player) return false;
-
-	const std::vector<const ShadowPrism*>& prisms = Collision_GetShadowPrisms();
-	if (prisms.empty()) return false;
-
-	const XMFLOAT3 half = Player2D_GetSolidHalfSize();
-
-	// current center (before move)
-	const XMFLOAT3 center = { player->Position.x, player->Position.y + half.y, player->Position.z };
-
-	// current intended horizontal displacement for this frame (Position += Velocity uses "per-frame" displacement)
-	const XMFLOAT3 velXZ = { player->Velocity.x, 0.0f, player->Velocity.z };
-
-	// if we are almost not moving, nothing to do
-	if (fabsf(velXZ.x) + fabsf(velXZ.z) < 1e-6f) return false;
-
-	for (const ShadowPrism* prism : prisms)
-	{
-		if (!prism || !prism->isValid) continue;
-		if (prism->poly.size() < 3) continue;
-
-		// Quick AABB gate (expanded by half + skin + move amount)
-		const float moveMargin = sqrtf(velXZ.x * velXZ.x + velXZ.z * velXZ.z) + skin + 0.05f;
-		if (center.x < prism->aabbMin.x - half.x - moveMargin || center.x > prism->aabbMax.x + half.x + moveMargin ||
-			center.z < prism->aabbMin.z - half.z - moveMargin || center.z > prism->aabbMax.z + half.z + moveMargin)
-		{
-			continue;
-		}
-
-		// local coordinates in prism basis
-		const XMFLOAT3 rel = center - prism->origin;
-		const float localU = Dot(rel, prism->u);
-		const float localV = Dot(rel, prism->v);
-		const float localN = Dot(rel, prism->n);
-
-		// prism U-V bounds from polygon (local 2D)
-		float minU = FLT_MAX, maxU = -FLT_MAX;
-		float minV = FLT_MAX, maxV = -FLT_MAX;
-		for (const auto& p : prism->poly)
-		{
-			minU = (std::min)(minU, p.x);
-			maxU = (std::max)(maxU, p.x);
-			minV = (std::min)(minV, p.y);
-			maxV = (std::max)(maxV, p.y);
-		}
-
-		// Player OBB projected radius on prism axes (important!)
-		const float rU = ProjectRadiusOnAxis_Yaw(prism->u, half, player->Rotation.y);
-		const float rV = ProjectRadiusOnAxis_Yaw(prism->v, half, player->Rotation.y);
-		const float rN = ProjectRadiusOnAxis_Yaw(prism->n, half, player->Rotation.y);
-
-		// Require overlap in the other two axes to treat as a side contact candidate
-		const bool overlapV = (localV <= maxV + rV) && (localV >= minV - rV);
-		const bool overlapN = (localN <= prism->thickness + rN) && (localN >= -rN);
-		const bool overlapU = (localU <= maxU + rU) && (localU >= minU - rU);
-
-		// Horizontal deltas in prism axes (ignore Y to avoid gravity causing side-blocks)
-		const float dU = DotXZ(velXZ, prism->u);
-		const float dN = DotXZ(velXZ, prism->n);
-
-		// +U / -U sides:
-		// 旧版は「外側にいる(outside>0) かつ 1フレームで跨ぐ」時だけ止めていたため、
-		// 一度接触(or 少しめり込み)した状態で押し続けると inside 側へ進めてしまう。
-		// ここでは「接触域(skin)に入る/入っている」状態で内向きに動こうとしたら必ず止める。
-		if (overlapV && overlapN)
-		{
-			const float outsideUpos = localU - (maxU + rU);      // >0: +U外側, <=0: +U面より内側(接触含む)
-			if (dU < 0.0f && (outsideUpos + dU) <= skin)         // 内向き(-U)に進んで skin 以内に入るなら停止
-			{
-				player->Velocity.x = 0.0f;
-				player->Velocity.z = 0.0f;
-				player->blockMovement = true;
-				return true;
-			}
-
-			const float outsideUneg = (minU - rU) - localU;      // >0: -U外側
-			if (dU > 0.0f && (outsideUneg - dU) <= skin)         // 内向き(+U)に進んで skin 以内に入るなら停止
-			{
-				player->Velocity.x = 0.0f;
-				player->Velocity.z = 0.0f;
-				player->blockMovement = true;
-				return true;
-			}
-		}
-
-		// +N / -N sides (thickness faces):
-		if (overlapU && overlapV)
-		{
-			const float outsideNpos = localN - (prism->thickness + rN); // >0: +N外側
-			if (dN < 0.0f && (outsideNpos + dN) <= skin)                // 内向き(-N)へ進んで skin 以内なら停止
-			{
-				player->Velocity.x = 0.0f;
-				player->Velocity.z = 0.0f;
-				player->blockMovement = true;
-				return true;
-			}
-
-			const float outsideNneg = (-rN) - localN;                   // >0: -N外側
-			if (dN > 0.0f && (outsideNneg - dN) <= skin)                // 内向き(+N)へ進んで skin 以内なら停止
-			{
-				player->Velocity.x = 0.0f;
-				player->Velocity.z = 0.0f;
-				player->blockMovement = true;
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 
 
 bool Player2DShadow_Collision()
@@ -991,15 +873,12 @@ bool Player2DShadow_Collision()
 
 	const XMFLOAT3 half = Player2D_GetSolidHalfSize();
 
-	// "skin" prevents tiny numerical penetration and avoids jitter.
 	const float skin = 0.01f;
 	const float eps = 1e-6f;
 	const float hitEps = 1e-4f;
 
-	// We only constrain horizontal movement here (like wall collision).
 	XMFLOAT3 dXZ = { player->Velocity.x, 0.0f, player->Velocity.z };
 
-	// If almost not moving horizontally, we still want to allow "top as ground" logic (Y).
 	bool hitAny = false;
 
 	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float
@@ -1015,7 +894,6 @@ bool Player2DShadow_Collision()
 	auto Sub2 = [](const XMFLOAT2& a, const XMFLOAT2& b) -> XMFLOAT2 { return { a.x - b.x, a.y - b.y }; };
 	auto Len2 = [](const XMFLOAT2& v) -> float { return sqrtf(v.x * v.x + v.y * v.y); };
 
-	// Sweep segment (p0 -> p0 + dp) against a convex polygon expanded by "rEdge" per edge.
 	auto SweepEnterExpanded = [&](const ShadowPrism* prism,
 		const std::vector<XMFLOAT2>& polyCCW,
 		const XMFLOAT2& p0,
@@ -1033,23 +911,19 @@ bool Player2DShadow_Collision()
 				const XMFLOAT2 b = polyCCW[(i + 1) % n];
 				const XMFLOAT2 e = { b.x - a.x, b.y - a.y };
 
-				// inward normal (poly is CCW)
 				XMFLOAT2 nIn = { -e.y, e.x };
 				float nl = Len2(nIn);
 				if (nl < 1e-6f) continue;
 				nIn.x /= nl; nIn.y /= nl;
 
-				// world axis corresponding to this inward normal
-				const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y; // unit length (u,v are orthonormal)
+				const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
 				const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, yawDeg) + skin;
 
 				const float s0 = Dot2(nIn, Sub2(p0, a));
 				const float sv = Dot2(nIn, dp);
 
-				// want: s0 + sv*t >= -rEdge
 				if (fabsf(sv) < 1e-6f)
 				{
-					// Parallel: must already satisfy
 					if (s0 < -rEdge) return false;
 					continue;
 				}
@@ -1058,12 +932,10 @@ bool Player2DShadow_Collision()
 
 				if (sv > 0.0f)
 				{
-					// entering this halfspace
 					if (t > tEnter) tEnter = t;
 				}
 				else
 				{
-					// leaving this halfspace
 					if (t < tExit) tExit = t;
 				}
 
@@ -1074,7 +946,6 @@ bool Player2DShadow_Collision()
 			return true;
 		};
 
-	// current collider center (for local projection)
 	auto GetCenter = [&]() -> XMFLOAT3
 		{
 			return { player->Position.x, player->Position.y + half.y, player->Position.z };
@@ -1085,7 +956,6 @@ bool Player2DShadow_Collision()
 		if (!prism || !prism->isValid) continue;
 		if (prism->poly.size() < 3) continue;
 
-		// Quick horizontal AABB gate
 		const float moveLen = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
 		const float gate = half.x + half.z + moveLen + 0.10f;
 		const XMFLOAT3 cW0 = GetCenter();
@@ -1095,12 +965,10 @@ bool Player2DShadow_Collision()
 			continue;
 		}
 
-		// Make a CCW local polygon (u-v plane coordinates)
 		std::vector<XMFLOAT2> poly = prism->poly;
 		if (Area2(poly) < 0.0f)
 			std::reverse(poly.begin(), poly.end());
 
-		// Local coordinates (u,v,n) of player center
 		const XMFLOAT3 cW = GetCenter();
 		const XMFLOAT3 rel = cW - prism->origin;
 		const float u0 = Dot(rel, prism->u);
@@ -1111,32 +979,21 @@ bool Player2DShadow_Collision()
 		const float rN = ProjectRadiusOnAxis_Yaw(prism->n, half, player->Rotation.y);
 		const bool overlapN = (n0 >= -rN) && (n0 <= prism->thickness + rN);
 
-		// ------------------------------------------------------------------
-		// TOP (ground-like) contact: only when prism normal points mostly upward.
-		// Use prism local "n" as the support direction; mark isGround only for up-facing prisms.
-		// ------------------------------------------------------------------
 		if (prism->n.y > 0.7f)
 		{
-			// check footprint (use local 2D polygon; ray-cast point-in-polygon)
 			const bool insideFoot = PointInPolygon2D(p0.x, p0.y, poly);
 
-			// bottom of player along n-axis
 			const float bottomN = n0 - rN;
 
-			// approaching the top face from above (+n side) with downward velocity
 			if (insideFoot && player->Velocity.y <= 0.0f)
 			{
-				// If we are close enough to the top face this frame, snap to it.
-				// top face is at localN = thickness
 				const float targetBottomN = prism->thickness;
 				const float distToTop = bottomN - targetBottomN;
 
 				if (distToTop <= 0.05f && distToTop >= -0.25f)
 				{
-					// move player so bottom touches top
 					player->Position = player->Position - prism->n * distToTop;
 
-					// cancel velocity component along n (for n≈up this cancels falling)
 					const float vN = Dot(player->Velocity, prism->n);
 					if (vN < 0.0f)
 						player->Velocity = player->Velocity - prism->n * vN;
@@ -1147,24 +1004,19 @@ bool Player2DShadow_Collision()
 			}
 		}
 
-		// If we don't overlap prism thickness, side walls can't be touched.
 		if (!overlapN) continue;
 
-		// If we're on/above the top face, allow moving within footprint (standing on it).
 		{
 			const float bottomN = n0 - rN;
 			if (prism->n.y > 0.7f && bottomN >= prism->thickness - 0.02f)
 				continue;
 		}
 
-		// If no horizontal movement, nothing else to do.
 		if (moveLen < eps) continue;
 
-		// Project horizontal movement into prism (u,v) coordinates.
 		XMFLOAT2 dp = { DotXZ(dXZ, prism->u), DotXZ(dXZ, prism->v) };
 		if (fabsf(dp.x) + fabsf(dp.y) < 1e-7f) continue;
 
-		// Determine whether we are already inside the expanded polygon at start.
 		bool insideExp0 = true;
 		for (int i = 0; i < (int)poly.size(); ++i)
 		{
@@ -1186,13 +1038,11 @@ bool Player2DShadow_Collision()
 
 		if (!insideExp0)
 		{
-			// Outside => prevent entering by stopping at the first time we would touch the expanded polygon.
 			float tEnter = 0.0f;
 			if (SweepEnterExpanded(prism, poly, p0, dp, player->Rotation.y, &tEnter))
 			{
 				if (tEnter <= 1.0f && tEnter >= 0.0f)
 				{
-					// If we would enter within this frame, clamp movement just before entry.
 					if (tEnter < 1.0f)
 					{
 						const float tStop = (std::max)(0.0f, (std::min)(1.0f, tEnter - hitEps));
@@ -1205,8 +1055,6 @@ bool Player2DShadow_Collision()
 		}
 		else
 		{
-			// Already inside expanded band (touching) => remove the inward component near the boundary.
-			// This gives "wall-like" behavior: push into it => no forward speed; move tangentially => slide.
 			for (int pass = 0; pass < 2; ++pass)
 			{
 				XMFLOAT2 dpNow = { DotXZ(dXZ, prism->u), DotXZ(dXZ, prism->v) };
@@ -1228,16 +1076,13 @@ bool Player2DShadow_Collision()
 					const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, player->Rotation.y) + skin;
 
 					const float s0 = Dot2(nIn, Sub2(p0, a));
-					const float slack = s0 + rEdge; // boundary at 0
+					const float slack = s0 + rEdge;
 
-					// Only block when we're very close to the boundary (prevents "magnetic" stop far away).
 					if (slack > 0.03f) continue;
 
-					// moving inward?
 					const float vIn = Dot2(nIn, dpNow);
 					if (vIn <= 0.0f) continue;
 
-					// Remove the inward component from dXZ (project out along axis in XZ).
 					XMFLOAT3 axisXZ = { axisW.x, 0.0f, axisW.z };
 					const float len2xz = axisXZ.x * axisXZ.x + axisXZ.z * axisXZ.z;
 					if (len2xz < 1e-6f) continue;
@@ -1256,7 +1101,6 @@ bool Player2DShadow_Collision()
 		}
 	}
 
-	// Write back constrained horizontal displacement
 	player->Velocity.x = dXZ.x;
 	player->Velocity.z = dXZ.z;
 
@@ -1275,7 +1119,6 @@ bool Player2DShadow_TopContact()
 
 	bool hitAny = false;
 
-	// 暋悢夞偺斀暅偱埨掕偝偣傞
 	const int maxIterations = 4;
 
 	for (int iter = 0; iter < maxIterations; iter++)
@@ -1284,7 +1127,6 @@ bool Player2DShadow_TopContact()
 
 		float footY = player->Position.y;
 
-		// 僾儗僀儎乕偺拞怱埵抲乮枅夞峏怴乯
 		XMFLOAT3 playerCenter = XMFLOAT3(
 			player->Position.x,
 			player->Position.y + halfSize.y,
@@ -1296,20 +1138,17 @@ bool Player2DShadow_TopContact()
 			if (!prism || !prism->isValid) continue;
 			if (prism->poly.size() < 3) continue;
 
-			// AABB憗婜僉儍儞僙儖
 			float margin = halfSize.x + 0.1f;
 			if (
-				footY > prism->aabbMax.y + margin ||           // 懌尦偑塭傛傝忋偡偓傞
-				footY + halfSize.y * 2.0f < prism->aabbMin.y - margin  // 摢偑塭傛傝壓偡偓傞
+				footY > prism->aabbMax.y + margin ||
+				footY + halfSize.y * 2.0f < prism->aabbMin.y - margin 
 				)
 			{
 				continue;
 			}
 
-			// 塭偺忋柺Y嵗昗
 			float shadowTopY = prism->aabbMax.y;
 
-			// 僾儗僀儎乕偑X-Z斖埻撪偵偄傞偐僠僃僢僋
 			bool inXZRange = (playerCenter.x >= prism->aabbMin.x - halfSize.x &&
 				playerCenter.x <= prism->aabbMax.x + halfSize.x &&
 				playerCenter.z >= prism->aabbMin.z - halfSize.z &&
@@ -1319,96 +1158,54 @@ bool Player2DShadow_TopContact()
 
 			float footToShadowTop = footY - shadowTopY;
 
-			// 懌尦偑塭偺忋柺傛傝彮偟壓乣彮偟忋偺斖埻偵偄傞応崌
 			if (footToShadowTop >= -halfSize.y && footToShadowTop <= 0.1f)
 			{
-				// 壓崀拞傑偨偼掆巭拞偺応崌丄拝抧
+
 				if (player->Velocity.y <= 0.01f)
 				{
-					// 懌尦傪塭偺忋柺偵攝抲
 					player->Position.y = shadowTopY;
 
-					// Y曽岦偺懍搙傪掆巭
 					player->Velocity.y = 0.0f;
 
-					// 愙抧僼儔僌傪愝掕
 					player->isGround = true;
 
 					hitThisIter = true;
 					hitAny = true;
-					continue;  // 偙偺塭偲偺張棟偼姰椆
+					continue;
 				}
 			}
 
-			// 懁柺丒掙柺偲偺徴撍敾掕
-			// 僾儗僀儎乕埵抲傪僾儕僘儉偺儘乕僇儖嵗昗偵曄姺
 			XMFLOAT3 rel = playerCenter - prism->origin;
-			float localU = Dot(rel, prism->u);
 			float localV = Dot(rel, prism->v);
-			float localN = Dot(rel, prism->n);
 
-			// 僾儕僘儉偺U-V斖埻傪寁嶼
-			float minU = FLT_MAX, maxU = -FLT_MAX;
 			float minV = FLT_MAX, maxV = -FLT_MAX;
 			for (const auto& p : prism->poly)
 			{
-				minU = (std::min)(minU, p.x);
-				maxU = (std::max)(maxU, p.x);
 				minV = (std::min)(minV, p.y);
 				maxV = (std::max)(maxV, p.y);
 			}
 
-			// 僾儗僀儎乕偺敿宎
-			float playerRadiusU = halfSize.x;
 			float playerRadiusV = halfSize.y;
-			float playerRadiusN = halfSize.z;
 
-			// 奺曽岦偺怤擖検傪寁嶼
-			float penU_pos = (maxU + playerRadiusU) - localU;
-			float penU_neg = localU - (minU - playerRadiusU);
-			float penV_pos = (maxV + playerRadiusV) - localV;
 			float penV_neg = localV - (minV - playerRadiusV);
-			float penN_pos = (prism->thickness + playerRadiusN) - localN;
-			float penN_neg = localN + playerRadiusN;
 
-			// 慡曽岦偱怤擖偟偰偄傞偐僠僃僢僋
-			if (penU_pos <= 0 || penU_neg <= 0 ||
-				penV_pos <= 0 || penV_neg <= 0 ||
-				penN_pos <= 0 || penN_neg <= 0)
-			{
-				continue;
-			}
-
-			// 嵟彫怤擖検偺曽岦傪尒偮偗傞乮忋柺偼彍奜丄婛偵張棟嵪傒乯
 			float minPen = FLT_MAX;
-			int pushDir = 0;
 
-			if (penV_neg < minPen) { minPen = penV_neg; pushDir = 4; }
+			if (penV_neg < minPen) { minPen = penV_neg;}
+			if (minPen <= 0.001f) continue;
 
-			if (pushDir == 0 || minPen <= 0.001f) continue;
-
-			switch (pushDir)
+			float targetLocalV = minV - playerRadiusV;
+			float deltaV = targetLocalV - localV;
+			player->Position.y += prism->v.y * deltaV;
+			if (player->Velocity.y > 0)
 			{
-			case 4:
-			{
-				float targetLocalV = minV - playerRadiusV;
-				float deltaV = targetLocalV - localV;
-				player->Position.y += prism->v.y * deltaV;
-				if (player->Velocity.y > 0)
-				{
-					player->Velocity.y = 0.0f;
-				}
+				player->Velocity.y = 0.0f;
 			}
-			break;
-
-			}
-
 
 			hitThisIter = true;
 			hitAny = true;
 		}
 
-		// 偙偺斀暅偱徴撍偑側偗傟偽廔椆
 		if (!hitThisIter) break;
 	}
 
