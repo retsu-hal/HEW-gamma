@@ -153,9 +153,7 @@
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="KeyBind.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="KeyBind.cpp" />
     <ClCompile Include="KeyBind.h" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="LightSource.cpp" />
@@ -174,6 +172,7 @@
     <ClCompile Include="ShadowColliderBox.cpp" />
     <ClCompile Include="sprite.cpp" />
     <ClCompile Include="title.cpp" />
+    <ClCompile Include="title_manager.cpp" />
     <ClCompile Include="Trail.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +209,7 @@
     <ClInclude Include="ShadowColliderBox.h" />
     <ClInclude Include="sprite.h" />
     <ClInclude Include="title.h" />
+    <ClInclude Include="title_manager.h" />
     <ClInclude Include="Trail.h" />
   </ItemGroup>
   <ItemGroup>

@@ -1,3 +1,4 @@
+//Audio.cpp
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
@@ -183,6 +184,22 @@ void PlayAudio(int Index, bool Loop)
 	// Ä¶
 	g_Audio[Index].SourceVoice->Start();
 
+}
+
+void SetMasterVolume(float Volume)
+{
+	if (g_MasteringVoice)
+	{
+		g_MasteringVoice->SetVolume(Volume);
+	}
+}
+
+void SetAudioVolume(int Index, float Volume)
+{
+	if (g_Audio[Index].SourceVoice)
+	{
+		g_Audio[Index].SourceVoice->SetVolume(Volume);
+	}
 }
 
 

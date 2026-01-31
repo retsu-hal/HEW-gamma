@@ -1,3 +1,4 @@
+//fade.h
 #pragma once
 
 #include "direct3d.h"
@@ -32,6 +33,7 @@ void Fade_Finalize();
 void Fade_Update();
 void Fade_Draw();
 void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state, SCENE scene);
+void	SetFade(int fadeframe, XMFLOAT4 color, FADE_STATE state);
 FADE_STATE	GetFadeState();
 
 

@@ -1,3 +1,4 @@
+//PlayerStatus.h
 #pragma once
 
 #include "Keyboard.h"
@@ -8,6 +9,14 @@
 
 // コントローラー
 extern Controller gPad;
+
+enum PLAYER_ANIM {
+	PLAYER_ANIM_IDLE = 0,
+	PLAYER_ANIM_WALK,
+	PLAYER_ANIM_PUSH,
+
+	PLAYER_ANIM_MAX
+};
 
 // プレイヤーステート
 enum PLAYER_STATE
@@ -33,6 +42,7 @@ public:
 	XMFLOAT3		FirstVelocity;
 	XMFLOAT3		FirstAcceleration;
 	PLAYER_STATE	FirstState;
+	PLAYER_ANIM		FirstAnim;
 	float			FirstStopTime;
 	XMVECTOR		FirstQuaternion;
 
@@ -42,16 +52,18 @@ public:
 	XMFLOAT3 Velocity;			//方向
 	XMFLOAT3 Acceleration;		//加速度
 	PLAYER_STATE state;			//状態
-	MODEL* Model;				//モデルデータ
+	PLAYER_ANIM CurrentAnimIndex;
+	MODEL* Model[PLAYER_ANIM_MAX];	//モデルデータ
 	XMVECTOR Quaternion;		//クォータニオン回転
 
 	// プレイヤーステータス
-	float moveSpeed = 0.005f;			//移動速度
-	float maxMoveSpeed = 1.0f;			//最大移動速度
+	float moveSpeed = 0.01f;			//移動速度
+	float maxMoveSpeed = 2.0f;			//最大移動速度
 	float maxFallSpeed = -0.5f;			//最大落下速度
 	float dampingXZ = 0.925f;			//摩擦係数
 	float gravityPower = -1.0f;			//重力加速度（もしかしたら使う予定）
 	float jumpPower = 0.175f;			//ジャンプ力
+	float dashMoveSpeed = 1.5f;			//ダッシュ移動速度倍率	
 	bool  isGround = false;				//接地判定
 
 	float FirstMaxMoveSpeed = maxMoveSpeed;

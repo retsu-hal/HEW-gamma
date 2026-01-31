@@ -1,3 +1,4 @@
+//controller.h
 #pragma once
 #include <Windows.h>
 #include <Xinput.h>
@@ -16,8 +17,11 @@ public:
     // 接続状態
     bool IsConnected() const;
 
-    // ボタン
-    bool IsButtonPressed(WORD button) const;
+    // ボタン判定（互換性のため既存関数名は残す）
+    bool IsButtonPressed(WORD button) const; // 現在押されているか
+    bool IsButtonTrigger(WORD button) const;  // 今フレーム押された瞬間
+    bool IsButtonReleased(WORD button) const; // 今フレーム離された瞬間
+
 
     // スティック入力（-1.0?1.0）
     float GetLeftStickX() const;
@@ -32,8 +36,8 @@ public:
 private:
     int m_index;
     XINPUT_STATE m_state;
+    XINPUT_STATE m_prevState; // 前フレームの状態を保持
     bool m_connected;
 
-    // ← ここを const に変更
     float ApplyDeadZone(SHORT value, SHORT deadZone) const;
 };

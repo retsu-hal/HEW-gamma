@@ -1,3 +1,4 @@
+//controller.cpp
 #include "Controller.h"
 #include <cmath>
 
@@ -15,6 +16,9 @@ Controller::Controller(int index)
 //----------------------------------------------
 void Controller::Update()
 {
+    // ëOâÒèÛë‘Çï€ë∂
+    m_prevState = m_state;
+
     ZeroMemory(&m_state, sizeof(XINPUT_STATE));
     DWORD result = XInputGetState(m_index, &m_state);
     m_connected = (result == ERROR_SUCCESS);
@@ -35,6 +39,22 @@ bool Controller::IsButtonPressed(WORD button) const
 {
     if (!m_connected) return false;
     return (m_state.Gamepad.wButtons & button) != 0;
+}
+
+bool Controller::IsButtonTrigger(WORD button) const
+{
+    if (!m_connected) return false;
+    bool now = (m_state.Gamepad.wButtons & button) != 0;
+    bool prev = (m_prevState.Gamepad.wButtons & button) != 0;
+    return now && !prev;
+}
+
+bool Controller::IsButtonReleased(WORD button) const
+{
+    if (!m_connected) return false;
+    bool now = (m_state.Gamepad.wButtons & button) != 0;
+    bool prev = (m_prevState.Gamepad.wButtons & button) != 0;
+    return !now && prev;
 }
 
 //----------------------------------------------

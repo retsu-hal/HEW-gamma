@@ -1,3 +1,4 @@
+//LightSource.cpp
 #include "LightSource.h"
 #include "Camera.h"
 #include "sprite.h"//スプライト機能を追加

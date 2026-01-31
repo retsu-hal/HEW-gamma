@@ -1,7 +1,7 @@
+//Player3D.cpp
 #include "Player3D.h"
 #include "PlayerStatus.h"
 #include "Keyboard.h"
-#include "KeyBind.h"
 #include "Camera.h"
 #include "shader.h"
 #include "Collision.h"
@@ -13,7 +13,7 @@
 using namespace mu;
 
 
-// 僨僶僢僌梡
+// 鍍ㄥ兌鍍㈠儗姊?
 #include "debug.h"
 static bool debugMode = TRUE;
 
@@ -35,17 +35,11 @@ static XMFLOAT3			FirstRotation;
 static XMFLOAT3			FirstScaling;
 static XMFLOAT3			FirstVelocity;
 static XMFLOAT3			FirstAcceleration;
-static PLAYER_STATE	FirstState;
+static PLAYER_STATE		FirstState;
+static PLAYER_ANIM		FirstAnim;
 static float			FirstStopTime;
 static XMVECTOR			FirstQuaternion;
 
-
-static float moveSpeed = 0.005f;	
-static float maxMoveSpeed = 1.0f;	
-static float maxFallSpeed = -0.5f;	
-static float  dampingXZ = 0.925f;	
-static float gravityPower = -1.0f;	
-static float jumpPower = 0.175f;	
 
 float FirstMaxMoveSpeed = maxMoveSpeed;
 
@@ -71,7 +65,15 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 	
-	g_Player3D.Model = ModelLoad("asset\\model\\Hip_Hop_Dancing.fbx");
+	for (int i = 0; i < PLAYER_ANIM_MAX; i++) {
+		g_Player3D.Model[i] = NULL;
+	}
+
+	FirstAnim = g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+
+	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
+	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\Walking.fbx");
+	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
 
 	Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
 	FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -84,13 +86,20 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	FirstMaxMoveSpeed = maxMoveSpeed;
 
-	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//弶婜嵟戝堏摦懍搙
+	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//寮跺宓熸垵鍫忔懄鎳嶆悪
 }
 
-
+//=========================================================================================================
+// ?I??????
+//=========================================================================================================
 void Player3D_Finalize(void)
 {
-	ModelRelease(g_Player3D.Model);
+	for (int i = 0; i < PLAYER_ANIM_MAX; i++) {
+		if (g_Player3D.Model[i] != NULL) {
+			ModelRelease(g_Player3D.Model[i]);
+			g_Player3D.Model[i] = NULL;
+		}
+	}
 }
 
 
@@ -98,29 +107,29 @@ void Player3D_Update()
 {
 	if (!g_Player3DActive) return;
 
-	Player3D_Respawn();	//儕僗億乕儞
+	Player3D_Respawn();	//リスポーン
 
-	Player3D_Gravity();	//廳椡張棟
+	Player3D_Gravity();	//重力処理
 
-	// 僾儗僀儎乕憖嶌
-	Player3D_Move();	//堏摦
-	Player3D_Jump();	//僕儍儞僾
-	Player3D_Change();	//塭曄恎
-	Player3D_Action();	//傾僋僔儑儞
+	// プレイヤー操作
+	Player3D_Move();	//移動
+	Player3D_Jump();	//ジャンプ
+	Player3D_Change();	//影変身
+	Player3D_Action();	//アクション
 
 	switch (g_Player3D.state)
 	{
 	case PLAYER_STATE_IDLE:
-
+		//Idle?A?j???[?V????
 		break;
 	case PLAYER_STATE_MOVE:
-
+		//Move?A?j???[?V????
 		break;
 	case PLAYER_STATE_FALL:
-
+		//Fall?A?j???[?V????
 		break;
 	case PLAYER_STATE_ACTION:
-
+		//Action?A?j???[?V????
 		break;
 	default:
 		break;
@@ -128,16 +137,21 @@ void Player3D_Update()
 
 }
 
-
+//=========================================================================================================
+// ?Q?b?^?[
+//=========================================================================================================
 XMFLOAT3 GetPlayer3DPosition()
 {
 	return g_Player3D.Position;
 }
 
 
+//=========================================================================================================
+// ????
+//=========================================================================================================
 void Player3D_Gravity()
 {
-
+	// --- ?d????Z?i?????j ---
 	if (g_Player3D.Velocity.x >= maxMoveSpeed) g_Player3D.Velocity.x = maxMoveSpeed;
 	else g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 
@@ -149,7 +163,7 @@ void Player3D_Gravity()
 
 	if (!g_Player3D.isGround)
 	{
-		// 廳椡壛懍搙傪揔梡偟丄嵟戝棊壓懍搙偱僋儔儞僾偡傞乮maxFallSpeed 偼晧偺抣偺憐掕乯
+		// 重力加速度を適用し、最大落下速度でクランプする（maxFallSpeed は負の値の想定）
 		g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
 
 		if (g_Player3D.Velocity.y < g_Player3D.maxFallSpeed)
@@ -157,12 +171,12 @@ void Player3D_Gravity()
 	}
 	else
 	{
-		// 抧忋偱偼壓岦偒懍搙傪僛儘偵偡傞
+		// 地上では下向き速度をゼロにする
 		if (g_Player3D.Velocity.y < 0.0f)
 			g_Player3D.Velocity.y = 0.0f;
 	}
 
-
+	// --- XZ????i?]???????j ---
 	g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 	g_Player3D.Velocity.z += g_Player3D.Acceleration.z;
 
@@ -179,13 +193,13 @@ void Player3D_Gravity()
 
 void Player3D_Respawn()
 {
-
+	// ?????`?F?b?N
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Reset();
 		return;
 	}
-	if (IsInputDown(ResetKey, gPad))
+	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player3D_Reset();
 	}
@@ -193,35 +207,59 @@ void Player3D_Respawn()
 
 void Player3D_Move()
 {
-	// 擖椡儀僋僩儖
+	// 入力ベクトル
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+	bool isMoving = false;
 
-
+	// ?O?t???[???????????Z?b?g?i?L?[????????????O???????c?????悤?????j
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (!gPad.IsConnected())
-	{
-		if (IsInputDown(UpKey, gPad))    inputDir.z += +1.0f;
-		if (IsInputDown(DownKey, gPad))  inputDir.z += -1.0f;
-		if (IsInputDown(RightKey, gPad)) inputDir.x += +1.0f;
-		if (IsInputDown(LeftKey, gPad))  inputDir.x += -1.0f;
+	{// ?L?[?{?[?h????
+		if (Keyboard_IsKeyDown(KK_W))
+		{
+			inputDir.z += +1.0f;
+			isMoving = true;
+		}
+		if (Keyboard_IsKeyDown(KK_S))
+		{
+			inputDir.z += -1.0f;
+			isMoving = true;
+		}
+		if (Keyboard_IsKeyDown(KK_D))
+		{
+			inputDir.x += +1.0f;
+			isMoving = true;
+		}
+		if (Keyboard_IsKeyDown(KK_A))
+		{
+			inputDir.x += -1.0f;
+			isMoving = true;
+		}
 	}
 	else
-	{
+	{// ?R???g???[???[????
 		float lx = gPad.GetLeftStickX();
 		float ly = gPad.GetLeftStickY();
 
-
+		// ?f?b?h?]?[??????????????????
 		const float deadzone = 0.20f;
 		if (fabsf(lx) < deadzone) lx = 0.0f;
 		if (fabsf(ly) < deadzone) ly = 0.0f;
 
-
-		inputDir.x = -lx;  
-		inputDir.y = 0.0f; 
-		inputDir.z = -ly;  
+		// ???E???t????????C???i?X?e?B?b?N?E?? x ????????悤???????]?j
+		inputDir.x = -lx;      // ???E
+		inputDir.y = 0.0f;     // 3D??? Y ??????????g????
+		inputDir.z = -ly;      // ?O??
 	}
 
+	// Switch animation based on movement
+	if (isMoving) {
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+	}
+	else {
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE; // Or IDLE if you have it
+	}
 
 	float len = Length2D(inputDir);
 	if (len > 1e-6f)
@@ -229,7 +267,7 @@ void Player3D_Move()
 
 		inputDir = Normalize2D(inputDir);
 
-
+		// ?J??????????????????????????
 		XMFLOAT3 camPos = GetCameraPosition();
 		XMFLOAT3 camAt = GetCameraAtPosition();
 
@@ -254,15 +292,15 @@ void Player3D_Move()
 		g_Player3D.Velocity.x += moveWorld.x * g_Player3D.moveSpeed;
 		g_Player3D.Velocity.z += moveWorld.z * g_Player3D.moveSpeed;
 
-
+		// ????????????????????X?V
 		float targetYawRad = atan2f(moveWorld.x, moveWorld.z);
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
 
-
+		// ???f??????????????????I?t?Z?b?g?i?K?v??璲???j
 		const float yawOffset = FirstRotation.y;
 		targetYawDeg += yawOffset;
 
-
+		// ?X???[?Y??]?i?p?x??????Z?o?H????????j
 
 		float currentYaw = g_Player3D.Rotation.y;
 		float delta = targetYawDeg - currentYaw;
@@ -272,9 +310,9 @@ void Player3D_Move()
 		const float rotateLerp = 0.2f;
 		g_Player3D.Rotation.y = currentYaw + delta * rotateLerp;
 	}
+	// ??????????????]???X??????i?????????????????????j
 
-
-
+	//???x????
 	if (g_Player3D.Velocity.x >= maxMoveSpeed)
 	{
 		g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
@@ -296,7 +334,7 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-	if (IsInputDown(JumpKey, gPad)) 
+	if (IsInputTrigger(JumpKey, gPad))
 	{
 		if (g_Player3D.isGround)
 		{
@@ -309,15 +347,29 @@ void Player3D_Jump()
 
 void Player3D_Change()
 {
-	if (IsInputDown(ChangeKey, gPad))
+	if (IsInputTrigger(ChangeKey, gPad))
 	{
 	
 	}
 }
 
+void Player3D_Dash()
+{
+	if (IsInputPress(DashKey, gPad))
+	{
+		// 銉�銉冦偡銉ュ嚘鐞?
+		// 鏈�澶хЩ鍕曢�熷害銈掍竴鏅傜殑銇笂銇掋倠
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
+	}
+	else
+	{
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
+	}
+}
+
 void Player3D_Action()
 {
-	if (IsInputDown(ActionKey, gPad))
+	if (IsInputTrigger(ActionKey, gPad))
 	{
 		
 
@@ -352,6 +404,7 @@ void Player3D_Reset()
 	g_Player3D.Velocity = g_Player3D.FirstVelocity;
 	g_Player3D.Acceleration = g_Player3D.FirstAcceleration;
 	g_Player3D.state = g_Player3D.FirstState;
+	g_Player3D.CurrentAnimIndex = g_Player3D.FirstAnim;
 	g_StopTime = g_Player3D.FirstStopTime;
 	g_Player3D.Quaternion = g_Player3D.FirstQuaternion;
 
@@ -423,12 +476,16 @@ void Player3D_Draw(void)
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 
-	ModelUpdateAnimation(g_Player3D.Model, 10.0f / 600.0f);   
-	Shader_SetBones(g_Player3D.Model);	
+	MODEL* currentModel = g_Player3D.Model[g_Player3D.CurrentAnimIndex];
 
+	if (currentModel != NULL)
+	{
+		ModelUpdateAnimation(currentModel, 10.0f / 600.0f);
+		Shader_SetBones(currentModel);
+	}
 
-
-	ModelDraw(g_Player3D.Model);
+	// ???f????`?惊?N?G?X?g
+	ModelDraw(currentModel);
 }
 
 XMFLOAT3 Player3D_GetForward()

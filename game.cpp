@@ -1,10 +1,11 @@
+//game.cpp
 #include	"Manager.h"
 #include	"sprite.h"
 #include	"Game.h"
 #include	"keyboard.h"
 #include	"Polygon3D.h"
 #include	"Player3D.h"
-#include "Player2D.h"
+#include	"Player2D.h"
 #include	"LightSource.h"
 #include	"field.h"
 #include	"Effect.h"
@@ -12,14 +13,14 @@
 #include	"Audio.h"
 #include	"camera.h"
 #include	"direct3d.h"
-#include "Collision.h"
+#include	"Collision.h"
 
-#include "PlayerModeSwitchManager.h"
+#include	"PlayerModeSwitchManager.h"
 
-#include "debug.h"
-#include "ShadowColliderBox.h"
+#include	"debug.h"
+#include	"ShadowColliderBox.h"
 
-#include <map>
+#include	 <map>
 
 static bool debugMode = TRUE;
 

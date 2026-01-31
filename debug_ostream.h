@@ -1,4 +1,4 @@
-
+//debug_ostream.h
 #ifndef DEBUG_OSTREAM_H
 #define DEBUG_OSTREAM_H
 

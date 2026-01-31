@@ -1,3 +1,4 @@
+//score.cpp
 #include	"shader.h"
 #include	"sprite.h"
 #include	"score.h"

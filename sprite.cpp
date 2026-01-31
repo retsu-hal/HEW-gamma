@@ -1,4 +1,3 @@
-
 //sprite.cpp
 
 #include "sprite.h"

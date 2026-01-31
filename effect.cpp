@@ -1,4 +1,5 @@
-#include "Effect.h"
+//effect.cpp
+#include "effect.h"
 #include "sprite.h"
 #include "shader.h"
 

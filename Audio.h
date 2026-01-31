@@ -1,3 +1,4 @@
+//Audio.h
 #pragma once
 #include <xaudio2.h>
 
@@ -9,6 +10,9 @@ void UninitAudio();		//サウンドの終了
 int LoadAudio(const char* FileName);		//サウンドデータ読み込み
 void UnloadAudio(int Index);				//サウンドデータ解放（停止）
 void PlayAudio(int Index, bool Loop = false);//サウンドデータ再生
+
+void SetAudioVolume(int Index, float Volume);   // Individual sound volume
+void SetMasterVolume(float Volume);
 
 /*
 //以下の関数はプログラムの最初と最後に1回ずつ呼び出せばOK

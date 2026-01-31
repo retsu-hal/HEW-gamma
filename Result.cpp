@@ -1,3 +1,4 @@
+//Result.cpp
 #include	"Manager.h"
 #include	"sprite.h"
 #include	"keyboard.h"
