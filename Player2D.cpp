@@ -27,6 +27,8 @@ static  ID3D11Buffer* g_VertexBuffer = NULL;
 static ID3D11ShaderResourceView* g_Texture;		//僥僋僗僠儍曄�?
 
 static float g_StopTime = 0.0f;
+static bool debugMode = TRUE;
+
 
 static Vertex3D Player2DVertex[4] = {
 	{//捀�? LEFT-TOP
@@ -190,13 +192,14 @@ void Player2D_Gravity()
 	g_Player2D.Velocity.x *= 0.925f;
 	g_Player2D.Velocity.z *= 0.925f;
 
+	Player2DShadow_Collision();
+
 	g_Player2D.Position.x += g_Player2D.Velocity.x;
 	g_Player2D.Position.y += g_Player2D.Velocity.y;
 	g_Player2D.Position.z += g_Player2D.Velocity.z;
 
 	int hit = Player2DField_Collision();
-	Player2DShadow_Collision();
-
+	Player2DShadow_TopContact();
 
 	if (g_Player2D.isGround && g_Player2D.Velocity.y < 0.0f)
 	{
@@ -239,7 +242,6 @@ void Player2D_Respawn()
 
 void Player2D_Move()
 {
-
 	if (g_Player2D.blockMovement)
 	{
 		return;
@@ -281,6 +283,19 @@ void Player2D_Move()
 		float speed = sqrtf(speedSq);
 		g_Player2D.Velocity.x = (g_Player2D.Velocity.x / speed) * maxSpeed;
 		g_Player2D.Velocity.z = (g_Player2D.Velocity.z / speed) * maxSpeed;
+	}
+
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("pla2DMo.cpp"))
+		{
+			ImGui::Text("g_Player2DblockMovement: %s", g_Player2D.blockMovement ? "true" : "false");
+			ImGui::Text("g_Player2DVelocityX: %.2f", g_Player2D.Velocity.x);
+			ImGui::Text("g_Player2DVelocityZ: %.2f", g_Player2D.Velocity.z);
+			ImGui::TreePop();
+		}
+		ImGui::End();
 	}
 }
 
@@ -377,6 +392,8 @@ void Player2D_Draw(void)
 
 	SetBlendState(BLENDSTATE_ALFA);
 	g_pContext->Draw(4, 0);
+
+	
 
 }
 
