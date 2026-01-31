@@ -41,7 +41,7 @@ static float			FirstStopTime;
 static XMVECTOR			FirstQuaternion;
 
 
-float FirstMaxMoveSpeed = maxMoveSpeed;
+float FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 
 static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
 	PLAYER3D_SOLID_HALF_X,
@@ -84,7 +84,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	FirstStopTime = g_StopTime = 0.0f;
 	FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
 
-	FirstMaxMoveSpeed = maxMoveSpeed;
+	FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 
 	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//弶婜嵟戝堏摦懍搙
 }
@@ -152,7 +152,7 @@ XMFLOAT3 GetPlayer3DPosition()
 void Player3D_Gravity()
 {
 	// --- ?d????Z?i?????j ---
-	if (g_Player3D.Velocity.x >= maxMoveSpeed) g_Player3D.Velocity.x = maxMoveSpeed;
+	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
 	else g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 
 	if (g_Player3D.Velocity.z >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.z = g_Player3D.maxMoveSpeed;
@@ -313,7 +313,7 @@ void Player3D_Move()
 	// ??????????????]???X??????i?????????????????????j
 
 	//???x????
-	if (g_Player3D.Velocity.x >= maxMoveSpeed)
+	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed)
 	{
 		g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
 	}
