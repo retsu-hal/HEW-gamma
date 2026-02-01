@@ -262,11 +262,13 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_OBJ_BOX:
 	case FIELD_EMPTY_BOX:
 	case FIELD_OBJ_1:
+	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
 	}
 }
+//For debug only
 // フィールドがトリガーかどうかを取得
 static bool Field_IsTrigger(FIELD t)
 {
@@ -274,7 +276,6 @@ static bool Field_IsTrigger(FIELD t)
 	{
 	case FIELD_GOAL:
 	case FIELD_OBJ_1:
-	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
