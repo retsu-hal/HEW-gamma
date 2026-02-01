@@ -16,7 +16,43 @@ ShadowManager* GetShadowManager()
 // フィールドの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
+    if (m.useCustomCollider)
+    {
+        return m.colliderHalf;
+    }
 	return { BOX_RADIUS * m.scale.x, BOX_RADIUS * m.scale.y, BOX_RADIUS * m.scale.z };
+}
+
+static XMFLOAT3 Field_GetColliderCenter(const MAPDATA& m)
+{
+    XMFLOAT3 offset = { 0, 0, 0 };
+
+    if (m.no == FIELD_SEESAW_2)
+    {
+        offset.y = 0.5f;
+    }
+
+    if (offset.x == 0 && offset.y == 0 && offset.z == 0)
+    {
+        return m.pos;
+    }
+
+    XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(m.rotate.x),
+        XMConvertToRadians(m.rotate.y),
+        XMConvertToRadians(m.rotate.z)
+    );
+
+    XMVECTOR vOffset = XMLoadFloat3(&offset);
+    XMVECTOR vRotatedOffset = XMVector3TransformNormal(vOffset, rotMat);
+    XMFLOAT3 rotatedOffset;
+    XMStoreFloat3(&rotatedOffset, vRotatedOffset);
+
+    return XMFLOAT3{
+        m.pos.x + rotatedOffset.x,
+        m.pos.y + rotatedOffset.y,
+        m.pos.z + rotatedOffset.z
+    };
 }
 
 // レイの当たり情報
@@ -30,101 +66,72 @@ struct RayHit
 };
 
 // レイとYaw回転OBBの当たり判定
-static bool RaycastOBB_Yaw(
-	const XMFLOAT3& rayO, const XMFLOAT3& rayDir,
-	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYawDeg,
-	float maxDist, float* outT, XMFLOAT3* outNormal)
+static bool RaycastOBB_FullRotation(
+    const XMFLOAT3& rayO, const XMFLOAT3& rayDir,
+    const XMFLOAT3& boxC, const XMFLOAT3& boxH, const XMFLOAT3& boxRotDeg,
+    float maxDist, float* outT, XMFLOAT3* outNormal)
 {
-	const float yaw = XMConvertToRadians(boxYawDeg);
+    XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(boxRotDeg.x),
+        XMConvertToRadians(boxRotDeg.y),
+        XMConvertToRadians(boxRotDeg.z)
+    );
+    XMMATRIX invRotMat = XMMatrixTranspose(rotMat);
 
-	XMFLOAT3 oL = RotateY(rayO - boxC, -yaw);
-	XMFLOAT3 dL = RotateY(rayDir, -yaw);
+    XMFLOAT3 relO = { rayO.x - boxC.x, rayO.y - boxC.y, rayO.z - boxC.z };
+    XMVECTOR vRelO = XMLoadFloat3(&relO);
+    XMVECTOR vDir = XMLoadFloat3(&rayDir);
 
-	float tmin = 0.0f, tmax = maxDist;
-	int hitAxis = -1;
-	float hitSign = 1.0f;
+    XMVECTOR vLocalO = XMVector3TransformNormal(vRelO, invRotMat);
+    XMVECTOR vLocalD = XMVector3TransformNormal(vDir, invRotMat);
 
-	auto slab = [&](float o, float d, float h, int axis) -> bool
-		{
-			if (std::fabs(d) < 1e-6f)
-				return (o >= -h && o <= h);
+    XMFLOAT3 oL, dL;
+    XMStoreFloat3(&oL, vLocalO);
+    XMStoreFloat3(&dL, vLocalD);
 
-			float t1 = (-h - o) / d;
-			float t2 = (+h - o) / d;
-			float sign = (d > 0.0f) ? -1.0f : 1.0f;
+    float tmin = 0.0f, tmax = maxDist;
+    int hitAxis = -1;
+    float hitSign = 1.0f;
 
-			if (t1 > t2) { std::swap(t1, t2); sign = -sign; }
+    auto slab = [&](float o, float d, float h, int axis) -> bool
+        {
+            if (std::fabs(d) < 1e-6f)
+                return (o >= -h && o <= h);
 
-			if (t1 > tmin) { tmin = t1; hitAxis = axis; hitSign = sign; }
-			tmax = (std::min)(tmax, t2);
+            float t1 = (-h - o) / d;
+            float t2 = (+h - o) / d;
+            float sign = (d > 0.0f) ? -1.0f : 1.0f;
 
-			return tmin <= tmax;
-		};
+            if (t1 > t2) { std::swap(t1, t2); sign = -sign; }
 
-	if (!slab(oL.x, dL.x, boxH.x, 0)) return false;
-	if (!slab(oL.y, dL.y, boxH.y, 1)) return false;
-	if (!slab(oL.z, dL.z, boxH.z, 2)) return false;
+            if (t1 > tmin) { tmin = t1; hitAxis = axis; hitSign = sign; }
+            tmax = (std::min)(tmax, t2);
 
-	if (tmin < 0.0f || tmin > maxDist) return false;
+            return tmin <= tmax;
+        };
 
-	if (outT) *outT = tmin;
-	if (outNormal)
-	{
-		XMFLOAT3 nL = { 0, 0, 0 };
-		if (hitAxis == 0) nL.x = hitSign;
-		else if (hitAxis == 1) nL.y = hitSign;
-		else nL.z = hitSign;
-		*outNormal = Normalize(RotateY(nL, yaw));
-	}
-	return true;
+    if (!slab(oL.x, dL.x, boxH.x, 0)) return false;
+    if (!slab(oL.y, dL.y, boxH.y, 1)) return false;
+    if (!slab(oL.z, dL.z, boxH.z, 2)) return false;
+
+    if (tmin < 0.0f || tmin > maxDist) return false;
+
+    if (outT) *outT = tmin;
+    if (outNormal)
+    {
+        XMFLOAT3 nL = { 0, 0, 0 };
+        if (hitAxis == 0) nL.x = hitSign;
+        else if (hitAxis == 1) nL.y = hitSign;
+        else nL.z = hitSign;
+
+        XMVECTOR vLocalN = XMLoadFloat3(&nL);
+        XMVECTOR vWorldN = XMVector3TransformNormal(vLocalN, rotMat);
+        vWorldN = XMVector3Normalize(vWorldN);
+        XMStoreFloat3(outNormal, vWorldN);
+    }
+    return true;
 }
 
-// レイとフィールド受け手群の当たり判定
-static bool RaycastReceivers(
-	const XMFLOAT3& rayO, const XMFLOAT3& rayDirN,
-	float maxDist,
-	const std::vector<MAPDATA>& receivers,
-	RayHit* outHit,
-	const MAPDATA* skipOne = nullptr)
-{
-	bool found = false;
-	float bestT = maxDist;
-	RayHit best{};
-
-	for (size_t i = 0; i < receivers.size(); ++i)
-	{
-		const auto& m = receivers[i];
-		if (skipOne == &m) continue;
-
-
-		if (!(m.no == FIELD_WALL || m.no == FIELD_GROUND || m.no == FIELD_OBJ_BOX || m.no == FIELD_OBJ_1))
-			continue;
-
-		const XMFLOAT3 c = m.pos;
-		const XMFLOAT3 h = Field_GetHalfSize(m);
-		const float yaw = m.rotate.y;
-
-		float t = 0.0f;
-		XMFLOAT3 nW{};
-		if (!RaycastOBB_Yaw(rayO, rayDirN, c, h, yaw, maxDist, &t, &nW))
-			continue;
-
-		if (!found || t < bestT)
-		{
-			found = true;
-			bestT = t;
-			best.hit = true;
-			best.t = t;
-			best.normal = nW;
-			best.point = rayO + rayDirN * t;
-			best.mapIndex = i;
-		}
-	}
-
-	if (!found) return false;
-	if (outHit) *outHit = best;
-	return true;
-}
 
 // レイとフィールド受け手群の当たり判定
 static bool RaycastToReceivers(
@@ -145,8 +152,8 @@ static bool RaycastToReceivers(
 
         float t;
         XMFLOAT3 n;
-        if (RaycastOBB_Yaw(rayO, rayDir, m.pos, Field_GetHalfSize(m),
-            m.rotate.y, maxDist, &t, &n))
+        if (RaycastOBB_FullRotation(rayO, rayDir, m.pos, Field_GetHalfSize(m),
+            m.rotate, maxDist, &t, &n))
         {
             if (!found || t < bestT)
             {
@@ -166,11 +173,15 @@ static bool RaycastToReceivers(
 }
 
 // OBBのサンプルポイントを取得
-static void GetOBBSamplePoints(
-    const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg,
+static void GetOBBSamplePoints_FullRotation(
+    const XMFLOAT3& c, const XMFLOAT3& h, const XMFLOAT3& rotDeg,
     int edgeSamples, std::vector<XMFLOAT3>& out)
 {
-    const float yaw = XMConvertToRadians(yawDeg);
+    XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
+        XMConvertToRadians(rotDeg.x),
+        XMConvertToRadians(rotDeg.y),
+        XMConvertToRadians(rotDeg.z)
+    );
 
     const XMFLOAT3 local[8] = {
         {-h.x, -h.y, -h.z}, {+h.x, -h.y, -h.z},
@@ -179,10 +190,20 @@ static void GetOBBSamplePoints(
         {+h.x, +h.y, +h.z}, {-h.x, +h.y, +h.z},
     };
 
+    XMFLOAT3 world[8];
+    for (int i = 0; i < 8; i++)
+    {
+        XMVECTOR vLocal = XMLoadFloat3(&local[i]);
+        XMVECTOR vWorld = XMVector3TransformNormal(vLocal, rotMat);
+        XMFLOAT3 rotated;
+        XMStoreFloat3(&rotated, vWorld);
+        world[i] = XMFLOAT3{ c.x + rotated.x, c.y + rotated.y, c.z + rotated.z };
+    }
+
     out.clear();
 
     for (int i = 0; i < 8; i++)
-        out.push_back(c + RotateY(local[i], yaw));
+        out.push_back(world[i]);
 
     if (edgeSamples > 0)
     {
@@ -194,18 +215,21 @@ static void GetOBBSamplePoints(
 
         for (int e = 0; e < 12; e++)
         {
-            XMFLOAT3 a = c + RotateY(local[edges[e][0]], yaw);
-            XMFLOAT3 b = c + RotateY(local[edges[e][1]], yaw);
+            XMFLOAT3 a = world[edges[e][0]];
+            XMFLOAT3 b = world[edges[e][1]];
 
             for (int i = 1; i < edgeSamples; i++)
             {
                 float t = (float)i / (float)edgeSamples;
-                out.push_back(a + (b - a) * t);
+                out.push_back(XMFLOAT3{
+                    a.x + (b.x - a.x) * t,
+                    a.y + (b.y - a.y) * t,
+                    a.z + (b.z - a.z) * t
+                    });
             }
         }
     }
 }
-
 // 法線から直交基底を構築
 static void BuildOrthoBasis(const XMFLOAT3& n, XMFLOAT3& u, XMFLOAT3& v)
 {
@@ -314,10 +338,14 @@ bool Shadow_NeedsRebuild(
     float t2 = threshold * threshold;
     if (LengthSq(lightPos - prism.cachedLightPos) > t2) return true;
     if (LengthSq(caster.pos - prism.cachedCasterPos) > t2) return true;
-    if (std::fabs(caster.rotate.y - prism.cachedCasterYaw) > 0.5f) return true;
+
+    if (std::fabs(caster.rotate.x - prism.cachedCasterRotate.x) > 0.5f) return true;
+    if (std::fabs(caster.rotate.y - prism.cachedCasterRotate.y) > 0.5f) return true;
+    if (std::fabs(caster.rotate.z - prism.cachedCasterRotate.z) > 0.5f) return true;
 
     return false;
 }
+
 
 bool Shadow_Build(
     ShadowPrism& out,
@@ -328,9 +356,11 @@ bool Shadow_Build(
 {
     Shadow_Clear(out);
 
+    XMFLOAT3 casterCenter = Field_GetColliderCenter(caster);
+
     std::vector<XMFLOAT3> samples;
-    GetOBBSamplePoints(caster.pos, Field_GetHalfSize(caster),
-        caster.rotate.y, config.edgeSamples, samples);
+    GetOBBSamplePoints_FullRotation(casterCenter, Field_GetHalfSize(caster),
+        caster.rotate, config.edgeSamples, samples);
 
     struct HitData { XMFLOAT3 point; XMFLOAT3 normal; };
     std::vector<HitData> hits;
@@ -399,7 +429,7 @@ bool Shadow_Build(
     out.isValid = true;
     out.cachedLightPos = lightPos;
     out.cachedCasterPos = caster.pos;
-    out.cachedCasterYaw = caster.rotate.y;
+    out.cachedCasterRotate = caster.rotate;
 
     return true;
 }
@@ -430,6 +460,22 @@ bool ShadowManager::HasValidShadows() const
     return false;
 }
 
+
+static bool Field_IsShadows(FIELD t)
+{
+    switch (t)
+    {
+    case FIELD_OBJ_2:
+    case FIELD_SEESAW_1:
+    case FIELD_SEESAW_2:
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+
 void ShadowManager::UpdateAllShadows(
     const XMFLOAT3& lightPos,
     const std::vector<MAPDATA>& map,
@@ -439,7 +485,7 @@ void ShadowManager::UpdateAllShadows(
     std::vector<int> newCasterIndices;
     for (int i = 0; i < (int)map.size(); ++i)
     {
-        if (map[i].no == FIELD_OBJ_2)
+        if (Field_IsShadows(map[i].no))
         {
             newCasterIndices.push_back(i);
         }
