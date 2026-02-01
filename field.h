@@ -24,6 +24,10 @@ enum FIELD
     FIELD_OBJ_1,
     FIELD_OBJ_2,
     FIELD_GOAL,
+
+    FIELD_SEESAW_1,
+	FIELD_SEESAW_2,
+
     FIELD_MAX,
 };
 
@@ -32,9 +36,20 @@ class MAPDATA
 public:
     XMFLOAT3 pos;    //位置
     FIELD no;        //種類
-
 	XMFLOAT3 scale;
 	XMFLOAT3 rotate;
+
+    XMFLOAT3 colliderHalf;
+    bool useCustomCollider;
+
+    MAPDATA()
+        : pos{ 0, 0, 0 }
+        , no(FIELD_GROUND)
+        , scale{ 1, 1, 1 }
+        , rotate{ 0, 0, 0 }
+        , colliderHalf{ 0.5f, 0.5f, 0.5f }
+        , useCustomCollider(false)
+    {}
 };
 
 // グローバルなフィールドデータ配列
@@ -54,4 +69,5 @@ std::vector<MAPDATA>& GetFieldMap();
 
 XMMATRIX Field_GetWorldMatrix(int i);
 void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i);
+
 

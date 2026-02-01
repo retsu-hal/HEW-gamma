@@ -1,14 +1,12 @@
 //PlayerModeSwitchManager.cpp
 #include "PlayerModeSwitchManager.h"
 
+#include <cfloat>
 #include "field.h"
-#include "collision.h"
 #include "player3D.h"
 #include "Player2D.h"
 #include "keyboard.h"
 
-#include <cfloat>
-#include <algorithm>
 
 #include "debug.h"
 #include "MathUtil.h"

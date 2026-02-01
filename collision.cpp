@@ -5,7 +5,6 @@
 #include "Player2D.h"
 #include "debug.h"
 #include "MathUtil.h"
-
 #include <vector>
 
 
@@ -64,10 +63,14 @@ static ImU32 MakeColor(unsigned char r, unsigned char g, unsigned char b, unsign
 // 儃僢僋僗偺敿暘偺僒僀僘傪庢摼
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
+	if (m.useCustomCollider)
+	{
+		return m.colliderHalf;
+	}
 	return XMFLOAT3{
-	BOX_RADIUS * m.scale.x,
-	BOX_RADIUS * m.scale.y,
-	BOX_RADIUS * m.scale.z
+		BOX_RADIUS * m.scale.x,
+		BOX_RADIUS * m.scale.y,
+		BOX_RADIUS * m.scale.z
 	};
 }
 
@@ -261,6 +264,8 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_WALL:
 	case FIELD_OBJ_BOX:
 	case FIELD_OBJ_1:
+	case FIELD_SEESAW_1:
+	case FIELD_SEESAW_2:
 		return true;
 	default:
 		return false;
@@ -592,9 +597,13 @@ int Player3DField_Collision()
 	{
 		if (!Field_IsSolid(map[i].no)) continue;
 
+		// ★ 跳过跷跷板板，单独处理
+		if (map[i].no == FIELD_SEESAW_2) continue;
+
 		float boxYaw = (map[i].no == FIELD_OBJ_1) ? map[i].rotate.y : 0.0f;
 
 		XMFLOAT3 push, norm;
+		// ★ 使用碰撞体尺寸
 		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, map[i].pos,
 			Field_GetHalfSize(map[i]), boxYaw, &push, &norm))
 			continue;
@@ -1247,12 +1256,13 @@ void Collision_DebugDraw()
 		for (size_t i = 0; i < map.size(); ++i)
 		{
 			if (!Field_IsTrigger(map[i].no)) continue;
-
-			XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
-			bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
-				map[i].pos, boxH, map[i].rotate.y);
-			ImU32 col = hit ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
-			DebugDrawOBB_Yaw(map[i].pos, boxH, map[i].rotate.y, col);
+			{
+				XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
+				bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
+					map[i].pos, boxH, map[i].rotate.y);
+				ImU32 col = hit ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
+				DebugDrawOBB_Yaw(map[i].pos, boxH, map[i].rotate.y, col);
+			}
 		}
 	}
 

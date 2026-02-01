@@ -6,6 +6,11 @@
 #include <sstream>
 #include <iostream>
 
+#include "debug.h"
+#include "player3D.h"
+#include "Seesaw.h"
+
+static bool debugMode;
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
@@ -246,6 +251,8 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
+	Seesaw_Initialize();
+
 	// テクスチャ
 	TexMetadata metadata;
 	ScratchImage image;
@@ -258,13 +265,6 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		// Error:  could not load map
 		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
 	}
-
-	for (size_t i = 0; i < g_MapData.size(); ++i)
-	{
-		g_MapData[i].scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		g_MapData[i].rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	}
-
 
 	bool hasGround = false;
 	bool hasWall = false;
@@ -283,7 +283,14 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	{
 		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
 	}
-
+	if (!Model[FIELD_SEESAW_1])
+	{
+		Model[FIELD_SEESAW_1] = ModelLoad("asset\\model\\Seesaw_dodai.fbx");
+	}
+	if (!Model[FIELD_SEESAW_2])
+	{
+		Model[FIELD_SEESAW_2] = ModelLoad("asset\\model\\Seesaw_siso.fbx");
+	}
 	
 }
 
@@ -293,6 +300,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 //=========================================================================================================
 void field_Finalize(void)
 {
+	Seesaw_Finalize();
 	g_MapData.clear();  // Clear the vector
 
 	for (int i = 0; i < FIELD_MAX; i++)
@@ -312,12 +320,28 @@ void field_Finalize(void)
 //=========================================================================================================
 void field_Update(void)
 {
+	ImGui::Begin("Debug - han");
+	if (ImGui::TreeNode("Filed.cpp"))
+	{
+		
+		ImGui::TreePop();
+	}
+	ImGui::End();
+
+	const float deltaTime = 1.0f / 60.0f;
+	Seesaw_UpdateAll(deltaTime);
+
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
 		if (g_MapData[i].no == FIELD_OBJ_1)
 		{
 			g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 5.0f);
-			g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
+			//g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
+		}
+		else if (g_MapData[i].no == FIELD_SEESAW_2)
+		{
+			//g_MapData[i].colliderHalf = XMFLOAT3(0.37f, 0.2f, 2.7f);
+			//g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
 		}
 	}
 }
@@ -458,13 +482,14 @@ std::vector<MAPDATA>& GetFieldMap()
 	return g_MapData;
 }
 
-
 bool LoadMapFromFile(const char* filename)
 {
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
 	g_MapData.clear();
+	Seesaw_ClearAll();
+
 	std::string line;
 	int y = 0;  // height layer
 	int z = 0;  // depth
@@ -485,6 +510,22 @@ bool LoadMapFromFile(const char* filename)
 		// Parse each character
 		for (int x = 0; x < (int)line.length(); x++)
 		{
+
+			char c = line[x];
+			if (c == 'S')
+			{
+				Seesaw_Create(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z,
+					g_MapData
+				);
+				continue;
+			}
+
+
+
+
 			FIELD type;
 			bool valid = true;
 
@@ -494,7 +535,7 @@ bool LoadMapFromFile(const char* filename)
 			case 'W':  type = FIELD_WALL; break;
 			case 'B':  type = FIELD_OBJ_BOX;  break;
 			case '1':  type = FIELD_GOAL;  break;
-			case 'S':  type = FIELD_OBJ_1;  break;
+			case 'O':  type = FIELD_OBJ_1;  break;
 			case '2':  type = FIELD_OBJ_2;  break;
 			case '.': valid = false;      break;  // Empty
 			case ' ': valid = false;      break;  // Space
@@ -509,7 +550,9 @@ bool LoadMapFromFile(const char* filename)
 					(float)(y - 1),
 					(float)z
 				);
-				data.no = type;
+				data.no = type; 
+				data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+				data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 				g_MapData.push_back(data);
 			}
 		}

@@ -21,6 +21,7 @@
 #include	"ShadowColliderBox.h"
 
 #include	 <map>
+#include "Seesaw.h"
 
 static bool debugMode = TRUE;
 
@@ -271,6 +272,7 @@ void Game_Draw()
 	}
 
 	Collision_DebugDraw();
+	Seesaw_DebugDraw();
 
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);

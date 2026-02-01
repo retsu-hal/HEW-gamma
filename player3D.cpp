@@ -15,6 +15,7 @@ using namespace mu;
 
 // 僨僶僢僌�?
 #include "debug.h"
+#include "Seesaw.h"
 static bool debugMode = TRUE;
 
 
@@ -188,6 +189,8 @@ void Player3D_Gravity()
 	g_Player3D.Position.z += g_Player3D.Velocity.z;
 
 	int hit = Player3DField_Collision();
+
+	Seesaw_PlayerCollision();
 }
 
 
