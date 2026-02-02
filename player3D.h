@@ -34,6 +34,7 @@ XMFLOAT3 GetPlayer3DPosition();
 void Player3D_Gravity();
 void Player3D_Move();
 void Player3D_Jump();
+void Player3D_Dash();
 void Player3D_Change();
 void Player3D_Action();
 void Player3D_Reset();

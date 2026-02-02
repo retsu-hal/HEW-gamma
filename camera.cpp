@@ -5,13 +5,19 @@
 #include "player3D.h"
 #include "debug.h"
 #include "Player2D.h"
+#include <iostream>
+
+#if defined(_DEBUG)
+static bool debugMode = true;
+#else 
+static bool debugMode = false;
+#endif
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
-static bool debugMode = TRUE;
 
 
 //マウス操作用変数
@@ -44,7 +50,7 @@ static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
 //=========================================================================================================
 void Camera_Initialize()
 {
-	CameraObject.Position = XMFLOAT3(0.0f, 5.0f, -5.0f);
+	CameraObject.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
@@ -151,11 +157,47 @@ void Player2DCamera_Update()
 
 }
 
+void Title_Camera_Update()
+{
+	static bool relativeMode = true;
+	if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+			relativeMode = !relativeMode;
+			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+				: MOUSE_POSITION_MODE_ABSOLUTE);
+		}
+
+	//XMFLOAT3 playerPos = GetPlayer3DPosition();
+
+	//// Follow only X
+	//CameraObject.Position.x = playerPos.x;
+
+	//// Much lower height (closer to ground)
+	//CameraObject.Position.y = 3.0f;
+
+	//// Closer depth (near the map)
+	//CameraObject.Position.z = playerPos.z - 6.0f;
+
+	//// Look at player (slightly up for nicer framing)
+	//CameraObject.AtPosition.x = playerPos.x;
+	//CameraObject.AtPosition.y = playerPos.y + 2.0f;
+	//CameraObject.AtPosition.z = playerPos.z;
+
+	// Fixed cinematic camera
+	CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
+	CameraObject.AtPosition = XMFLOAT3(4.0f, 2.0f, 0.0f);
+	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+
+	// IMPORTANT: override internal follow camera state
+	gCamPos = CameraObject.Position;
+	gCamTarget = CameraObject.AtPosition;
+}
+
 //=========================================================================================================
 // 描画処理
 //=========================================================================================================
 void Camera_Draw()
 {
+
 	if (debugMode)
 	{
 		ImGui::Begin("Debug - han");

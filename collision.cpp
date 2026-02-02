@@ -260,12 +260,15 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_GROUND:
 	case FIELD_WALL:
 	case FIELD_OBJ_BOX:
+	case FIELD_EMPTY_BOX:
 	case FIELD_OBJ_1:
+	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
 	}
 }
+//For debug only
 // フィールドがトリガーかどうかを取得
 static bool Field_IsTrigger(FIELD t)
 {
@@ -273,7 +276,6 @@ static bool Field_IsTrigger(FIELD t)
 	{
 	case FIELD_GOAL:
 	case FIELD_OBJ_1:
-	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
@@ -1033,7 +1035,8 @@ void Collision_DebugDraw()
 
 		for (size_t i = 0; i < map.size(); ++i)
 		{
-			if (!Field_IsTrigger(map[i].no)) continue;
+
+			//if (!Field_IsTrigger(map[i].no)) continue;
 
 			XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
 			bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
