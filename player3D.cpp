@@ -13,7 +13,7 @@
 using namespace mu;
 
 
-// åƒ¨åƒ¶åƒ¢åƒŒæ¢?
+// åƒ¨åƒ¶åƒ¢åƒŒï¿½?
 #include "debug.h"
 #include "Seesaw.h"
 static bool debugMode = TRUE;
@@ -108,15 +108,18 @@ void Player3D_Update()
 {
 	if (!g_Player3DActive) return;
 
-	Player3D_Respawn();	//¥ê¥¹¥İ©`¥ó
+	Player3D_Respawn();	//ï¿½ê¥¹ï¿½İ©`ï¿½ï¿½
 
-	Player3D_Gravity();	//ÖØÁ¦„IÀí
+	Player3D_Gravity();	//ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½
 
-	// ¥×¥ì¥¤¥ä©`²Ù×÷
-	Player3D_Move();	//ÒÆ„Ó
-	Player3D_Jump();	//¥¸¥ã¥ó¥×
-	Player3D_Change();	//Ó°‰äÉí
-	Player3D_Action();	//¥¢¥¯¥·¥ç¥ó
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼æ“ä½œ
+	
+	Player3D_Move();	//ç§»å‹•
+	Player3D_Dash();	//ãƒ€ãƒƒã‚·ãƒ¥
+	Player3D_Jump();	//ã‚¸ãƒ£ãƒ³ãƒ—
+	Player3D_Change();	//å½±å¤‰èº«
+	Player3D_Action();	//ã‚¢ã‚¯ã‚·ãƒ§ãƒ³
+	
 
 	switch (g_Player3D.state)
 	{
@@ -164,7 +167,7 @@ void Player3D_Gravity()
 
 	if (!g_Player3D.isGround)
 	{
-		// ÖØÁ¦¼ÓËÙ¶È¤òßmÓÃ¤·¡¢×î´óÂäÏÂËÙ¶È¤Ç¥¯¥é¥ó¥×¤¹¤ë£¨maxFallSpeed ¤ÏØ“¤Î‚¤ÎÏë¶¨£©
+		// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È¤ï¿½ï¿½mï¿½Ã¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È¤Ç¥ï¿½ï¿½ï¿½ï¿½×¤ï¿½ï¿½ë£¨maxFallSpeed ï¿½ï¿½Ø“ï¿½Î‚ï¿½ï¿½ï¿½ï¿½ë¶¨ï¿½ï¿½
 		g_Player3D.Velocity.y += g_Player3D.Acceleration.y;
 
 		if (g_Player3D.Velocity.y < g_Player3D.maxFallSpeed)
@@ -172,7 +175,7 @@ void Player3D_Gravity()
 	}
 	else
 	{
-		// µØÉÏ¤Ç¤ÏÏÂÏò¤­ËÙ¶È¤ò¥¼¥í¤Ë¤¹¤ë
+		// ï¿½ï¿½ï¿½Ï¤Ç¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ù¶È¤ò¥¼¥ï¿½ï¿½Ë¤ï¿½ï¿½ï¿½
 		if (g_Player3D.Velocity.y < 0.0f)
 			g_Player3D.Velocity.y = 0.0f;
 	}
@@ -210,11 +213,11 @@ void Player3D_Respawn()
 
 void Player3D_Move()
 {
-	// ÈëÁ¦¥Ù¥¯¥È¥ë
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ù¥ï¿½ï¿½È¥ï¿½
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 	bool isMoving = false;
 
-	// ?O?t???[???????????Z?b?g?i?L?[????????????O???????c?????•?????j
+	// ?O?t???[???????????Z?b?g?i?L?[????????????O???????c?????ï¿½ï¿½?????j
 	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (!gPad.IsConnected())
@@ -250,7 +253,7 @@ void Player3D_Move()
 		if (fabsf(lx) < deadzone) lx = 0.0f;
 		if (fabsf(ly) < deadzone) ly = 0.0f;
 
-		// ???E???t????????C???i?X?e?B?b?N?E?? x ????????•???????]?j
+		// ???E???t????????C???i?X?e?B?b?N?E?? x ????????ï¿½ï¿½???????]?j
 		inputDir.x = -lx;      // ???E
 		inputDir.y = 0.0f;     // 3D??? Y ??????????g????
 		inputDir.z = -ly;      // ?O??
@@ -292,14 +295,23 @@ void Player3D_Move()
 		);
 		moveWorld = Normalize2D(moveWorld);
 
-		g_Player3D.Velocity.x += moveWorld.x * g_Player3D.moveSpeed;
-		g_Player3D.Velocity.z += moveWorld.z * g_Player3D.moveSpeed;
+		if (g_Player3D.isDash)
+		{
+			g_Player3D.Velocity.x += moveWorld.x * (g_Player3D.moveSpeed * g_Player3D.dashMoveSpeed);
+			g_Player3D.Velocity.z += moveWorld.z * (g_Player3D.moveSpeed * g_Player3D.dashMoveSpeed);
+		}
+		else
+		{
+			g_Player3D.Velocity.x += moveWorld.x * g_Player3D.moveSpeed;
+			g_Player3D.Velocity.z += moveWorld.z * g_Player3D.moveSpeed;
+		}
+		
 
 		// ????????????????????X?V
 		float targetYawRad = atan2f(moveWorld.x, moveWorld.z);
 		float targetYawDeg = XMConvertToDegrees(targetYawRad);
 
-		// ???f??????????????????I?t?Z?b?g?i?K?v??­j???j
+		// ???f??????????????????I?t?Z?b?g?i?K?v??ï¿½j???j
 		const float yawOffset = FirstRotation.y;
 		targetYawDeg += yawOffset;
 
@@ -360,12 +372,14 @@ void Player3D_Dash()
 {
 	if (IsInputPress(DashKey, gPad))
 	{
-		// ãƒ€ãƒƒã‚·ãƒ¥å‡¦ç?
+		// ãƒ€ãƒƒã‚·ãƒ¥å‡¦ï¿½?
 		// æœ€å¤§ç§»å‹•é€Ÿåº¦ã‚’ä¸€æ™‚çš„ã«ä¸Šã’ã‚‹
+		g_Player3D.isDash = true;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 	}
 	else
 	{
+		g_Player3D.isDash = false;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
 	}
 }
@@ -487,7 +501,7 @@ void Player3D_Draw(void)
 		Shader_SetBones(currentModel);
 	}
 
-	// ???f????`?¾ª?N?G?X?g
+	// ???f????`?ï¿½ï¿½?N?G?X?g
 	ModelDraw(currentModel);
 }
 

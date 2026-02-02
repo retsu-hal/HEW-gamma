@@ -14,8 +14,10 @@
 #include	"camera.h"
 #include	"direct3d.h"
 #include	"Collision.h"
+#include	"Bill_Board.h"
 
 #include	"PlayerModeSwitchManager.h"
+#include	"Pushing_Obj_Manager.h"
 
 #include	"debug.h"
 #include	"ShadowColliderBox.h"
@@ -25,7 +27,8 @@
 
 static bool debugMode = TRUE;
 
-static	int g_BgmID = NULL;
+static	int	g_BgmID = NULL;
+
 LIGHTOBJECT g_BallLight;
 
 static ID3D11Device* g_pDevice = nullptr;
@@ -42,6 +45,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	PlayerModeSwitchManager_Init();
+	PlayerPushManager_Init();
 
 
 	Player3D_Initialize(pDevice, pContext);
@@ -50,7 +54,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
-	
+	InitializeBillBoard();
 
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(false);
@@ -83,9 +87,11 @@ void Game_Finalize()
 	Polygon3D_Finalize();
 	Light_Finalize();
 	Camera_Finalize();
-	
+
+	PlayerPushManager_Finalize();
 	Player3D_Finalize();
 	Player2D_Finalize();
+	FinalizeBillBoard();
 
 }
 
@@ -100,6 +106,11 @@ void Game_Update()
 
 
 	PlayerModeSwitchManager_Update();
+
+	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
+	{
+		PlayerPushManager_Update();
+	}
 
 	XMFLOAT3 LightPos = GetLight_Position();
 	//g_BallLight.SetEnable(true);
@@ -213,6 +224,12 @@ void Game_Draw()
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		Player3D_Draw();
+
+		g_BallLight.SetEnable(FALSE);
+		Shader_SetLight(g_BallLight.Light);
+		PlayerPushManager_Draw();
+		g_BallLight.SetEnable(TRUE);
+		Shader_SetLight(g_BallLight.Light);
 	}
 	else
 	{
