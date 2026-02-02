@@ -204,6 +204,9 @@ void Camera_Draw()
 		ImGui::End();
 	}
 
+	float w = (float)Direct3D_GetBackBufferWidth();
+	float h = (float)Direct3D_GetBackBufferHeight();
+	if (h > 1e-6f) CameraObject.Aspect = w / h;
 
 	CameraObject.Projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(CameraObject.Fov),CameraObject.Aspect,CameraObject.NearClip,CameraObject.FarClip);
 

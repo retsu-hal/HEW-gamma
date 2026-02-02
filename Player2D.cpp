@@ -7,58 +7,60 @@
 #include "sprite.h"
 
 //=========================================================================================================
-// デバッグ用
+// 僨僶僢僌�?
 #include "debug.h"
 #include "MathUtil.h"
 using namespace mu;
 
 //=========================================================================================================
-// デバッグ用
+// 僨僶僢僌�?
 //=========================================================================================================
 #include "debug.h"
 
 //=========================================================================================================
-// グローバル変数
+// 僌儘乕僶儖曄�?
 //=========================================================================================================
 PLAYER g_Player2D;
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
 static  ID3D11Buffer* g_VertexBuffer = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//テクスチャ変数
+static ID3D11ShaderResourceView* g_Texture;		//僥僋僗僠儍曄�?
 
 static float g_StopTime = 0.0f;
+static bool debugMode = TRUE;
+
 
 static Vertex3D Player2DVertex[4] = {
-	{//頂点0 LEFT-TOP
-		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//座標
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					//テクスチャ座標
+	{//捀�? LEFT-TOP
+		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(0.0f,0.0f)					//僥僋僗僠儍嵗�?
 	},
 
-	{//頂点1 RIGHT-TOP
-		XMFLOAT3(1.0f, 1.0f, 0.0f),		//座標
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					//テクスチャ座標
+	{//捀�? RIGHT-TOP
+		XMFLOAT3(1.0f, 1.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(1.0f,0.0f)					//僥僋僗僠儍嵗�?
 	},
 
-	{//頂点2 LEFT-BOTTOM
-		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//座標
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					//テクスチャ座標
+	{//捀�? LEFT-BOTTOM
+		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(0.0f,1.0f)					//僥僋僗僠儍嵗�?
 	},
 
-	{//頂点3 RIGHT-BOTTOM
-		XMFLOAT3(1.0f, 0.0f, 0.0f),		//座標
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//法線
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					//テクスチャ座標
+	{//捀�? RIGHT-BOTTOM
+		XMFLOAT3(1.0f, 0.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(1.0f,1.0f)					//僥僋僗僠儍嵗�?
 	},
 };
 
-//プレイヤー当たり判定サイズ
+//僾儗僀儎乕摉偨傝敾掕僒僀�?
 static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 	PLAYER2D_SOLID_HALF_X,
 	PLAYER2D_SOLID_HALF_Y,
@@ -68,26 +70,26 @@ static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 static bool g_Player2DActive = false;
 
 //=========================================================================================================
-// 初期化処理
+// 弶婜壔張�?
 //=========================================================================================================
 void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// デバイスとデバイスコンテキストの保存
+	// 僨僶僀僗偲僨僶僀僗僐儞僥僉僗僩偺曐懚
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// テクスチャ
+	// 僥僋僗僠�?
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\player2d.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	//頂点バッファの生成
+	//捀揰僶僢僼傽偺惗惉
 	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));//0でクリア
+	ZeroMemory(&bd, sizeof(bd));//0偱僋儕傾
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(Vertex3D) * 4;//格納できる頂点数*頂点サイズ
+	bd.ByteWidth = sizeof(Vertex3D) * 4;//奿擺偱偒傞捀揰悢*捀揰僒僀�?
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
@@ -100,7 +102,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 }
 
 //=========================================================================================================
-// 終了処理
+// 廔椆張棟
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
@@ -109,32 +111,32 @@ void Player2D_Finalize(void)
 }
 
 //=========================================================================================================
-// 更新処理
+// 峏怴張�?
 //=========================================================================================================
 void Player2D_Update()
 {
 	if (!g_Player2DActive) return;
 
-	Player2D_Respawn();	//リスポーン
+	Player2D_Respawn();	//儕僗億乕�?
 
-	Player2D_Gravity();	//重力処理
+	Player2D_Gravity();	//廳椡張棟
 
-	// プレイヤー操作
-	Player2D_Move();	//移動
-	Player2D_Jump();	//ジャンプ
-	Player2D_Change();	//影変身
+	// 僾儗僀儎乕憖嶌
+	Player2D_Move();	//堏摦
+	Player2D_Jump();	//僕儍儞僾
+	Player2D_Change();	//塭曄�?
 
 
 	switch (g_Player2D.state)
 	{
 	case PLAYER_STATE_IDLE:
-		//Idleアニメーション
+		//Idle傾僯儊乕僔儑�?
 		break;
 	case PLAYER_STATE_MOVE:
-		//Moveアニメーション
+		//Move傾僯儊乕僔儑�?
 		break;
 	case PLAYER_STATE_FALL:
-		//Fallアニメーション
+		//Fall傾僯儊乕僔儑�?
 		break;
 
 
@@ -144,7 +146,7 @@ void Player2D_Update()
 }
 
 //=========================================================================================================
-// ゲッター
+// 僎僢僞乕
 //=========================================================================================================
 XMFLOAT3 GetPlayer2DPosition()
 {
@@ -153,10 +155,18 @@ XMFLOAT3 GetPlayer2DPosition()
 
 
 //=========================================================================================================
-// 処理
+// �Z�b�^�[
+//=========================================================================================================
+
+
+//=========================================================================================================
+// ����
+// �I��
 //=========================================================================================================
 void Player2D_Gravity()
 {
+	g_Player2D.blockMovement = false;
+
 	bool wasGround = g_Player2D.isGround;
 	g_Player2D.isGround = false;
 
@@ -169,26 +179,37 @@ void Player2D_Gravity()
 			g_Player2D.Velocity.y = g_Player2D.gravityPower;
 		}
 	}
+	else
+	{
+		// 愙抧拞偼壓曽岦偺懍搙傪儕僙僢僩乮忋曽岦偼嫋壜�?
+		if (g_Player2D.Velocity.y < 0.0f)
+		{
+			g_Player2D.Velocity.y = 0.0f;
+		}
+	}
 
-	// X-Z平面の摩擦による減速
+	// X-Z暯柺偺杸嶤偵傛傞尭懍
 	g_Player2D.Velocity.x *= 0.925f;
 	g_Player2D.Velocity.z *= 0.925f;
+
+	Player2DShadow_Collision();
 
 	g_Player2D.Position.x += g_Player2D.Velocity.x;
 	g_Player2D.Position.y += g_Player2D.Velocity.y;
 	g_Player2D.Position.z += g_Player2D.Velocity.z;
 
 	int hit = Player2DField_Collision();
-	Player2DShadow_Collision();
-
+	Player2DShadow_TopContact();
 
 	if (g_Player2D.isGround && g_Player2D.Velocity.y < 0.0f)
 	{
 		g_Player2D.Velocity.y = 0.0f;
 	}
+
 	float len = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
 		g_Player2D.Velocity.y * g_Player2D.Velocity.y +
 		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+
 	if (len <= 0.0002f)
 	{
 		g_StopTime++;
@@ -207,7 +228,7 @@ void Player2D_Gravity()
 
 void Player2D_Respawn()
 {
-	// 落下チェック
+	// 棊壓僠僃僢僋
 	if (g_Player2D.Position.y < -10.0f)
 	{
 		Player2D_Reset();
@@ -221,6 +242,11 @@ void Player2D_Respawn()
 
 void Player2D_Move()
 {
+	if (g_Player2D.blockMovement)
+	{
+		return;
+	}
+
 	XMFLOAT3 inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	if (IsInputPress(RightKey, gPad)) inputDir.x += +1.0f;
@@ -228,27 +254,27 @@ void Player2D_Move()
 
 	if (fabsf(inputDir.x) > 0.0001f)
 	{
-		// プレイヤーのY回転角度を取得（壁の向きを決定）
-		// Rotation.y は壁の法線方向を向いている
+		// 僾儗僀儎乕偺Y夞揮妏搙傪庢摼乮暻偺岦偒傪寛掕乯
+		// Rotation.y 偼暻偺朄慄曽岦傪岦偄偰偄�?
 		float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
 
-		// 壁に沿った「右方向」ベクトルを計算
-		// 法線方向:  (sin(yaw), 0, cos(yaw))
-		// 右方向: 法線を Y軸周りに -90度回転 = (cos(yaw), 0, -sin(yaw))
-		// または単純に:  右 = (cos(yaw), 0, -sin(yaw))
+		// 暻偵増偭偨乽塃曽岦乿儀僋僩儖傪寁嶼
+		// 朄慄曽岦:  (sin(yaw), 0, cos(yaw))
+		// 塃曽�? 朄慄�?Y幉廃傝偵 -90搙夞�?= (cos(yaw), 0, -sin(yaw))
+		// 傑偨偼扨弮偵:  �?= (cos(yaw), 0, -sin(yaw))
 		float rightX = cosf(yawRad);
 		float rightZ = -sinf(yawRad);
 
-		// 入力方向（左右）をワールド座標に変換
+		// 擖椡曽岦乮嵍塃乯傪儚乕儖僪嵗昗偵曄姺
 		float worldX = inputDir.x * rightX;
 		float worldZ = inputDir.x * rightZ;
 
-		// 速度に加算（X軸とZ軸、Y軸は重力で制御）
+		// 懍搙偵壛嶼乮X幉偲Z幉丄Y幉偼廳椡偱惂屼乯
 		g_Player2D.Velocity.x += worldX * g_Player2D.moveSpeed;
 		g_Player2D.Velocity.z += worldZ * g_Player2D.moveSpeed;
 	}
 
-	// 速度制限（X-Z平面）
+	// 懍搙惂尷乮X-Z暯柺�?
 	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
 		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
 	float maxSpeed = g_Player2D.maxMoveSpeed;
@@ -258,6 +284,19 @@ void Player2D_Move()
 		g_Player2D.Velocity.x = (g_Player2D.Velocity.x / speed) * maxSpeed;
 		g_Player2D.Velocity.z = (g_Player2D.Velocity.z / speed) * maxSpeed;
 	}
+
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("pla2DMo.cpp"))
+		{
+			ImGui::Text("g_Player2DblockMovement: %s", g_Player2D.blockMovement ? "true" : "false");
+			ImGui::Text("g_Player2DVelocityX: %.2f", g_Player2D.Velocity.x);
+			ImGui::Text("g_Player2DVelocityZ: %.2f", g_Player2D.Velocity.z);
+			ImGui::TreePop();
+		}
+		ImGui::End();
+	}
 }
 
 void Player2D_Jump()
@@ -266,8 +305,8 @@ void Player2D_Jump()
 	{
 		if (g_Player2D.isGround)
 		{
-			//g_Player2D.Velocity.y += g_Player2D.jumpPower;//������ɏ�����^����
-			// �󒆂ɂ����Ԃ�
+			//g_Player2D.Velocity.y += g_Player2D.jumpPower;//????????????^????
+			// ??????????
 			// g_Player2D.state = PLAYER2D_STATE_FALL;
 		}
 	}
@@ -277,11 +316,11 @@ void Player2D_Change()
 {
 	if (IsInputTrigger(ChangeKey, gPad))
 	{
-		// ◆3Dに変身
+		// ��3D�ˉ���
 		// 
-		// 3Dキャラクターを2Dプレイヤーの座標を参照して生成
-		// ↓
-		// 2Dプレイヤーを削除する
+		// 3D����饯���`��2D�ץ쥤��`�����ˤ���դ�������
+		// ��
+		// 2D�ץ쥤��`����������
 		//
 	}
 }
@@ -309,7 +348,7 @@ XMFLOAT3 Player2D_GetSolidHalfSize()
 }
 
 //=========================================================================================================
-// 描画処理
+// �軭�I��
 //=========================================================================================================
 void Player2D_Draw(void)
 {
@@ -342,7 +381,7 @@ void Player2D_Draw(void)
 	XMMATRIX projection = GetProjectionMatrix();
 	XMMATRIX wvp = world * view * projection;
 
-	// 変換行列を頂点シェーダへセット
+	// ��Q���Ф�픵㥷���`���إ��å�
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);
@@ -353,6 +392,8 @@ void Player2D_Draw(void)
 
 	SetBlendState(BLENDSTATE_ALFA);
 	g_pContext->Draw(4, 0);
+
+	
 
 }
 

@@ -173,6 +173,7 @@
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="ShadowColliderBox.cpp" />
     <ClCompile Include="sprite.cpp" />
+    <ClCompile Include="Seesaw.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="title_manager.cpp" />
     <ClCompile Include="Trail.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="shader.h" />
     <ClInclude Include="ShadowColliderBox.h" />
     <ClInclude Include="sprite.h" />
+    <ClInclude Include="Seesaw.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="title_manager.h" />
     <ClInclude Include="Trail.h" />

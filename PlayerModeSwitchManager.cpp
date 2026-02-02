@@ -1,14 +1,12 @@
 //PlayerModeSwitchManager.cpp
 #include "PlayerModeSwitchManager.h"
 
+#include <cfloat>
 #include "field.h"
-#include "collision.h"
 #include "player3D.h"
 #include "Player2D.h"
 #include "keyboard.h"
 
-#include <cfloat>
-#include <algorithm>
 
 #include "debug.h"
 #include "MathUtil.h"
@@ -16,12 +14,12 @@ using namespace mu;
 
 static bool debugMode = TRUE;
 
-static const float kSwitchMaxDist = 2.0f; // 3Dプレイヤーから2Dプレイヤーへの変身可能距離
-static const float kPlayer2DThickness = 0.05f; // 2Dプレイヤーの厚み（当たり判定用）
-static const float kWallOffset = 0.02f; // 壁からの微小オフセット
-static const float kTo3DFrontOffset = -1.0f; // 2D→3D変身時の前方オフセット
-static const float kGroundSearchUp = 3.0f; // 2Dプレイヤーの地面探索上方向範囲
-static const float kGroundSearchDown = 10.0f; // 2Dプレイヤーの地面探索下方向範囲
+static const float kSwitchMaxDist = 2.0f;
+static const float kPlayer2DThickness = 0.05f;
+static const float kWallOffset = 0.02f;
+static const float kTo3DFrontOffset = -1.0f;
+static const float kGroundSearchUp = 3.0f;
+static const float kGroundSearchDown = 10.0f;
 
 static PLAYER_MODE g_Mode = MODE_3D; 
 
