@@ -253,11 +253,17 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
 	{
 		// Error:  could not load map
 		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
 	}
+
+	//if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+	//{
+	//	// Error:  could not load map
+	//	MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+	//}
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
@@ -273,7 +279,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (m.no == FIELD_WALL)   hasWall = true;
 	}
 
-	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2]) EnsureBoxCreated();
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
 	if (!Model[FIELD_OBJ_BOX])
 	{
@@ -357,8 +363,11 @@ void field_Draw(void)
 
 		if (Model[g_MapData[i].no])
 			ModelDraw(Model[g_MapData[i].no]);
-		else
+		else if (g_MapData[i].no == FIELD_EMPTY_BOX)
 		{
+			continue;
+		}
+		else {
 			g_pContext->PSSetShaderResources(0, 1, &g_Texture);
 			UINT stride = sizeof(Vertex3D);
 			UINT offset = 0;
@@ -433,6 +442,9 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 	if (g_MapData[i].no == FIELD_GROUND)
 		return; // skip shadow
+
+	if (g_MapData[i].no == FIELD_EMPTY_BOX)
+		return;
 	
 	if (Model[g_MapData[i].no])
 	{
@@ -464,6 +476,19 @@ bool LoadMapFromFile(const char* filename)
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
+	// Detect map 1 (stage1)
+	bool isMap1 = false;
+	if (strstr(filename, "stage1") != nullptr)
+	{
+		isMap1 = true;
+	}
+
+	bool isMapTitle = false;
+	if (strstr(filename, "title") != nullptr)
+	{
+		isMapTitle = true;
+	}
+
 	g_MapData.clear();
 	std::string line;
 	int y = 0;  // height layer
@@ -493,6 +518,7 @@ bool LoadMapFromFile(const char* filename)
 			case 'G': type = FIELD_GROUND;   break;
 			case 'W':  type = FIELD_WALL; break;
 			case 'B':  type = FIELD_OBJ_BOX;  break;
+			case 'E':  type = FIELD_EMPTY_BOX;  break;
 			case '1':  type = FIELD_GOAL;  break;
 			case 'S':  type = FIELD_OBJ_1;  break;
 			case '2':  type = FIELD_OBJ_2;  break;
@@ -504,11 +530,22 @@ bool LoadMapFromFile(const char* filename)
 			if (valid)
 			{
 				MAPDATA data;
-				data.pos = XMFLOAT3(
-					(float)(x - 2),  // Center X (adjust offset as needed)
-					(float)(y - 1),
-					(float)z
-				);
+				if (isMap1 || isMapTitle)
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 1),
+						(float)(z - 2)
+					);
+				}
+				else
+				{
+					data.pos = XMFLOAT3(
+						(float)x,
+						(float)y,
+						(float)z
+					);
+				}
 				data.no = type;
 				g_MapData.push_back(data);
 			}

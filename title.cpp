@@ -75,6 +75,8 @@ void Title_Finalize()
 //=========================================================================================================
 void Title_Update()
 { 
+	Title_Manager_Update();
+
 	if (GetFadeState() != FADE_NONE)
 		return;
 
@@ -89,13 +91,14 @@ void Title_Update()
 	}
 
 
-	Title_Manager_Update();
+	
 }
 //=========================================================================================================
 //描画処理
 //=========================================================================================================
 void Title_Draw()
 {
+	Title_Manager_Draw();
 	// シェーダーを描画パイプラインに設定
 	Shader_Begin();
 
@@ -122,9 +125,8 @@ void Title_Draw()
 	//XMFLOAT2 pos = { SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) / 2 };
 	//XMFLOAT2 size = { SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5};
 
-	XMFLOAT2 pos = { SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2)};
-	XMFLOAT2 size = { SCREEN_WIDTH , SCREEN_HEIGHT };
+	XMFLOAT2 pos = { SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2 - 150)};
+	XMFLOAT2 size = { SCREEN_WIDTH /4, SCREEN_HEIGHT /4};
 	DrawSprite(pos, size, col);//1枚絵を表示
 
-	Title_Manager_Draw();
 }

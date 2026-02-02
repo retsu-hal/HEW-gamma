@@ -2,6 +2,8 @@
 # B = Box, T = Tree, G = Goal,. = Empty
 
 # Layer Y=0 (Ground)
+..................
+GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
@@ -20,8 +22,12 @@ GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+..................
 
 # Layer Y=1 (Second floor)
+EEEEEEEEEEEEEEEEEE
+W................W
 W................W
 W.......2........W
 W................W
@@ -38,10 +44,15 @@ W................W
 W................W 
 W................W
 W................W
+W................W
 W................W 
-W.1..............W 
+W.1..............W
+EEEEEEEEEEEEEEEEEE
+
 
 # Layer Y=2 (Second floor)
+EEEEEEEEEEEEEEEEEE
+B................B
 B................B
 B.......2........B
 B............S...B
@@ -60,16 +71,20 @@ B................B
 B................B
 B................B 
 B................B 
+B................B
+EEEEEEEEEEEEEEEEEE
 
 # Layer Y=3 (Second floor)
+EEEEEEEEEEEEEEEEEE
 B................B
-B................B
-B................B
-B................B 
 B................B
 B................B
 B................B
 B................B 
+B................B
+B................B
+B................B
+B................B 
 B................B 
 B................B
 B................B
@@ -80,3 +95,5 @@ B................B
 B................B
 B................B 
 B................B 
+B................B
+EEEEEEEEEEEEEEEEEE
