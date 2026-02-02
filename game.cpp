@@ -14,6 +14,7 @@
 #include	"camera.h"
 #include	"direct3d.h"
 #include	"Collision.h"
+#include	"Bill_Board.h"
 
 #include	"PlayerModeSwitchManager.h"
 #include	"Pushing_Obj_Manager.h"
@@ -48,7 +49,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	Player3D_Initialize(pDevice, pContext);
 	Player2D_Initialize(pDevice, pContext);
-
+	InitializeBillBoard();
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
@@ -88,7 +89,7 @@ void Game_Finalize()
 	PlayerPushManager_Finalize();
 	Player3D_Finalize();
 	Player2D_Finalize();
-
+	FinalizeBillBoard();
 }
 
 
