@@ -228,15 +228,29 @@ void Player2D_Gravity()
 
 void Player2D_Respawn()
 {
-	// 棊壓僠僃僢僋
+	static int s_FallFrameCount = 0;
+	const int FALL_FRAME_THRESHOLD = 30; 
+
 	if (g_Player2D.Position.y < -10.0f)
 	{
-		Player2D_Reset();
-		return;
+		s_FallFrameCount++;
+
+		if (s_FallFrameCount >= FALL_FRAME_THRESHOLD)
+		{
+			Player2D_Reset();
+			s_FallFrameCount = 0;
+			return;
+		}
 	}
+	else
+	{
+		s_FallFrameCount = 0;
+	}
+
 	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player2D_Reset();
+		s_FallFrameCount = 0;
 	}
 }
 
@@ -299,17 +313,89 @@ void Player2D_Move()
 	}
 }
 
+
+static bool g_IsJumping = false;      
+static bool g_JumpKeyReleased = true; 
+static float g_JumpHoldTime = 0.0f;   
+static float g_CoyoteTime = 0.0f;     
+static float g_JumpBufferTime = 0.0f; 
+
+static const float JUMP_INITIAL_VELOCITY = 0.18f;  
+static const float JUMP_HOLD_BONUS = 0.008f;       
+static const float JUMP_HOLD_MAX_TIME = 12.0f;     
+static const float COYOTE_TIME_MAX = 6.0f;         
+static const float JUMP_BUFFER_MAX = 8.0f;         
+static const float JUMP_CUT_MULTIPLIER = 0.5f;
+
+
 void Player2D_Jump()
 {
-	if (IsInputTrigger(JumpKey, gPad))
+	if (g_Player2D.isGround)
 	{
-		if (g_Player2D.isGround)
+		g_CoyoteTime = COYOTE_TIME_MAX;
+		g_IsJumping = false;
+	}
+	else
+	{
+		if (g_CoyoteTime > 0.0f)
 		{
-			//g_Player2D.Velocity.y += g_Player2D.jumpPower;//????????????^????
-			// ??????????
-			// g_Player2D.state = PLAYER2D_STATE_FALL;
+			g_CoyoteTime -= 1.0f;
 		}
 	}
+
+	if (g_JumpBufferTime > 0.0f)
+	{
+		g_JumpBufferTime -= 1.0f;
+	}
+
+	bool jumpPressed = IsInputPress(JumpKey, gPad);
+	bool jumpTriggered = IsInputTrigger(JumpKey, gPad);
+
+	if (jumpTriggered)
+	{
+		g_JumpBufferTime = JUMP_BUFFER_MAX;
+	}
+
+	bool canJump = (g_Player2D.isGround || g_CoyoteTime > 0.0f) && !g_IsJumping;
+	bool wantsToJump = jumpTriggered || (g_JumpBufferTime > 0.0f && g_JumpKeyReleased);
+
+	if (canJump && wantsToJump && g_JumpKeyReleased)
+	{
+		g_Player2D.Velocity.y = JUMP_INITIAL_VELOCITY;
+		g_Player2D.isGround = false;
+		g_IsJumping = true;
+		g_JumpKeyReleased = false;
+		g_JumpHoldTime = 0.0f;
+		g_CoyoteTime = 0.0f;      
+		g_JumpBufferTime = 0.0f;  
+
+		g_Player2D.state = PLAYER_STATE_FALL;
+
+		// Audio_PlaySE(SE_JUMP);
+	}
+
+	if (g_IsJumping && jumpPressed && g_Player2D.Velocity.y > 0.0f)
+	{
+		g_JumpHoldTime += 1.0f;
+
+		if (g_JumpHoldTime <= JUMP_HOLD_MAX_TIME)
+		{
+			float holdBonus = JUMP_HOLD_BONUS * (1.0f - g_JumpHoldTime / JUMP_HOLD_MAX_TIME);
+			g_Player2D.Velocity.y += holdBonus;
+		}
+	}
+
+	if (g_IsJumping && !jumpPressed && g_Player2D.Velocity.y > 0.0f)
+	{
+		g_Player2D.Velocity.y *= JUMP_CUT_MULTIPLIER;
+		g_IsJumping = false;
+	}
+
+	if (!jumpPressed)
+	{
+		g_JumpKeyReleased = true;
+	}
+
 }
 
 void Player2D_Change()
@@ -325,6 +411,15 @@ void Player2D_Change()
 	}
 }
 
+void Player2D_ResetJumpState()
+{
+	g_IsJumping = false;
+	g_JumpKeyReleased = true;
+	g_JumpHoldTime = 0.0f;
+	g_CoyoteTime = 0.0f;
+	g_JumpBufferTime = 0.0f;
+}
+
 void Player2D_Reset()
 {
 	g_Player2D.Position = g_Player2D.Firstposition;
@@ -335,6 +430,8 @@ void Player2D_Reset()
 	g_Player2D.state = g_Player2D.FirstState;
 	g_StopTime = g_Player2D.FirstStopTime;
 	g_Player2D.Quaternion = g_Player2D.FirstQuaternion;
+
+	Player2D_ResetJumpState();
 }
 
 PLAYER* GetPlayer2D()

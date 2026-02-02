@@ -33,6 +33,7 @@ void Player2D_Change();
 
 void Player2D_Reset();
 void Player2D_Respawn();
+void Player2D_ResetJumpState();
 
 PLAYER* GetPlayer2D();
 

@@ -266,6 +266,7 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_OBJ_1:
 	case FIELD_SEESAW_1:
 	case FIELD_SEESAW_2:
+	case FIELD_MANHOLE:
 		return true;
 	default:
 		return false;
@@ -1127,13 +1128,17 @@ bool Player2DShadow_TopContact()
 	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
 
 	bool hitAny = false;
-
 	const int maxIterations = 4;
+
+	static int s_LastStandingPrismIndex = -1;
+	static XMFLOAT3 s_LastShadowTopPos = { 0, 0, 0 };
+
+	int currentStandingPrism = -1;
+	float bestContactDist = FLT_MAX;
 
 	for (int iter = 0; iter < maxIterations; iter++)
 	{
 		bool hitThisIter = false;
-
 		float footY = player->Position.y;
 
 		XMFLOAT3 playerCenter = XMFLOAT3(
@@ -1142,24 +1147,24 @@ bool Player2DShadow_TopContact()
 			player->Position.z
 		);
 
-		for (const ShadowPrism* prism : prisms)
+		for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
 		{
+			const ShadowPrism* prism = prisms[prismIdx];
 			if (!prism || !prism->isValid) continue;
 			if (prism->poly.size() < 3) continue;
 
-			float margin = halfSize.x + 0.1f;
-			if (
-				footY > prism->aabbMax.y + margin ||
-				footY + halfSize.y * 2.0f < prism->aabbMin.y - margin 
-				)
+			float verticalMargin = halfSize.y + 0.5f;
+			if (footY > prism->aabbMax.y + verticalMargin ||
+				footY + halfSize.y * 2.0f < prism->aabbMin.y - verticalMargin)
 			{
 				continue;
 			}
 
 			float shadowTopY = prism->aabbMax.y;
 
-			bool inXZRange = (playerCenter.x >= prism->aabbMin.x - halfSize.x &&
-				playerCenter.x <= prism->aabbMax.x + halfSize.x &&
+			float horizontalMargin = halfSize.x + 0.15f;
+			bool inXZRange = (playerCenter.x >= prism->aabbMin.x - horizontalMargin &&
+				playerCenter.x <= prism->aabbMax.x + horizontalMargin &&
 				playerCenter.z >= prism->aabbMin.z - halfSize.z &&
 				playerCenter.z <= prism->aabbMax.z + halfSize.z);
 
@@ -1167,16 +1172,33 @@ bool Player2DShadow_TopContact()
 
 			float footToShadowTop = footY - shadowTopY;
 
-			if (footToShadowTop >= -halfSize.y && footToShadowTop <= 0.1f)
+			float contactToleranceDown = -halfSize.y - 0.3f;
+			float contactToleranceUp = 0.25f;
+
+			if (footToShadowTop >= contactToleranceDown && footToShadowTop <= contactToleranceUp)
 			{
-
-				if (player->Velocity.y <= 0.01f)
+				if (player->Velocity.y <= 0.05f) 
 				{
-					player->Position.y = shadowTopY;
+					float targetY = shadowTopY;
+					float currentY = player->Position.y;
+					float deltaY = targetY - currentY;
 
+					const float maxAdjustPerFrame = 0.15f;
+					if (fabsf(deltaY) > maxAdjustPerFrame)
+					{
+						deltaY = (deltaY > 0) ? maxAdjustPerFrame : -maxAdjustPerFrame;
+					}
+
+					player->Position.y += deltaY;
 					player->Velocity.y = 0.0f;
-
 					player->isGround = true;
+
+					float dist = fabsf(footToShadowTop);
+					if (dist < bestContactDist)
+					{
+						bestContactDist = dist;
+						currentStandingPrism = prismIdx;
+					}
 
 					hitThisIter = true;
 					hitAny = true;
@@ -1195,17 +1217,22 @@ bool Player2DShadow_TopContact()
 			}
 
 			float playerRadiusV = halfSize.y;
-
 			float penV_neg = localV - (minV - playerRadiusV);
 
-			float minPen = FLT_MAX;
-
-			if (penV_neg < minPen) { minPen = penV_neg;}
-			if (minPen <= 0.001f) continue;
+			if (penV_neg <= 0.001f) continue;
 
 			float targetLocalV = minV - playerRadiusV;
 			float deltaV = targetLocalV - localV;
-			player->Position.y += prism->v.y * deltaV;
+
+			float pushAmount = prism->v.y * deltaV;
+			const float maxPush = 0.1f;
+			if (fabsf(pushAmount) > maxPush)
+			{
+				pushAmount = (pushAmount > 0) ? maxPush : -maxPush;
+			}
+
+			player->Position.y += pushAmount;
+
 			if (player->Velocity.y > 0)
 			{
 				player->Velocity.y = 0.0f;
@@ -1216,6 +1243,48 @@ bool Player2DShadow_TopContact()
 		}
 
 		if (!hitThisIter) break;
+	}
+
+	static int s_GraceFrames = 0;
+	const int GRACE_FRAME_COUNT = 5;
+
+	if (s_LastStandingPrismIndex >= 0 && !hitAny)
+	{
+		s_GraceFrames++;
+		if (s_GraceFrames <= GRACE_FRAME_COUNT)
+		{
+			if (s_LastStandingPrismIndex < (int)prisms.size())
+			{
+				const ShadowPrism* lastPrism = prisms[s_LastStandingPrismIndex];
+				if (lastPrism && lastPrism->isValid)
+				{
+					float newShadowTopY = lastPrism->aabbMax.y;
+					float deltaY = newShadowTopY - s_LastShadowTopPos.y;
+
+					player->Position.y += deltaY;
+					player->isGround = true;
+					player->Velocity.y = 0.0f;
+					hitAny = true;
+
+					s_LastShadowTopPos.y = newShadowTopY;
+				}
+			}
+		}
+		else
+		{
+			s_LastStandingPrismIndex = -1;
+			s_GraceFrames = 0;
+		}
+	}
+	else if (hitAny)
+	{
+		s_GraceFrames = 0;
+	}
+
+	if (currentStandingPrism >= 0)
+	{
+		s_LastStandingPrismIndex = currentStandingPrism;
+		s_LastShadowTopPos.y = prisms[currentStandingPrism]->aabbMax.y;
 	}
 
 	return hitAny;

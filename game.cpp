@@ -21,7 +21,8 @@
 #include	"ShadowColliderBox.h"
 
 #include	 <map>
-#include "Seesaw.h"
+#include "FieldSeesaw.h"
+#include "FieldManhole.h"
 
 static bool debugMode = TRUE;
 
@@ -221,6 +222,7 @@ void Game_Draw()
 
 	Collision_DebugDraw();
 	Seesaw_DebugDraw();
+	Manhole_DebugDraw();
 
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);

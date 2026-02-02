@@ -144,6 +144,7 @@
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="field.cpp" />
+    <ClCompile Include="FieldManhole.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_win32.cpp" />
@@ -153,8 +154,13 @@
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="KeyBind.cpp" />
-    <ClCompile Include="KeyBind.h" />
+    <ClCompile Include="KeyBind.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
+    </ClCompile>
+    <ClInclude Include="KeyBind.h" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
@@ -171,7 +177,7 @@
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="ShadowColliderBox.cpp" />
     <ClCompile Include="sprite.cpp" />
-    <ClCompile Include="Seesaw.cpp" />
+    <ClCompile Include="FieldSeesaw.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="title_manager.cpp" />
     <ClCompile Include="Trail.cpp" />
@@ -188,6 +194,7 @@
     <ClInclude Include="effect.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="field.h" />
+    <ClInclude Include="FieldManhole.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h" />
@@ -209,7 +216,7 @@
     <ClInclude Include="shader.h" />
     <ClInclude Include="ShadowColliderBox.h" />
     <ClInclude Include="sprite.h" />
-    <ClInclude Include="Seesaw.h" />
+    <ClInclude Include="FieldSeesaw.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="title_manager.h" />
     <ClInclude Include="Trail.h" />

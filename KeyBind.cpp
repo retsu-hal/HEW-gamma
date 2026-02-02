@@ -1,6 +1,9 @@
 //KeyBind.cpp
+
+
 #include "KeyBind.h"
-#include "Controller.h" // 必要な定義をインクルード
+#include "Controller.h"
+
 
 InputKey UpKey =		{ KK_W,			XINPUT_GAMEPAD_DPAD_UP };	//前進
 InputKey RightKey =		{ KK_D,			XINPUT_GAMEPAD_DPAD_RIGHT };//右移動

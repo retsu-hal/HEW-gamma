@@ -28,6 +28,8 @@ enum FIELD
     FIELD_SEESAW_1,
 	FIELD_SEESAW_2,
 
+    FIELD_MANHOLE,
+
     FIELD_MAX,
 };
 

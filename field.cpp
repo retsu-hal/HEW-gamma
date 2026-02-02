@@ -8,7 +8,8 @@
 
 #include "debug.h"
 #include "player3D.h"
-#include "Seesaw.h"
+#include "FieldSeesaw.h"
+#include "FieldManhole.h"
 
 static bool debugMode;
 //=========================================================================================================
@@ -252,6 +253,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	Seesaw_Initialize();
+	Manhole_Initialize();
 
 	// テクスチャ
 	TexMetadata metadata;
@@ -301,6 +303,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 void field_Finalize(void)
 {
 	Seesaw_Finalize();
+	Manhole_Finalize();
 	g_MapData.clear();  // Clear the vector
 
 	for (int i = 0; i < FIELD_MAX; i++)
@@ -330,6 +333,7 @@ void field_Update(void)
 
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);
+	Manhole_UpdateAll(deltaTime);
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
@@ -489,6 +493,7 @@ bool LoadMapFromFile(const char* filename)
 
 	g_MapData.clear();
 	Seesaw_ClearAll();
+	Manhole_ClearAll();
 
 	std::string line;
 	int y = 0;  // height layer
@@ -512,6 +517,7 @@ bool LoadMapFromFile(const char* filename)
 		{
 
 			char c = line[x];
+			//Seesaw
 			if (c == 'S')
 			{
 				Seesaw_Create(
@@ -523,7 +529,17 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
-
+			//Manhole
+			if (c == 'M')
+			{
+				Manhole_Create(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z,
+					g_MapData
+				);
+				continue;
+			}
 
 
 			FIELD type;

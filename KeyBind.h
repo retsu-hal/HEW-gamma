@@ -1,6 +1,18 @@
 // KeyBind.h
 #pragma once
-#include "PlayerStatus.h"
+#include <Windows.h>
+#include <Xinput.h> 
+
+#pragma comment(lib, "xinput.lib")
+#include "Keyboard.h"
+
+class Controller;
+
+struct InputKey
+{
+	Keyboard_Keys keyboard;
+	WORD          gamepad;
+};
 
 extern InputKey UpKey;
 extern InputKey RightKey;

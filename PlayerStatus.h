@@ -1,11 +1,10 @@
 //PlayerStatus.h
 #pragma once
 
-#include "Keyboard.h"
-#include "controller.h"
-#include "Input.h"
 #include "model.h"
 #include "direct3d.h"
+#include "controller.h"
+#include "KeyBind.h"
 
 // コントローラー
 extern Controller gPad;
@@ -77,9 +76,4 @@ public:
 	//  false:3D状態
 };
 
-struct InputKey
-{
-	Keyboard_Keys keyboard; // KK_*
-	WORD          gamepad;  // XINPUT_GAMEPAD_*
-};
 

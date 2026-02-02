@@ -468,6 +468,7 @@ static bool Field_IsShadows(FIELD t)
     case FIELD_OBJ_2:
     case FIELD_SEESAW_1:
     case FIELD_SEESAW_2:
+	case FIELD_MANHOLE:
         return true;
     default:
         return false;
