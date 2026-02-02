@@ -6,7 +6,7 @@ static constexpr int NUM_VERTEX = 6;
 static ID3D11Buffer* g_pVertexBuffer = nullptr;
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
-static ID3D11ShaderResourceView* g_BillBoardTexture = nullptr;
+//static ID3D11ShaderResourceView* g_BillBoardTexture = nullptr;
 
 void InitializeBillBoard()
 {
@@ -22,16 +22,16 @@ void InitializeBillBoard()
     g_pDevice->CreateBuffer(&bd, NULL, &g_pVertexBuffer);
 
     // Load billboard texture (e.g., an interaction icon)
-    TexMetadata metadata;
-    ScratchImage image;
-    LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
-    CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_BillBoardTexture);
+    //TexMetadata metadata;
+    //ScratchImage image;
+    //LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
+    //CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_BillBoardTexture);
 }
 
 void FinalizeBillBoard()
 {
     if (g_pVertexBuffer) g_pVertexBuffer->Release();
-    if (g_BillBoardTexture) g_BillBoardTexture->Release();
+    //if (g_BillBoardTexture) g_BillBoardTexture->Release();
 }
 
 void DrawBillBoard(XMFLOAT3 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc)
@@ -100,11 +100,11 @@ void DrawBillBoard(XMFLOAT3 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, i
     Shader_SetMatrix(MVP);
 
     // Set texture and draw
-    g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
+    //g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
     g_pContext->Draw(4, 0);
 }
 
-ID3D11ShaderResourceView* GetBillBoardTexture()
-{
-    return g_BillBoardTexture;
-}
+//ID3D11ShaderResourceView* GetBillBoardTexture()
+//{
+//    return g_BillBoardTexture;
+//}
