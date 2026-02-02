@@ -273,20 +273,21 @@ static bool Field_IsSolid(FIELD t)
 		return false;
 	}
 }
-// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
-//For debug only
-// ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãŒãƒˆãƒªã‚¬ãƒ¼ã‹ã©ã†ã‹ã‚’å–å¾—
+// ƒtƒB[ƒ‹ƒh‚ªƒgƒŠƒK[‚©‚Ç‚¤‚©‚ðŽæ“¾
 static bool Field_IsTrigger(FIELD t)
 {
 	switch (t)
 	{
 	case FIELD_GOAL:
 	case FIELD_OBJ_1:
+	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
 	}
 }
+// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
+//For debug only
 
 // OBB vs OBB ï¿½ï¿½ï¿½Zï¿½iYawï¿½ï¿½]ï¿½Ì‚Ý‘Î‰ï¿½ï¿½j
 static bool OBB_Intersect_Yaw(
@@ -600,13 +601,13 @@ int Player3DField_Collision()
 	{
 		if (!Field_IsSolid(map[i].no)) continue;
 
-		// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+		// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿?
 		if (map[i].no == FIELD_SEESAW_2) continue;
 
 		float boxYaw = (map[i].no == FIELD_OBJ_1) ? map[i].rotate.y : 0.0f;
 
 		XMFLOAT3 push, norm;
-		// ï¿½ï¿½ Ê¹ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ß´ï¿½
+		// ï¿½ï¿½ Ê¹ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ß´ï¿?
 		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, map[i].pos,
 			Field_GetHalfSize(map[i]), boxYaw, &push, &norm))
 			continue;
@@ -703,7 +704,7 @@ int Player2DField_Collision()
 		}
 		else
 		{
-			// ï¿½Oï¿½ï¿½Ì•ÇÕ“ï¿½
+			// ï¿½Oï¿½ï¿½Ì•ÇÕ“ï¿?
 			player->Velocity.z = 0;
 			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
 		}

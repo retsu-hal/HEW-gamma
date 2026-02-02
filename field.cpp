@@ -265,7 +265,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
 	{
 		// Error:  could not load map
-		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+		MessageBox(nullptr, "Failed to load map file! Error", "Error", MB_OK);
 	}
 
 	bool hasGround = false;
