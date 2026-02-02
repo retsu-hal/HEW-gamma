@@ -23,7 +23,10 @@ struct PUSH_TARGET
 void PlayerPushManager_Init();
 void PlayerPushManager_Finalize();
 void PlayerPushManager_Update();
+void PlayerPushManager_Draw();
 
 PUSH_STATE PlayerPushManager_GetState();
 bool PlayerPushManager_IsPushing();
 const PUSH_TARGET* PlayerPushManager_GetCurrentTarget();
+bool PlayerPushManager_ShouldShowBillBoard();
+XMFLOAT3 PlayerPushManager_GetBillBoardPosition();

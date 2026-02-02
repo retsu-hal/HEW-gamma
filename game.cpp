@@ -14,6 +14,7 @@
 #include	"camera.h"
 #include	"direct3d.h"
 #include	"Collision.h"
+#include	"Bill_Board.h"
 
 #include	"PlayerModeSwitchManager.h"
 #include	"Pushing_Obj_Manager.h"
@@ -52,7 +53,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
-	
+	InitializeBillBoard();
 
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(false);
@@ -88,6 +89,7 @@ void Game_Finalize()
 	PlayerPushManager_Finalize();
 	Player3D_Finalize();
 	Player2D_Finalize();
+	FinalizeBillBoard();
 
 }
 
@@ -273,6 +275,12 @@ void Game_Draw()
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		Player3D_Draw();
+
+		g_BallLight.SetEnable(FALSE);
+		Shader_SetLight(g_BallLight.Light);
+		PlayerPushManager_Draw();
+		g_BallLight.SetEnable(TRUE);
+		Shader_SetLight(g_BallLight.Light);
 	}
 	else
 	{

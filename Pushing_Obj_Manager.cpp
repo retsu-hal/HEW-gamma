@@ -7,6 +7,7 @@
 #include "keyboard.h"
 #include "KeyBind.h"
 #include "Input.h"
+#include "Bill_Board.h"
 
 #include <cfloat>
 #include <algorithm>
@@ -21,6 +22,9 @@ static const float kPushSpeed = 0.02f;      // Speed at which objects are pushed
 // State
 static PUSH_STATE g_PushState = PUSH_STATE_NONE;
 static PUSH_TARGET g_CurrentTarget;
+
+static bool g_ShowBillBoard = false;
+static XMFLOAT3 g_BillBoardPosition = { 0.0f, 0.0f, 0.0f };
 
 // Get field half size
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
@@ -247,9 +251,11 @@ static void ApplyPushMovement(int fieldIndex, const XMFLOAT3& pushDir)
 
 void PlayerPushManager_Init()
 {
+
     g_PushState = PUSH_STATE_NONE;
     g_CurrentTarget.fieldIndex = -1;
     g_CurrentTarget.pushDirection = { 0, 0, 0 };
+
 }
 
 void PlayerPushManager_Finalize()
@@ -265,6 +271,7 @@ void PlayerPushManager_Update()
     {
         g_PushState = PUSH_STATE_NONE;
         g_CurrentTarget.fieldIndex = -1;
+        g_ShowBillBoard = false;
         return;
     }
 
@@ -275,6 +282,32 @@ void PlayerPushManager_Update()
     XMFLOAT3 playerFwd = Player3D_GetForward();
     float velDot = Dot2D(p3->Velocity, playerFwd);
     bool movingForward = velDot > 0.001f;
+
+    // Always check for nearby pushable objects to show billboard
+    PUSH_TARGET nearbyTarget;
+    bool hasNearbyTarget = FindPushableTarget(&nearbyTarget);
+
+    if (hasNearbyTarget && g_PushState == PUSH_STATE_NONE)
+    {
+        // Show billboard above the pushable object
+        g_ShowBillBoard = true;
+        std::vector<MAPDATA>& map = GetFieldMap();
+        if (nearbyTarget.fieldIndex >= 0 && nearbyTarget.fieldIndex < (int)map.size())
+        {
+            const MAPDATA& obj = map[nearbyTarget.fieldIndex];
+            XMFLOAT3 objHalf = Field_GetHalfSize(obj);
+            // Position billboard above the object
+            g_BillBoardPosition = XMFLOAT3(
+                obj.pos.x,
+                obj.pos.y + objHalf.y + 1.0f,  // Above the object
+                obj.pos.z
+            );
+        }
+    }
+    else
+    {
+        g_ShowBillBoard = false;
+    }
 
     switch (g_PushState)
     {
@@ -288,6 +321,7 @@ void PlayerPushManager_Update()
             {
                 g_CurrentTarget = target;
                 g_PushState = PUSH_STATE_PUSHING;
+                g_ShowBillBoard = false;  // Hide billboard while pushing
 
                 // Set player animation to push
                 p3->CurrentAnimIndex = PLAYER_ANIM_PUSH;
@@ -298,6 +332,7 @@ void PlayerPushManager_Update()
 
     case PUSH_STATE_PUSHING:
     {
+        g_ShowBillBoard = false;  // Hide billboard while pushing
         // Check if we should stop pushing
         if (!actionHeld || !movingForward)
         {
@@ -331,6 +366,32 @@ void PlayerPushManager_Update()
     }
     break;
     }
+}
+
+void PlayerPushManager_Draw()
+{
+    if (g_ShowBillBoard)
+    {
+        Shader_Begin();
+        SetBlendState(BLENDSTATE_ALFA);
+        SetDepthTest(TRUE);
+
+        XMFLOAT2 size = { 0.5f, 0.5f };  // Billboard size
+        XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+        DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);
+    }
+}
+
+// Add getter for billboard visibility (optional, for debugging)
+bool PlayerPushManager_ShouldShowBillBoard()
+{
+    return g_ShowBillBoard;
+}
+
+XMFLOAT3 PlayerPushManager_GetBillBoardPosition()
+{
+    return g_BillBoardPosition;
 }
 
 PUSH_STATE PlayerPushManager_GetState()
