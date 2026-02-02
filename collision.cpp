@@ -28,7 +28,7 @@ struct ExtraDebugBox
 static std::vector<ExtraDebugBox> g_ExtraBoxes;
 
 //=========================================================================================================
-// ƒ{[ƒ‹‚ÆƒtƒB[ƒ‹ƒh‚Ì“–‚½‚è”»’è
+// ï¿½{ï¿½[ï¿½ï¿½ï¿½Æƒtï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½Ì“ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
 //=========================================================================================================
 
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms)
@@ -60,7 +60,7 @@ static ImU32 MakeColor(unsigned char r, unsigned char g, unsigned char b, unsign
 	return ((ImU32)a << 24) | ((ImU32)b << 16) | ((ImU32)g << 8) | (ImU32)r;
 }
 
-// ƒ{ƒbƒNƒX‚Ì”¼•ª‚ÌƒTƒCƒY‚ğæ“¾
+// ï¿½{ï¿½bï¿½Nï¿½Xï¿½Ì”ï¿½ï¿½ï¿½ï¿½ÌƒTï¿½Cï¿½Yï¿½ï¿½ï¿½æ“¾
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
 	if (m.useCustomCollider)
@@ -74,7 +74,7 @@ static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 	};
 }
 
-// ƒ[ƒ‹ƒhÀ•W‚ğƒXƒNƒŠ[ƒ“À•W‚É•ÏŠ·
+// ï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½Xï¿½Nï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½É•ÏŠï¿½
 struct ScreenPt { ImVec2 pos; bool valid; };
 static ScreenPt WorldToScreen(const XMFLOAT3& p)
 {
@@ -105,7 +105,7 @@ static ScreenPt WorldToScreen(const XMFLOAT3& p)
 	return out;
 }
 
-// 3Dƒ‰ƒCƒ“‚ğ•`‰æ
+// 3Dï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½`ï¿½ï¿½
 static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick = 1.0f)
 {
 	ScreenPt sa = WorldToScreen(a);
@@ -113,7 +113,7 @@ static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float th
 	if (sa.valid && sb.valid)
 		ImGui::GetBackgroundDrawList()->AddLine(sa.pos, sb.pos, col, thick);
 }
-// 3Dƒ|ƒCƒ“ƒg‚ğ•`‰æ
+// 3Dï¿½|ï¿½Cï¿½ï¿½ï¿½gï¿½ï¿½`ï¿½ï¿½
 static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
 {
 	ScreenPt sp = WorldToScreen(p);
@@ -122,7 +122,7 @@ static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
 }
 
 
-// AABB‚ğ•`‰æ
+// AABBï¿½ï¿½`ï¿½ï¿½
 static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 {
 	XMFLOAT3 corners[8] = {
@@ -140,7 +140,7 @@ static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
-// OBB‚ğYaw‰ñ“]‚Å•`‰æ
+// OBBï¿½ï¿½Yawï¿½ï¿½]ï¿½Å•`ï¿½ï¿½
 static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg, ImU32 col)
 {
 	float yaw = XMConvertToRadians(yawDeg);
@@ -162,7 +162,7 @@ static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg,
 		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
-// ‘È‰~‘Ì‚ğ•`‰æ
+// ï¿½È‰~ï¿½Ì‚ï¿½`ï¿½ï¿½
 static void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, int seg = 24)
 {
 	const float PI2 = 6.28318530718f;
@@ -230,7 +230,7 @@ static void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOpti
 }
 
 
-// ƒvƒŒƒCƒ„[‚ÌŒÅ‘ÌƒRƒ‰ƒCƒ_[’†S‚ğæ“¾
+// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ÌŒÅ‘ÌƒRï¿½ï¿½ï¿½Cï¿½_ï¿½[ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½æ“¾
 static XMFLOAT3 GetPlayerSolidCollider()
 {
 	PLAYER* p = GetPlayer3D();
@@ -238,7 +238,7 @@ static XMFLOAT3 GetPlayerSolidCollider()
 	c.y += Player3D_GetSolidHalfSize().y;
 	return c;
 }
-// ƒvƒŒƒCƒ„[2D‚ÌŒÅ‘ÌƒRƒ‰ƒCƒ_[’†S‚ğæ“¾
+// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[2Dï¿½ÌŒÅ‘ÌƒRï¿½ï¿½ï¿½Cï¿½_ï¿½[ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½æ“¾
 static XMFLOAT3 GetPlayer2DSolidCollider()
 {
 	PLAYER* p = GetPlayer2D();
@@ -246,7 +246,7 @@ static XMFLOAT3 GetPlayer2DSolidCollider()
 	c.y += Player2D_GetSolidHalfSize().y + 0.1f;
 	return c;
 }
-// ƒvƒŒƒCƒ„[‚ÌƒgƒŠƒK[ƒRƒ‰ƒCƒ_[’†S‚ğæ“¾
+// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ìƒgï¿½ï¿½ï¿½Kï¿½[ï¿½Rï¿½ï¿½ï¿½Cï¿½_ï¿½[ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½æ“¾
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
 	PLAYER* p = GetPlayer3D();
@@ -255,7 +255,7 @@ static XMFLOAT3 GetPlayerTriggerCollider()
 	return c;
 }
 
-// ƒtƒB[ƒ‹ƒh‚ªŒÅ‘Ì‚©‚Ç‚¤‚©‚ğæ“¾
+// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½ï¿½Å‘Ì‚ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
 static bool Field_IsSolid(FIELD t)
 {
 	switch (t)
@@ -263,6 +263,7 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_GROUND:
 	case FIELD_WALL:
 	case FIELD_OBJ_BOX:
+	case FIELD_EMPTY_BOX:
 	case FIELD_OBJ_1:
 	case FIELD_SEESAW_1:
 	case FIELD_SEESAW_2:
@@ -272,21 +273,22 @@ static bool Field_IsSolid(FIELD t)
 		return false;
 	}
 }
-// ƒtƒB[ƒ‹ƒh‚ªƒgƒŠƒK[‚©‚Ç‚¤‚©‚ğæ“¾
+// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
+//For debug only
+// ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ãŒãƒˆãƒªã‚¬ãƒ¼ã‹ã©ã†ã‹ã‚’å–å¾—
 static bool Field_IsTrigger(FIELD t)
 {
 	switch (t)
 	{
 	case FIELD_GOAL:
 	case FIELD_OBJ_1:
-	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
 	}
 }
 
-// OBB vs OBB ‰ğZiYaw‰ñ“]‚Ì‚İ‘Î‰j
+// OBB vs OBB ï¿½ï¿½ï¿½Zï¿½iYawï¿½ï¿½]ï¿½Ì‚İ‘Î‰ï¿½ï¿½j
 static bool OBB_Intersect_Yaw(
 	const XMFLOAT3& cA, const XMFLOAT3& hA, float yawA,
 	const XMFLOAT3& cB, const XMFLOAT3& hB, float yawB)
@@ -322,7 +324,7 @@ static bool OBB_Intersect_Yaw(
 	return true;
 }
 
-// ‘È‰~‘Ì vs OBB ‰ğZiYaw‰ñ“]‚Ì‚İ‘Î‰j
+// ï¿½È‰~ï¿½ï¿½ vs OBB ï¿½ï¿½ï¿½Zï¿½iYawï¿½ï¿½]ï¿½Ì‚İ‘Î‰ï¿½ï¿½j
 static bool Resolve_Ellipsoid_OBB_Yaw(
 	const XMFLOAT3& ellC, const XMFLOAT3& ellR,
 	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYaw,
@@ -382,7 +384,7 @@ static bool Resolve_Ellipsoid_OBB_Yaw(
 	return true;
 }
 
-// ƒgƒŠƒK[‚ª“–‚½‚Á‚½–Ê‚ğŒvZiPlayer3d YawŠî€j
+// ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê‚ï¿½ï¿½vï¿½Zï¿½iPlayer3d Yawï¿½î€ï¿½j
 static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
 {
 	PLAYER* p = GetPlayer3D();
@@ -411,7 +413,7 @@ void Collision_DebugClearExtraBoxes()
 {
 	g_ExtraBoxes.clear();
 }
-// AABB‚ğƒfƒoƒbƒO•`‰æƒŠƒXƒg‚É’Ç‰Á
+// AABBï¿½ï¿½ï¿½fï¿½oï¿½bï¿½Oï¿½`ï¿½æƒŠï¿½Xï¿½gï¿½É’Ç‰ï¿½
 void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
 	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -422,7 +424,7 @@ void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
 	box.color = MakeColor(r, g, b, a);
 	g_ExtraBoxes.push_back(box);
 }
-// OBB‚ğƒfƒoƒbƒO•`‰æƒŠƒXƒg‚É’Ç‰Á
+// OBBï¿½ï¿½ï¿½fï¿½oï¿½bï¿½Oï¿½`ï¿½æƒŠï¿½Xï¿½gï¿½É’Ç‰ï¿½
 void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFLOAT3& rot,
 	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -436,21 +438,21 @@ void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFL
 }
 
 bool Resolve_OBB_OBB_ZY(
-	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // ƒvƒŒƒCƒ„[iZ‰ñ“]j
-	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // ƒtƒB[ƒ‹ƒhiY‰ñ“]j
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½iZï¿½ï¿½]ï¿½j
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½iYï¿½ï¿½]ï¿½j
 	XMFLOAT3* outPush, XMFLOAT3* outNorm)
 {
-	// ƒvƒŒƒCƒ„[‚ÌZ‰ñ“]s—ñi2D•½–Ê‚Å‚Ì‰ñ“]j
+	// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½Zï¿½ï¿½]ï¿½sï¿½ï¿½i2Dï¿½ï¿½ï¿½Ê‚Å‚Ì‰ï¿½]ï¿½j
 	XMMATRIX rotMatA = XMMatrixRotationZ(rotZRadA);
 
-	// ƒtƒB[ƒ‹ƒh‚ÌY‰ñ“]s—ñ
+	// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½Yï¿½ï¿½]ï¿½sï¿½ï¿½
 	float rotYRadB = XMConvertToRadians(rotYDegB);
 	XMMATRIX rotMatB = XMMatrixRotationY(rotYRadB);
 
-	// ŠeOBB‚Ìƒ[ƒJƒ‹²‚ğæ“¾
+	// ï¿½eOBBï¿½Ìƒï¿½ï¿½[ï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
 	XMFLOAT3 axesA[3], axesB[3];
 
-	// ƒvƒŒƒCƒ„[‚Ì²iZ‰ñ“]j
+	// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ìï¿½ï¿½iZï¿½ï¿½]ï¿½j
 	XMVECTOR axA0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatA);
 	XMVECTOR axA1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatA);
 	XMVECTOR axA2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatA);
@@ -458,7 +460,7 @@ bool Resolve_OBB_OBB_ZY(
 	XMStoreFloat3(&axesA[1], axA1);
 	XMStoreFloat3(&axesA[2], axA2);
 
-	// ƒtƒB[ƒ‹ƒh‚Ì²iY‰ñ“]j
+	// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½Ìï¿½ï¿½iYï¿½ï¿½]ï¿½j
 	XMVECTOR axB0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatB);
 	XMVECTOR axB1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatB);
 	XMVECTOR axB2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatB);
@@ -466,7 +468,7 @@ bool Resolve_OBB_OBB_ZY(
 	XMStoreFloat3(&axesB[1], axB1);
 	XMStoreFloat3(&axesB[2], axB2);
 
-	// ’†SŠÔƒxƒNƒgƒ‹
+	// ï¿½ï¿½ï¿½Sï¿½Ôƒxï¿½Nï¿½gï¿½ï¿½
 	XMVECTOR vD = XMVectorSet(posA.x - posB.x, posA.y - posB.y, posA.z - posB.z, 0);
 
 	float halfExtA[3] = { halfA.x, halfA.y, halfA.z };
@@ -475,15 +477,15 @@ bool Resolve_OBB_OBB_ZY(
 	float minPen = FLT_MAX;
 	XMFLOAT3 minAxis = { 0, 1, 0 };
 
-	// 15²‚ÌSAT”»’è
+	// 15ï¿½ï¿½ï¿½ï¿½SATï¿½ï¿½ï¿½ï¿½
 	auto TestAxis = [&](XMVECTOR axis) -> bool
 		{
 			float len = XMVectorGetX(XMVector3Length(axis));
-			if (len < 1e-6f) return true;  // •½s‚È²‚ÍƒXƒLƒbƒv
+			if (len < 1e-6f) return true;  // ï¿½ï¿½ï¿½sï¿½Èï¿½ï¿½ÍƒXï¿½Lï¿½bï¿½v
 
 			axis = XMVector3Normalize(axis);
 
-			// ŠeOBB‚Ì“Š‰e”¼Œa
+			// ï¿½eOBBï¿½Ì“ï¿½ï¿½eï¿½ï¿½ï¿½a
 			float rA = 0, rB = 0;
 			for (int i = 0; i < 3; i++)
 			{
@@ -499,7 +501,7 @@ bool Resolve_OBB_OBB_ZY(
 			float dist = fabsf(XMVectorGetX(XMVector3Dot(vD, axis)));
 			float pen = (rA + rB) - dist;
 
-			if (pen < 0) return false;  // •ª—£²”­Œ© ¨ Õ“Ë‚È‚µ
+			if (pen < 0) return false;  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Õ“Ë‚È‚ï¿½
 
 			if (pen < minPen)
 			{
@@ -509,17 +511,17 @@ bool Resolve_OBB_OBB_ZY(
 			return true;
 		};
 
-	// A ‚Ì3²
+	// A ï¿½ï¿½3ï¿½ï¿½
 	if (!TestAxis(axA0)) return false;
 	if (!TestAxis(axA1)) return false;
 	if (!TestAxis(axA2)) return false;
 
-	// B ‚Ì3²
+	// B ï¿½ï¿½3ï¿½ï¿½
 	if (!TestAxis(axB0)) return false;
 	if (!TestAxis(axB1)) return false;
 	if (!TestAxis(axB2)) return false;
 
-	// ŠOÏ²i9²j
+	// ï¿½Oï¿½Ïï¿½ï¿½i9ï¿½ï¿½ï¿½j
 	if (!TestAxis(XMVector3Cross(axA0, axB0))) return false;
 	if (!TestAxis(XMVector3Cross(axA0, axB1))) return false;
 	if (!TestAxis(XMVector3Cross(axA0, axB2))) return false;
@@ -530,7 +532,7 @@ bool Resolve_OBB_OBB_ZY(
 	if (!TestAxis(XMVector3Cross(axA2, axB1))) return false;
 	if (!TestAxis(XMVector3Cross(axA2, axB2))) return false;
 
-	// ‰Ÿ‚µo‚µ•ûŒü‚ğŒˆ’èiA‚ğB‚©‚ç—£‚·•ûŒüj
+	// ï¿½ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iAï¿½ï¿½Bï¿½ï¿½ï¿½ç—£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
 	XMVECTOR normAxis = XMLoadFloat3(&minAxis);
 	if (XMVectorGetX(XMVector3Dot(vD, normAxis)) < 0)
 	{
@@ -553,23 +555,23 @@ bool OBB_Intersect_ZY(
 }
 
 //=========================================================================================================
-// 2D—pƒgƒŠƒK[•ûŒü”»’èiƒvƒŒƒCƒ„[‚Ì‰ñ“]‚ğl—¶j
+// 2Dï¿½pï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½iï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ì‰ï¿½]ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½j
 //=========================================================================================================
 static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRotZ, const XMFLOAT3& triggerPos)
 {
-	// ƒvƒŒƒCƒ„[‚©‚çƒgƒŠƒK[‚Ö‚ÌƒxƒNƒgƒ‹
+	// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½gï¿½ï¿½ï¿½Kï¿½[ï¿½Ö‚Ìƒxï¿½Nï¿½gï¿½ï¿½
 	float dx = triggerPos.x - playerPos.x;
 	float dy = triggerPos.y - playerPos.y;
 
-	// ƒvƒŒƒCƒ„[‚Ì‰ñ“]‚ğl—¶‚µ‚Äƒ[ƒJƒ‹À•W‚É•ÏŠ·
+	// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ì‰ï¿½]ï¿½ï¿½ï¿½lï¿½ï¿½ï¿½ï¿½ï¿½Äƒï¿½ï¿½[ï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½É•ÏŠï¿½
 	float radZ = XMConvertToRadians(playerRotZ);
-	float cosZ = cosf(-radZ);  // ‹t‰ñ“]‚Åƒ[ƒJƒ‹À•W‚Ö
+	float cosZ = cosf(-radZ);  // ï¿½tï¿½ï¿½]ï¿½Åƒï¿½ï¿½[ï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½ï¿½
 	float sinZ = sinf(-radZ);
 
 	float localX = dx * cosZ - dy * sinZ;
 	float localY = dx * sinZ + dy * cosZ;
 
-	// ƒ[ƒJƒ‹À•W‚Å‚Ì•ûŒü”»’è
+	// ï¿½ï¿½ï¿½[ï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½Å‚Ì•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	if (fabsf(localX) > fabsf(localY))
 	{
 		return (localX > 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
@@ -581,7 +583,7 @@ static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRot
 }
 
 
-// ƒvƒŒƒCƒ„[3D‚ÆƒtƒB[ƒ‹ƒh‚Ì“–‚½‚è”»’è
+// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[3Dï¿½Æƒtï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½Ì“ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
 int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
@@ -598,13 +600,13 @@ int Player3DField_Collision()
 	{
 		if (!Field_IsSolid(map[i].no)) continue;
 
-		// ¡ï Ìø¹ıõÎõÎ°å°å£¬µ¥¶À´¦Àí
+		// ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if (map[i].no == FIELD_SEESAW_2) continue;
 
 		float boxYaw = (map[i].no == FIELD_OBJ_1) ? map[i].rotate.y : 0.0f;
 
 		XMFLOAT3 push, norm;
-		// ¡ï Ê¹ÓÃÅö×²Ìå³ß´ç
+		// ï¿½ï¿½ Ê¹ï¿½ï¿½ï¿½ï¿½×²ï¿½ï¿½ß´ï¿½
 		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, map[i].pos,
 			Field_GetHalfSize(map[i]), boxYaw, &push, &norm))
 			continue;
@@ -648,14 +650,14 @@ int Player2DField_Collision()
 	player->isGround = false;
 	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
 
-	// 2DƒvƒŒƒCƒ„[‚Ì“–‚½‚è”»’è’†Si‘«Œ³Šî€‚©‚ç’†SŠî€‚Ö•ÏŠ·j
+	// 2Dï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ì“ï¿½ï¿½ï¿½ï¿½è”»ï¿½è’†ï¿½Sï¿½iï¿½ï¿½ï¿½ï¿½ï¿½î€ï¿½ï¿½ï¿½ç’†ï¿½Sï¿½î€ï¿½Ö•ÏŠï¿½ï¿½j
 	XMFLOAT3 colliderCenter = XMFLOAT3(
 		player->Position.x,
 		player->Position.y + halfSize.y,
 		player->Position.z
 	);
 
-	// ƒvƒŒƒCƒ„[‚ÌZ²‰ñ“]Šp“xi“x¨ƒ‰ƒWƒAƒ“j
+	// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½Zï¿½ï¿½ï¿½ï¿½]ï¿½pï¿½xï¿½iï¿½xï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½Aï¿½ï¿½ï¿½j
 	float playerZRot = XMConvertToRadians(player->Rotation.z);
 
 	for (size_t i = 0; i < map.size(); ++i)
@@ -664,10 +666,10 @@ int Player2DField_Collision()
 
 		XMFLOAT3 push, norm;
 
-		// OBB vs OBBiƒvƒŒƒCƒ„[‚ÍZ‰ñ“]AƒtƒB[ƒ‹ƒh‚ÍY‰ñ“]j
+		// OBB vs OBBï¿½iï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½ï¿½Zï¿½ï¿½]ï¿½Aï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½ï¿½Yï¿½ï¿½]ï¿½j
 		if (!Resolve_OBB_OBB_ZY(
-			colliderCenter, halfSize, playerZRot,      // ƒvƒŒƒCƒ„[iZ‰ñ“]j
-			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // ƒtƒB[ƒ‹ƒhiY‰ñ“]j
+			colliderCenter, halfSize, playerZRot,      // ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½iZï¿½ï¿½]ï¿½j
+			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½iYï¿½ï¿½]ï¿½j
 			&push, &norm))
 			continue;
 
@@ -681,7 +683,7 @@ int Player2DField_Collision()
 
 		if (ay >= ax && ay >= az)
 		{
-			// ã‰º‚ÌÕ“Ë
+			// ï¿½ã‰ºï¿½ÌÕ“ï¿½
 			if (norm.y > 0)
 			{
 				player->isGround = true;
@@ -695,19 +697,19 @@ int Player2DField_Collision()
 		}
 		else if (ax >= az)
 		{
-			// ¶‰E‚Ì•ÇÕ“Ë
+			// ï¿½ï¿½ï¿½Eï¿½Ì•ÇÕ“ï¿½
 			player->Velocity.x = 0;
 			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
 		}
 		else
 		{
-			// ‘OŒã‚Ì•ÇÕ“Ë
+			// ï¿½Oï¿½ï¿½Ì•ÇÕ“ï¿½
 			player->Velocity.z = 0;
 			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
 		}
 	}
 
-	// ’†SÀ•W‚©‚ç‘«Œ³À•W‚Ö–ß‚·
+	// ï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ç‘«ï¿½ï¿½ï¿½ï¿½ï¿½Wï¿½Ö–ß‚ï¿½
 	player->Position.x = colliderCenter.x;
 	player->Position.y = colliderCenter.y - halfSize.y;
 	player->Position.z = colliderCenter.z;
@@ -717,7 +719,7 @@ int Player2DField_Collision()
 
 
 
-// ƒvƒŒƒCƒ„[‚ÌƒgƒŠƒK[“–‚½‚è”»’è
+// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Ìƒgï¿½ï¿½ï¿½Kï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
@@ -802,7 +804,7 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 		tHalf.y += extraRange;
 		tHalf.z += extraRange;
 
-		// OBB vs OBB Œğ·”»’è
+		// OBB vs OBB ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if (!OBB_Intersect_ZY(pC, pHalf, pZRot,
 			map[i].pos, tHalf, map[i].rotate.y))
 			continue;
@@ -829,7 +831,7 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 
 
 //=========================================================================================================
-// “_‚ªƒvƒŠƒYƒ€“à‚É‚ ‚é‚©ƒ`ƒFƒbƒNi2D‘½ŠpŒ`”»’èj
+// ï¿½_ï¿½ï¿½ï¿½vï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½ï¿½ï¿½É‚ï¿½ï¿½é‚©ï¿½`ï¿½Fï¿½bï¿½Nï¿½i2Dï¿½ï¿½ï¿½pï¿½`ï¿½ï¿½ï¿½ï¿½j
 //=========================================================================================================
 static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& poly)
 {
@@ -853,7 +855,7 @@ static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& po
 }
 
 //=========================================================================================================
-// ƒvƒŒƒCƒ„[2D‚Æ‰eƒvƒŠƒYƒ€‚Ì“–‚½‚è”»’è
+// ï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[2Dï¿½Æ‰eï¿½vï¿½ï¿½ï¿½Yï¿½ï¿½ï¿½Ì“ï¿½ï¿½ï¿½ï¿½è”»ï¿½ï¿½
 //=========================================================================================================
 static float DotXZ(const XMFLOAT3& a, const XMFLOAT3& b)
 {
@@ -1291,10 +1293,10 @@ bool Player2DShadow_TopContact()
 }
 
 
-// ƒfƒoƒbƒO•`‰æ
+// ï¿½fï¿½oï¿½bï¿½Oï¿½`ï¿½ï¿½
 void Collision_DebugDraw()
 {
-	// 3DƒvƒŒƒCƒ„[ƒRƒ‰ƒCƒ_[
+	// 3Dï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Rï¿½ï¿½ï¿½Cï¿½_ï¿½[
 	PLAYER* player3D = GetPlayer3D();
 	if (player3D)
 	{
@@ -1306,7 +1308,7 @@ void Collision_DebugDraw()
 		XMFLOAT3 tH = Player3D_GetTriggerHalfSize();
 		DebugDrawOBB_Yaw(tC, tH, player3D->Rotation.y, IM_COL32(255, 255, 255, 255));
 	}
-	// 2DƒvƒŒƒCƒ„[ƒRƒ‰ƒCƒ_[
+	// 2Dï¿½vï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½Rï¿½ï¿½ï¿½Cï¿½_ï¿½[
 	PLAYER* player2D = GetPlayer2D();
 	if (player2D)
 	{
@@ -1315,7 +1317,7 @@ void Collision_DebugDraw()
 		DebugDrawOBB_Yaw(pC, pH, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));
 	}
 
-	// ƒtƒB[ƒ‹ƒhƒgƒŠƒK[
+	// ï¿½tï¿½Bï¿½[ï¿½ï¿½ï¿½hï¿½gï¿½ï¿½ï¿½Kï¿½[
 	std::vector<MAPDATA>& map = GetFieldMap();
 	if (player3D && !map.empty())
 	{
