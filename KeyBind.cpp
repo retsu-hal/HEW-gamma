@@ -15,7 +15,7 @@ InputKey ChangeKey =	{ KK_F,			XINPUT_GAMEPAD_B };			//影変身
 InputKey ResetKey =		{ KK_R,			XINPUT_GAMEPAD_BACK };		//リセット
 InputKey MenuKey =		{ KK_ESCAPE,	XINPUT_GAMEPAD_START };		//メニュー
 
-
+//押している時
 bool IsInputPress(const InputKey& key, const Controller& pad)
 {
 	// キーボード
@@ -35,6 +35,7 @@ bool IsInputPress(const InputKey& key, const Controller& pad)
 	return false;
 }
 
+//押された時
 bool IsInputTrigger(const InputKey& key, const Controller& pad)
 {
 	// キーボード
@@ -52,6 +53,7 @@ bool IsInputTrigger(const InputKey& key, const Controller& pad)
 	return false;
 }
 
+//離したとき
 bool IsInputUp(const InputKey& key, const Controller& pad)
 {
 	// キーボード
