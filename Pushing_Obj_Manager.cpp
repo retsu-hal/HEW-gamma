@@ -263,7 +263,7 @@ void PlayerPushManager_Init()
 
     TexMetadata metadata;
     ScratchImage image;
-    LoadFromWICFile(L"asset\\texture\\Title.png", WIC_FLAGS_NONE, &metadata, image);
+    LoadFromWICFile(L"asset\\texture\\KeyPush.png", WIC_FLAGS_NONE, &metadata, image);
     CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_BillBoardTexture);
 
 }
@@ -391,7 +391,7 @@ void PlayerPushManager_Draw()
 
         g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 
-        XMFLOAT2 size = { 0.5f, 0.5f };  // Billboard size
+        XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
         XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);
