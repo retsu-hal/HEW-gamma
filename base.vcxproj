@@ -153,8 +153,6 @@
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="KeyBind.cpp" />
-    <ClCompile Include="KeyBind.h" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
@@ -162,6 +160,7 @@
     <ClCompile Include="memo.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
+    <ClCompile Include="newKeyBind.cpp" />
     <ClCompile Include="Player2D.cpp" />
     <ClCompile Include="Player3D.cpp" />
     <ClCompile Include="PlayerModeSwitchManager.cpp" />
@@ -169,10 +168,7 @@
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="score.cpp" />
     <ClCompile Include="shader.cpp" />
-<<<<<<< HEAD
-=======
     <ClCompile Include="ShadowColliderBox.cpp" />
->>>>>>> origin/main
     <ClCompile Include="sprite.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="title_manager.cpp" />
@@ -201,6 +197,7 @@
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
+    <ClInclude Include="newKeyBind.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
     <ClInclude Include="PlayerModeSwitchManager.h" />
@@ -209,10 +206,7 @@
     <ClInclude Include="result.h" />
     <ClInclude Include="score.h" />
     <ClInclude Include="shader.h" />
-<<<<<<< HEAD
-=======
     <ClInclude Include="ShadowColliderBox.h" />
->>>>>>> origin/main
     <ClInclude Include="sprite.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="title_manager.h" />
