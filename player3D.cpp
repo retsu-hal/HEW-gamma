@@ -40,10 +40,6 @@ static XMFLOAT3 g_TriggerHalfSize = XMFLOAT3(
 static bool g_Player3DActive = true;
 static bool isTrigger = false;
 
-// 前方宣言: 状態管理のための追加関数
-static bool Player3D_HasMoveInput();
-static void Player3D_HandleStateTransitions();
-static void Player3D_Idle();
 
 //=========================================================================================================
 // 初期化処理
@@ -68,7 +64,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	g_Player3D.FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player3D.FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_Player3D.FirstState = g_Player3D.state = PLAYER_STATE_MOVE;
+	g_Player3D.FirstState = g_Player3D.state = PLAYER_STATE_IDLE;
 	g_Player3D.FirstStopTime = g_StopTime = 0.0f;
 	g_Player3D.FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
 
@@ -103,6 +99,7 @@ void Player3D_Update()
 			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
 			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
 			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+			ImGui::Text("State: %d", g_Player3D.state);
 			ImGui::TreePop();
 		}
 		ImGui::End();
@@ -120,31 +117,33 @@ void Player3D_Update()
 	// プレイヤー操作
 
 
-	Player3D_Move();	//移動
-	Player3D_Dash();	//ダッシュ
-	Player3D_Jump();	//ジャンプ
+	
+	
+	
 	Player3D_Change();	//影変身
-	Player3D_Action();	//アクション
+	
 
 
 	switch (g_Player3D.state)
 	{
 	case PLAYER_STATE_IDLE:
-		
+		Player3D_Idle();
 		break;
 	case PLAYER_STATE_MOVE:
-		
+		Player3D_Move();	//移動
 		break;
-	case PLAYER_STATE_FALL:
-		
+	case PLAYER_STATE_JUMP:
+		Player3D_Jump();	//ジャンプ
+		break;
+	case PLAYER_STATE_DASH:
+		Player3D_Dash();	//ダッシュ
 		break;
 	case PLAYER_STATE_ACTION:
-		
+		Player3D_Action();	//アクション
 		break;
 	default:
 		break;
 	}
-
 
 }
 
@@ -335,21 +334,24 @@ void Player3D_Move()
 		g_Player3D.Velocity.z = -g_Player3D.maxMoveSpeed;
 	}
 
-	
+	if (IsInputTrigger(JumpKey, gPad))
+	{
+		g_Player3D.state = PLAYER_STATE_JUMP;
+	}
+	if (IsInputPress(DashKey, gPad))
+	{
+		Player3D_Dash();
+	}
 }
 
 void Player3D_Jump()
 {
-	if (IsInputTrigger(JumpKey, gPad))
-	{
 		if (g_Player3D.isGround)
 		{
 			g_Player3D.Velocity.y = g_Player3D.jumpPower;
 			g_Player3D.isGround = false;
-			g_Player3D.state = PLAYER_STATE_FALL; // 上昇後はFALLへ
+			g_Player3D.state = PLAYER_STATE_MOVE; // 上昇後はFALLへ
 		}
-	}
-
 }
 
 void Player3D_Change()
@@ -371,15 +373,6 @@ void Player3D_Dash()
 		g_Player3D.isDash = false;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
 
-		// 状態復帰（地上/空中で適切に戻す）
-		if (g_Player3D.isGround)
-		{
-			g_Player3D.state = Player3D_HasMoveInput() ? PLAYER_STATE_MOVE : PLAYER_STATE_IDLE;
-		}
-		else
-		{
-			g_Player3D.state = PLAYER_STATE_FALL;
-		}
 	}
 }
 
@@ -540,85 +533,13 @@ XMFLOAT3 Player3D_GetTriggerHalfSize()
 	return g_TriggerHalfSize;
 }
 
-//=========================================================================================================
-// 追加: 状態管理のためのヘルパー
-//=========================================================================================================
-static bool Player3D_HasMoveInput()
+
+void Player3D_Idle()
 {
-	if (!gPad.IsConnected())
+	if (IsInputPress(UpKey, gPad)|| IsInputPress(RightKey, gPad) || IsInputPress(DownKey, gPad) || IsInputPress(LeftKey, gPad))
 	{
-		if (Keyboard_IsKeyDown(KK_W)) return true;
-		if (Keyboard_IsKeyDown(KK_S)) return true;
-		if (Keyboard_IsKeyDown(KK_A)) return true;
-		if (Keyboard_IsKeyDown(KK_D)) return true;
-		return false;
+		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
-	else
-	{
-		float lx = gPad.GetLeftStickX();
-		float ly = gPad.GetLeftStickY();
-		const float deadzone = 0.20f;
-		return (fabsf(lx) >= deadzone) || (fabsf(ly) >= deadzone);
-	}
-}
-
-static void Player3D_HandleStateTransitions()
-{
-	// ジャンプ開始（地上で入力があればJUMPへ）
-	if (g_Player3D.isGround && IsInputPress(JumpKey, gPad))
-	{
-		g_Player3D.state = PLAYER_STATE_JUMP;
-	}
-
-	// DASH開始（IDLE/MOVE時に入力があればDASHへ）
-	if ((g_Player3D.state == PLAYER_STATE_IDLE || g_Player3D.state == PLAYER_STATE_MOVE) && IsInputPress(DashKey, gPad))
-	{
-		g_Player3D.state = PLAYER_STATE_DASH;
-	}
-
-	// 着地時の復帰
-	if (g_Player3D.isGround)
-	{
-		// FALL/JUMPから地上へ戻ったら入力有無でIDLE/MOVEへ
-		if (g_Player3D.state == PLAYER_STATE_FALL || g_Player3D.state == PLAYER_STATE_JUMP)
-		{
-			g_Player3D.state = Player3D_HasMoveInput() ? PLAYER_STATE_MOVE : PLAYER_STATE_IDLE;
-		}
-
-		// IDLE中に入力が来たらMOVEへ
-		if (g_Player3D.state == PLAYER_STATE_IDLE && Player3D_HasMoveInput())
-		{
-			g_Player3D.state = PLAYER_STATE_MOVE;
-		}
-	}
-	else
-	{
-		// 空中で下降中ならFALLへ（JUMP直後の上昇中は除く）
-		if (g_Player3D.Velocity.y <= 0.0f && g_Player3D.state != PLAYER_STATE_JUMP)
-		{
-			g_Player3D.state = PLAYER_STATE_FALL;
-		}
-	}
-
-	// DASH中で入力が離れたら解除（詳細は Player3D_Dash() 内でも保険）
-	if (g_Player3D.state == PLAYER_STATE_DASH && !IsInputPress(DashKey, gPad))
-	{
-		g_Player3D.isDash = false;
-		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
-
-		if (g_Player3D.isGround)
-		{
-			g_Player3D.state = Player3D_HasMoveInput() ? PLAYER_STATE_MOVE : PLAYER_STATE_IDLE;
-		}
-		else
-		{
-			g_Player3D.state = PLAYER_STATE_FALL;
-		}
-	}
-}
-
-static void Player3D_Idle()
-{
 	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 
 	// 横方向は緩やかに減速
