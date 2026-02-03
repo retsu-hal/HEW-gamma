@@ -8,7 +8,7 @@
 #include"Collision.h"
 
 #include "debug.h"
-static bool debugMode = TRUE;
+static bool debugMode;
 
 LightSource g_Light;
 

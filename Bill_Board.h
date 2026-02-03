@@ -7,5 +7,5 @@ using namespace DirectX;
 void InitializeBillBoard();
 void FinalizeBillBoard();
 void DrawBillBoard(XMFLOAT3 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);
-ID3D11ShaderResourceView* GetBillBoardTexture();
+//ID3D11ShaderResourceView* GetBillBoardTexture();
 

@@ -3,10 +3,10 @@
 
 #include <d3d11.h>
 #include <DirectXMath.h>
+using namespace DirectX;
 #include"direct3d.h"
 #include"sprite.h"
 #include"shader.h"
-using namespace DirectX;
 #include"field.h"
 #include"player3D.h"
 #include "ShadowColliderBox.h"
@@ -106,7 +106,10 @@ struct ShadowDebugOptions
 
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options);
 
+bool Player2DShadow_BlockMoveAtContact(float skin = 0.02f);
 bool Player2DShadow_Collision();
+bool Player2DShadow_TopContact();
+
 
 
 

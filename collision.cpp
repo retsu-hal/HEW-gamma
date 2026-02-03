@@ -5,14 +5,13 @@
 #include "Player2D.h"
 #include "debug.h"
 #include "MathUtil.h"
-
 #include <vector>
 
 
 using namespace DirectX;
 using namespace mu;
 
-static bool debugMode = TRUE;
+static bool debugMode;
 
 static std::vector<const ShadowPrism*> g_ShadowPrisms;
 static ShadowDebugOptions g_ShadowDebugOpts;
@@ -29,7 +28,7 @@ struct ExtraDebugBox
 static std::vector<ExtraDebugBox> g_ExtraBoxes;
 
 //=========================================================================================================
-// ボールとフィールドの当たり判定
+// �{�[���ƃt�B�[���h�̓����蔻��
 //=========================================================================================================
 
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms)
@@ -61,17 +60,21 @@ static ImU32 MakeColor(unsigned char r, unsigned char g, unsigned char b, unsign
 	return ((ImU32)a << 24) | ((ImU32)b << 16) | ((ImU32)g << 8) | (ImU32)r;
 }
 
-// ボックスの半分のサイズを取得
+// �{�b�N�X�̔����̃T�C�Y���擾
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
+	if (m.useCustomCollider)
+	{
+		return m.colliderHalf;
+	}
 	return XMFLOAT3{
-	BOX_RADIUS * m.scale.x,
-	BOX_RADIUS * m.scale.y,
-	BOX_RADIUS * m.scale.z
+		BOX_RADIUS * m.scale.x,
+		BOX_RADIUS * m.scale.y,
+		BOX_RADIUS * m.scale.z
 	};
 }
 
-// ワールド座標をスクリーン座標に変換
+// ���[���h���W���X�N���[�����W�ɕϊ�
 struct ScreenPt { ImVec2 pos; bool valid; };
 static ScreenPt WorldToScreen(const XMFLOAT3& p)
 {
@@ -102,7 +105,7 @@ static ScreenPt WorldToScreen(const XMFLOAT3& p)
 	return out;
 }
 
-// 3Dラインを描画
+// 3D���C����`��
 static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick = 1.0f)
 {
 	ScreenPt sa = WorldToScreen(a);
@@ -110,7 +113,7 @@ static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float th
 	if (sa.valid && sb.valid)
 		ImGui::GetBackgroundDrawList()->AddLine(sa.pos, sb.pos, col, thick);
 }
-// 3Dポイントを描画
+// 3D�|�C���g��`��
 static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
 {
 	ScreenPt sp = WorldToScreen(p);
@@ -119,7 +122,7 @@ static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
 }
 
 
-// AABBを描画
+// AABB��`��
 static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 {
 	XMFLOAT3 corners[8] = {
@@ -137,7 +140,7 @@ static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
-// OBBをYaw回転で描画
+// OBB��Yaw��]�ŕ`��
 static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg, ImU32 col)
 {
 	float yaw = XMConvertToRadians(yawDeg);
@@ -159,7 +162,7 @@ static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg,
 		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
-// 楕円体を描画
+// �ȉ~�̂�`��
 static void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, int seg = 24)
 {
 	const float PI2 = 6.28318530718f;
@@ -227,7 +230,7 @@ static void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOpti
 }
 
 
-// プレイヤーの固体コライダー中心を取得
+// �v���C���[�̌ő̃R���C�_�[���S���擾
 static XMFLOAT3 GetPlayerSolidCollider()
 {
 	PLAYER* p = GetPlayer3D();
@@ -235,7 +238,7 @@ static XMFLOAT3 GetPlayerSolidCollider()
 	c.y += Player3D_GetSolidHalfSize().y;
 	return c;
 }
-// プレイヤー2Dの固体コライダー中心を取得
+// �v���C���[2D�̌ő̃R���C�_�[���S���擾
 static XMFLOAT3 GetPlayer2DSolidCollider()
 {
 	PLAYER* p = GetPlayer2D();
@@ -243,7 +246,7 @@ static XMFLOAT3 GetPlayer2DSolidCollider()
 	c.y += Player2D_GetSolidHalfSize().y + 0.1f;
 	return c;
 }
-// プレイヤーのトリガーコライダー中心を取得
+// �v���C���[�̃g���K�[�R���C�_�[���S���擾
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
 	PLAYER* p = GetPlayer3D();
@@ -252,7 +255,7 @@ static XMFLOAT3 GetPlayerTriggerCollider()
 	return c;
 }
 
-// フィールドが固体かどうかを取得
+// �t�B�[���h���ő̂��ǂ������擾
 static bool Field_IsSolid(FIELD t)
 {
 	switch (t)
@@ -262,12 +265,15 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_OBJ_BOX:
 	case FIELD_EMPTY_BOX:
 	case FIELD_OBJ_1:
+	case FIELD_SEESAW_1:
+	case FIELD_SEESAW_2:
 	case FIELD_OBJ_2:
 		return true;
 	default:
 		return false;
 	}
 }
+// �t�B�[���h���g���K�[���ǂ������擾
 //For debug only
 // フィールドがトリガーかどうかを取得
 static bool Field_IsTrigger(FIELD t)
@@ -282,7 +288,7 @@ static bool Field_IsTrigger(FIELD t)
 	}
 }
 
-// OBB vs OBB 解算（Yaw回転のみ対応）
+// OBB vs OBB ���Z�iYaw��]�̂ݑΉ��j
 static bool OBB_Intersect_Yaw(
 	const XMFLOAT3& cA, const XMFLOAT3& hA, float yawA,
 	const XMFLOAT3& cB, const XMFLOAT3& hB, float yawB)
@@ -318,7 +324,7 @@ static bool OBB_Intersect_Yaw(
 	return true;
 }
 
-// 楕円体 vs OBB 解算（Yaw回転のみ対応）
+// �ȉ~�� vs OBB ���Z�iYaw��]�̂ݑΉ��j
 static bool Resolve_Ellipsoid_OBB_Yaw(
 	const XMFLOAT3& ellC, const XMFLOAT3& ellR,
 	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYaw,
@@ -378,7 +384,7 @@ static bool Resolve_Ellipsoid_OBB_Yaw(
 	return true;
 }
 
-// トリガーが当たった面を計算（Player3d Yaw基準）
+// �g���K�[�����������ʂ��v�Z�iPlayer3d Yaw��j
 static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
 {
 	PLAYER* p = GetPlayer3D();
@@ -407,7 +413,7 @@ void Collision_DebugClearExtraBoxes()
 {
 	g_ExtraBoxes.clear();
 }
-// AABBをデバッグ描画リストに追加
+// AABB���f�o�b�O�`�惊�X�g�ɒǉ�
 void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
 	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -418,7 +424,7 @@ void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
 	box.color = MakeColor(r, g, b, a);
 	g_ExtraBoxes.push_back(box);
 }
-// OBBをデバッグ描画リストに追加
+// OBB���f�o�b�O�`�惊�X�g�ɒǉ�
 void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFLOAT3& rot,
 	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -432,21 +438,21 @@ void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFL
 }
 
 bool Resolve_OBB_OBB_ZY(
-	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // プレイヤー（Z回転）
-	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // フィールド（Y回転）
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // �v���C���[�iZ��]�j
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // �t�B�[���h�iY��]�j
 	XMFLOAT3* outPush, XMFLOAT3* outNorm)
 {
-	// プレイヤーのZ回転行列（2D平面での回転）
+	// �v���C���[��Z��]�s��i2D���ʂł̉�]�j
 	XMMATRIX rotMatA = XMMatrixRotationZ(rotZRadA);
 
-	// フィールドのY回転行列
+	// �t�B�[���h��Y��]�s��
 	float rotYRadB = XMConvertToRadians(rotYDegB);
 	XMMATRIX rotMatB = XMMatrixRotationY(rotYRadB);
 
-	// 各OBBのローカル軸を取得
+	// �eOBB�̃��[�J�������擾
 	XMFLOAT3 axesA[3], axesB[3];
 
-	// プレイヤーの軸（Z回転）
+	// �v���C���[�̎��iZ��]�j
 	XMVECTOR axA0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatA);
 	XMVECTOR axA1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatA);
 	XMVECTOR axA2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatA);
@@ -454,7 +460,7 @@ bool Resolve_OBB_OBB_ZY(
 	XMStoreFloat3(&axesA[1], axA1);
 	XMStoreFloat3(&axesA[2], axA2);
 
-	// フィールドの軸（Y回転）
+	// �t�B�[���h�̎��iY��]�j
 	XMVECTOR axB0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatB);
 	XMVECTOR axB1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatB);
 	XMVECTOR axB2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatB);
@@ -462,7 +468,7 @@ bool Resolve_OBB_OBB_ZY(
 	XMStoreFloat3(&axesB[1], axB1);
 	XMStoreFloat3(&axesB[2], axB2);
 
-	// 中心間ベクトル
+	// ���S�ԃx�N�g��
 	XMVECTOR vD = XMVectorSet(posA.x - posB.x, posA.y - posB.y, posA.z - posB.z, 0);
 
 	float halfExtA[3] = { halfA.x, halfA.y, halfA.z };
@@ -471,15 +477,15 @@ bool Resolve_OBB_OBB_ZY(
 	float minPen = FLT_MAX;
 	XMFLOAT3 minAxis = { 0, 1, 0 };
 
-	// 15軸のSAT判定
+	// 15����SAT����
 	auto TestAxis = [&](XMVECTOR axis) -> bool
 		{
 			float len = XMVectorGetX(XMVector3Length(axis));
-			if (len < 1e-6f) return true;  // 平行な軸はスキップ
+			if (len < 1e-6f) return true;  // ���s�Ȏ��̓X�L�b�v
 
 			axis = XMVector3Normalize(axis);
 
-			// 各OBBの投影半径
+			// �eOBB�̓��e���a
 			float rA = 0, rB = 0;
 			for (int i = 0; i < 3; i++)
 			{
@@ -495,7 +501,7 @@ bool Resolve_OBB_OBB_ZY(
 			float dist = fabsf(XMVectorGetX(XMVector3Dot(vD, axis)));
 			float pen = (rA + rB) - dist;
 
-			if (pen < 0) return false;  // 分離軸発見 → 衝突なし
+			if (pen < 0) return false;  // ���������� �� �Փ˂Ȃ�
 
 			if (pen < minPen)
 			{
@@ -505,17 +511,17 @@ bool Resolve_OBB_OBB_ZY(
 			return true;
 		};
 
-	// A の3軸
+	// A ��3��
 	if (!TestAxis(axA0)) return false;
 	if (!TestAxis(axA1)) return false;
 	if (!TestAxis(axA2)) return false;
 
-	// B の3軸
+	// B ��3��
 	if (!TestAxis(axB0)) return false;
 	if (!TestAxis(axB1)) return false;
 	if (!TestAxis(axB2)) return false;
 
-	// 外積軸（9軸）
+	// �O�ώ��i9���j
 	if (!TestAxis(XMVector3Cross(axA0, axB0))) return false;
 	if (!TestAxis(XMVector3Cross(axA0, axB1))) return false;
 	if (!TestAxis(XMVector3Cross(axA0, axB2))) return false;
@@ -526,7 +532,7 @@ bool Resolve_OBB_OBB_ZY(
 	if (!TestAxis(XMVector3Cross(axA2, axB1))) return false;
 	if (!TestAxis(XMVector3Cross(axA2, axB2))) return false;
 
-	// 押し出し方向を決定（AをBから離す方向）
+	// �����o������������iA��B���痣�������j
 	XMVECTOR normAxis = XMLoadFloat3(&minAxis);
 	if (XMVectorGetX(XMVector3Dot(vD, normAxis)) < 0)
 	{
@@ -549,23 +555,23 @@ bool OBB_Intersect_ZY(
 }
 
 //=========================================================================================================
-// 2D用トリガー方向判定（プレイヤーの回転を考慮）
+// 2D�p�g���K�[��������i�v���C���[�̉�]���l���j
 //=========================================================================================================
 static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRotZ, const XMFLOAT3& triggerPos)
 {
-	// プレイヤーからトリガーへのベクトル
+	// �v���C���[����g���K�[�ւ̃x�N�g��
 	float dx = triggerPos.x - playerPos.x;
 	float dy = triggerPos.y - playerPos.y;
 
-	// プレイヤーの回転を考慮してローカル座標に変換
+	// �v���C���[�̉�]���l�����ă��[�J�����W�ɕϊ�
 	float radZ = XMConvertToRadians(playerRotZ);
-	float cosZ = cosf(-radZ);  // 逆回転でローカル座標へ
+	float cosZ = cosf(-radZ);  // �t��]�Ń��[�J�����W��
 	float sinZ = sinf(-radZ);
 
 	float localX = dx * cosZ - dy * sinZ;
 	float localY = dx * sinZ + dy * cosZ;
 
-	// ローカル座標での方向判定
+	// ���[�J�����W�ł̕�������
 	if (fabsf(localX) > fabsf(localY))
 	{
 		return (localX > 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
@@ -577,7 +583,7 @@ static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRot
 }
 
 
-// プレイヤー3Dとフィールドの当たり判定
+// �v���C���[3D�ƃt�B�[���h�̓����蔻��
 int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
@@ -594,9 +600,13 @@ int Player3DField_Collision()
 	{
 		if (!Field_IsSolid(map[i].no)) continue;
 
+		// �� �������ΰ�壬��������
+		if (map[i].no == FIELD_SEESAW_2) continue;
+
 		float boxYaw = (map[i].no == FIELD_OBJ_1) ? map[i].rotate.y : 0.0f;
 
 		XMFLOAT3 push, norm;
+		// �� ʹ����ײ��ߴ�
 		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, map[i].pos,
 			Field_GetHalfSize(map[i]), boxYaw, &push, &norm))
 			continue;
@@ -640,14 +650,14 @@ int Player2DField_Collision()
 	player->isGround = false;
 	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
 
-	// 2Dプレイヤーの当たり判定中心（足元基準から中心基準へ変換）
+	// 2D�v���C���[�̓����蔻�蒆�S�i��������璆�S��֕ϊ��j
 	XMFLOAT3 colliderCenter = XMFLOAT3(
 		player->Position.x,
 		player->Position.y + halfSize.y,
 		player->Position.z
 	);
 
-	// プレイヤーのZ軸回転角度（度→ラジアン）
+	// �v���C���[��Z����]�p�x�i�x�����W�A���j
 	float playerZRot = XMConvertToRadians(player->Rotation.z);
 
 	for (size_t i = 0; i < map.size(); ++i)
@@ -656,10 +666,10 @@ int Player2DField_Collision()
 
 		XMFLOAT3 push, norm;
 
-		// OBB vs OBB（プレイヤーはZ回転、フィールドはY回転）
+		// OBB vs OBB�i�v���C���[��Z��]�A�t�B�[���h��Y��]�j
 		if (!Resolve_OBB_OBB_ZY(
-			colliderCenter, halfSize, playerZRot,      // プレイヤー（Z回転）
-			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // フィールド（Y回転）
+			colliderCenter, halfSize, playerZRot,      // �v���C���[�iZ��]�j
+			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // �t�B�[���h�iY��]�j
 			&push, &norm))
 			continue;
 
@@ -673,7 +683,7 @@ int Player2DField_Collision()
 
 		if (ay >= ax && ay >= az)
 		{
-			// 上下の衝突
+			// �㉺�̏Փ�
 			if (norm.y > 0)
 			{
 				player->isGround = true;
@@ -687,19 +697,19 @@ int Player2DField_Collision()
 		}
 		else if (ax >= az)
 		{
-			// 左右の壁衝突
+			// ���E�̕ǏՓ�
 			player->Velocity.x = 0;
 			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
 		}
 		else
 		{
-			// 前後の壁衝突
+			// �O��̕ǏՓ�
 			player->Velocity.z = 0;
 			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
 		}
 	}
 
-	// 中心座標から足元座標へ戻す
+	// ���S���W���瑫�����W�֖߂�
 	player->Position.x = colliderCenter.x;
 	player->Position.y = colliderCenter.y - halfSize.y;
 	player->Position.z = colliderCenter.z;
@@ -709,7 +719,7 @@ int Player2DField_Collision()
 
 
 
-// プレイヤーのトリガー当たり判定
+// �v���C���[�̃g���K�[�����蔻��
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
@@ -794,7 +804,7 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 		tHalf.y += extraRange;
 		tHalf.z += extraRange;
 
-		// OBB vs OBB 交差判定
+		// OBB vs OBB ��������
 		if (!OBB_Intersect_ZY(pC, pHalf, pZRot,
 			map[i].pos, tHalf, map[i].rotate.y))
 			continue;
@@ -821,7 +831,7 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 
 
 //=========================================================================================================
-// 点がプリズム内にあるかチェック（2D多角形判定）
+// �_���v���Y�����ɂ��邩�`�F�b�N�i2D���p�`����j
 //=========================================================================================================
 static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& poly)
 {
@@ -845,9 +855,271 @@ static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& po
 }
 
 //=========================================================================================================
-// プレイヤー2Dと影プリズムの当たり判定
+// �v���C���[2D�Ɖe�v���Y���̓����蔻��
 //=========================================================================================================
+static float DotXZ(const XMFLOAT3& a, const XMFLOAT3& b)
+{
+	return a.x * b.x + a.z * b.z;
+}
+
+static float ProjectRadiusOnAxis_Yaw(const XMFLOAT3& axis, const XMFLOAT3& half, float yawDeg)
+{
+	const float yaw = XMConvertToRadians(yawDeg);
+	const XMFLOAT3 right = { cosf(yaw), 0.0f, -sinf(yaw) };
+	const XMFLOAT3 fwd = { sinf(yaw), 0.0f,  cosf(yaw) };
+	const XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
+
+	return fabsf(Dot(axis, right)) * half.x
+		+ fabsf(Dot(axis, up)) * half.y
+		+ fabsf(Dot(axis, fwd)) * half.z;
+}
+
+
 bool Player2DShadow_Collision()
+{
+	PLAYER* player = GetPlayer2D();
+	if (!player) return false;
+
+	const std::vector<const ShadowPrism*>& prisms = Collision_GetShadowPrisms();
+	if (prisms.empty()) return false;
+
+	const XMFLOAT3 half = Player2D_GetSolidHalfSize();
+
+	const float skin = 0.01f;
+	const float eps = 1e-6f;
+	const float hitEps = 1e-4f;
+
+	XMFLOAT3 dXZ = { player->Velocity.x, 0.0f, player->Velocity.z };
+
+	bool hitAny = false;
+
+	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float
+		{
+			float a = 0.0f;
+			const int n = (int)p.size();
+			for (int i = 0, j = n - 1; i < n; j = i++)
+				a += p[j].x * p[i].y - p[i].x * p[j].y;
+			return a;
+		};
+
+	auto Dot2 = [](const XMFLOAT2& a, const XMFLOAT2& b) -> float { return a.x * b.x + a.y * b.y; };
+	auto Sub2 = [](const XMFLOAT2& a, const XMFLOAT2& b) -> XMFLOAT2 { return { a.x - b.x, a.y - b.y }; };
+	auto Len2 = [](const XMFLOAT2& v) -> float { return sqrtf(v.x * v.x + v.y * v.y); };
+
+	auto SweepEnterExpanded = [&](const ShadowPrism* prism,
+		const std::vector<XMFLOAT2>& polyCCW,
+		const XMFLOAT2& p0,
+		const XMFLOAT2& dp,
+		float yawDeg,
+		float* outEnterT) -> bool
+		{
+			const int n = (int)polyCCW.size();
+			float tEnter = 0.0f;
+			float tExit = 1.0f;
+
+			for (int i = 0; i < n; ++i)
+			{
+				const XMFLOAT2 a = polyCCW[i];
+				const XMFLOAT2 b = polyCCW[(i + 1) % n];
+				const XMFLOAT2 e = { b.x - a.x, b.y - a.y };
+
+				XMFLOAT2 nIn = { -e.y, e.x };
+				float nl = Len2(nIn);
+				if (nl < 1e-6f) continue;
+				nIn.x /= nl; nIn.y /= nl;
+
+				const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
+				const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, yawDeg) + skin;
+
+				const float s0 = Dot2(nIn, Sub2(p0, a));
+				const float sv = Dot2(nIn, dp);
+
+				if (fabsf(sv) < 1e-6f)
+				{
+					if (s0 < -rEdge) return false;
+					continue;
+				}
+
+				const float t = (-rEdge - s0) / sv;
+
+				if (sv > 0.0f)
+				{
+					if (t > tEnter) tEnter = t;
+				}
+				else
+				{
+					if (t < tExit) tExit = t;
+				}
+
+				if (tEnter > tExit) return false;
+			}
+
+			if (outEnterT) *outEnterT = tEnter;
+			return true;
+		};
+
+	auto GetCenter = [&]() -> XMFLOAT3
+		{
+			return { player->Position.x, player->Position.y + half.y, player->Position.z };
+		};
+
+	for (const ShadowPrism* prism : prisms)
+	{
+		if (!prism || !prism->isValid) continue;
+		if (prism->poly.size() < 3) continue;
+
+		const float moveLen = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
+		const float gate = half.x + half.z + moveLen + 0.10f;
+		const XMFLOAT3 cW0 = GetCenter();
+		if (cW0.x < prism->aabbMin.x - gate || cW0.x > prism->aabbMax.x + gate ||
+			cW0.z < prism->aabbMin.z - gate || cW0.z > prism->aabbMax.z + gate)
+		{
+			continue;
+		}
+
+		std::vector<XMFLOAT2> poly = prism->poly;
+		if (Area2(poly) < 0.0f)
+			std::reverse(poly.begin(), poly.end());
+
+		const XMFLOAT3 cW = GetCenter();
+		const XMFLOAT3 rel = cW - prism->origin;
+		const float u0 = Dot(rel, prism->u);
+		const float v0 = Dot(rel, prism->v);
+		const float n0 = Dot(rel, prism->n);
+		const XMFLOAT2 p0 = { u0, v0 };
+
+		const float rN = ProjectRadiusOnAxis_Yaw(prism->n, half, player->Rotation.y);
+		const bool overlapN = (n0 >= -rN) && (n0 <= prism->thickness + rN);
+
+		if (prism->n.y > 0.7f)
+		{
+			const bool insideFoot = PointInPolygon2D(p0.x, p0.y, poly);
+
+			const float bottomN = n0 - rN;
+
+			if (insideFoot && player->Velocity.y <= 0.0f)
+			{
+				const float targetBottomN = prism->thickness;
+				const float distToTop = bottomN - targetBottomN;
+
+				if (distToTop <= 0.05f && distToTop >= -0.25f)
+				{
+					player->Position = player->Position - prism->n * distToTop;
+
+					const float vN = Dot(player->Velocity, prism->n);
+					if (vN < 0.0f)
+						player->Velocity = player->Velocity - prism->n * vN;
+
+					player->isGround = true;
+					hitAny = true;
+				}
+			}
+		}
+
+		if (!overlapN) continue;
+
+		{
+			const float bottomN = n0 - rN;
+			if (prism->n.y > 0.7f && bottomN >= prism->thickness - 0.02f)
+				continue;
+		}
+
+		if (moveLen < eps) continue;
+
+		XMFLOAT2 dp = { DotXZ(dXZ, prism->u), DotXZ(dXZ, prism->v) };
+		if (fabsf(dp.x) + fabsf(dp.y) < 1e-7f) continue;
+
+		bool insideExp0 = true;
+		for (int i = 0; i < (int)poly.size(); ++i)
+		{
+			const XMFLOAT2 a = poly[i];
+			const XMFLOAT2 b = poly[(i + 1) % (int)poly.size()];
+			const XMFLOAT2 e = { b.x - a.x, b.y - a.y };
+
+			XMFLOAT2 nIn = { -e.y, e.x };
+			float nl = Len2(nIn);
+			if (nl < 1e-6f) continue;
+			nIn.x /= nl; nIn.y /= nl;
+
+			const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
+			const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, player->Rotation.y) + skin;
+
+			const float s0 = Dot2(nIn, Sub2(p0, a));
+			if (s0 < -rEdge) { insideExp0 = false; break; }
+		}
+
+		if (!insideExp0)
+		{
+			float tEnter = 0.0f;
+			if (SweepEnterExpanded(prism, poly, p0, dp, player->Rotation.y, &tEnter))
+			{
+				if (tEnter <= 1.0f && tEnter >= 0.0f)
+				{
+					if (tEnter < 1.0f)
+					{
+						const float tStop = (std::max)(0.0f, (std::min)(1.0f, tEnter - hitEps));
+						dXZ.x *= tStop;
+						dXZ.z *= tStop;
+						hitAny = true;
+					}
+				}
+			}
+		}
+		else
+		{
+			for (int pass = 0; pass < 2; ++pass)
+			{
+				XMFLOAT2 dpNow = { DotXZ(dXZ, prism->u), DotXZ(dXZ, prism->v) };
+				if (fabsf(dpNow.x) + fabsf(dpNow.y) < 1e-7f) break;
+
+				bool changed = false;
+				for (int i = 0; i < (int)poly.size(); ++i)
+				{
+					const XMFLOAT2 a = poly[i];
+					const XMFLOAT2 b = poly[(i + 1) % (int)poly.size()];
+					const XMFLOAT2 e = { b.x - a.x, b.y - a.y };
+
+					XMFLOAT2 nIn = { -e.y, e.x };
+					float nl = Len2(nIn);
+					if (nl < 1e-6f) continue;
+					nIn.x /= nl; nIn.y /= nl;
+
+					const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
+					const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, player->Rotation.y) + skin;
+
+					const float s0 = Dot2(nIn, Sub2(p0, a));
+					const float slack = s0 + rEdge;
+
+					if (slack > 0.03f) continue;
+
+					const float vIn = Dot2(nIn, dpNow);
+					if (vIn <= 0.0f) continue;
+
+					XMFLOAT3 axisXZ = { axisW.x, 0.0f, axisW.z };
+					const float len2xz = axisXZ.x * axisXZ.x + axisXZ.z * axisXZ.z;
+					if (len2xz < 1e-6f) continue;
+
+					const float proj = (dXZ.x * axisXZ.x + dXZ.z * axisXZ.z) / len2xz;
+					if (proj > 0.0f)
+					{
+						dXZ.x -= axisXZ.x * proj;
+						dXZ.z -= axisXZ.z * proj;
+						changed = true;
+						hitAny = true;
+					}
+				}
+				if (!changed) break;
+			}
+		}
+	}
+
+	player->Velocity.x = dXZ.x;
+	player->Velocity.z = dXZ.z;
+
+	return hitAny;
+}
+
+bool Player2DShadow_TopContact()
 {
 	PLAYER* player = GetPlayer2D();
 	if (!player) return false;
@@ -859,14 +1131,14 @@ bool Player2DShadow_Collision()
 
 	bool hitAny = false;
 
-	// 複数回の反復で安定させる
 	const int maxIterations = 4;
 
 	for (int iter = 0; iter < maxIterations; iter++)
 	{
 		bool hitThisIter = false;
 
-		// プレイヤーの中心位置（毎回更新）
+		float footY = player->Position.y;
+
 		XMFLOAT3 playerCenter = XMFLOAT3(
 			player->Position.x,
 			player->Position.y + halfSize.y,
@@ -878,122 +1150,74 @@ bool Player2DShadow_Collision()
 			if (!prism || !prism->isValid) continue;
 			if (prism->poly.size() < 3) continue;
 
-			// AABB早期キャンセル
 			float margin = halfSize.x + 0.1f;
-			if (playerCenter.x < prism->aabbMin.x - margin ||
-				playerCenter.x > prism->aabbMax.x + margin ||
-				playerCenter.y < prism->aabbMin.y - halfSize.y - margin ||
-				playerCenter.y > prism->aabbMax.y + margin ||
-				playerCenter.z < prism->aabbMin.z - margin ||
-				playerCenter.z > prism->aabbMax.z + margin)
+			if (
+				footY > prism->aabbMax.y + margin ||
+				footY + halfSize.y * 2.0f < prism->aabbMin.y - margin 
+				)
 			{
 				continue;
 			}
 
-			// プレイヤー位置をプリズムのローカル座標に変換
-			XMFLOAT3 rel = playerCenter - prism->origin;
-			float localU = Dot(rel, prism->u);
-			float localV = Dot(rel, prism->v);
-			float localN = Dot(rel, prism->n);
+			float shadowTopY = prism->aabbMax.y;
 
-			// プリズムのU-V範囲を計算
-			float minU = FLT_MAX, maxU = -FLT_MAX;
+			bool inXZRange = (playerCenter.x >= prism->aabbMin.x - halfSize.x &&
+				playerCenter.x <= prism->aabbMax.x + halfSize.x &&
+				playerCenter.z >= prism->aabbMin.z - halfSize.z &&
+				playerCenter.z <= prism->aabbMax.z + halfSize.z);
+
+			if (!inXZRange) continue;
+
+			float footToShadowTop = footY - shadowTopY;
+
+			if (footToShadowTop >= -halfSize.y && footToShadowTop <= 0.1f)
+			{
+
+				if (player->Velocity.y <= 0.01f)
+				{
+					player->Position.y = shadowTopY;
+
+					player->Velocity.y = 0.0f;
+
+					player->isGround = true;
+
+					hitThisIter = true;
+					hitAny = true;
+					continue;
+				}
+			}
+
+			XMFLOAT3 rel = playerCenter - prism->origin;
+			float localV = Dot(rel, prism->v);
+
 			float minV = FLT_MAX, maxV = -FLT_MAX;
 			for (const auto& p : prism->poly)
 			{
-				minU = (std::min)(minU, p.x);
-				maxU = (std::max)(maxU, p.x);
 				minV = (std::min)(minV, p.y);
 				maxV = (std::max)(maxV, p.y);
 			}
 
-			// プレイヤーの半径
-			float playerRadiusU = halfSize.x;
 			float playerRadiusV = halfSize.y;
-			float playerRadiusN = halfSize.z;
 
-			// 各方向の侵入量を計算
-			float penU_pos = (maxU + playerRadiusU) - localU;
-			float penU_neg = localU - (minU - playerRadiusU);
-			float penV_pos = (maxV + playerRadiusV) - localV;
 			float penV_neg = localV - (minV - playerRadiusV);
-			float penN_pos = (prism->thickness + playerRadiusN) - localN;
-			float penN_neg = localN + playerRadiusN;
 
-			// 全方向で侵入しているかチェック
-			if (penU_pos <= 0 || penU_neg <= 0 ||
-				penV_pos <= 0 || penV_neg <= 0 ||
-				penN_pos <= 0 || penN_neg <= 0)
-			{
-				continue;
-			}
-
-			// 最小侵入量の方向を見つける
 			float minPen = FLT_MAX;
-			int pushDir = 0;
 
-			if (penU_pos < minPen) { minPen = penU_pos; pushDir = 1; }
-			if (penU_neg < minPen) { minPen = penU_neg; pushDir = 2; }
-			if (penV_pos < minPen) { minPen = penV_pos; pushDir = 3; }
-			if (penV_neg < minPen) { minPen = penV_neg; pushDir = 4; }
-			if (penN_pos < minPen) { minPen = penN_pos; pushDir = 5; }
-			if (penN_neg < minPen) { minPen = penN_neg; pushDir = 6; }
+			if (penV_neg < minPen) { minPen = penV_neg;}
+			if (minPen <= 0.001f) continue;
 
-			if (pushDir == 0 || minPen <= 0.001f) continue;
-
-			// 押し出しベクトルを計算
-			XMFLOAT3 pushDir3 = { 0, 0, 0 };
-			bool isGroundHit = false;
-
-			switch (pushDir)
+			float targetLocalV = minV - playerRadiusV;
+			float deltaV = targetLocalV - localV;
+			player->Position.y += prism->v.y * deltaV;
+			if (player->Velocity.y > 0)
 			{
-			case 1:  // +U方向に押し出し
-				pushDir3 = prism->u;
-				break;
-			case 2:  // -U方向に押し出し
-				pushDir3 = { -prism->u.x, -prism->u.y, -prism->u.z };
-				break;
-			case 3:  // +V方向に押し出し（上方向＝着地の可能性）
-				pushDir3 = prism->v;
-				if (prism->v.y > 0.5f) isGroundHit = true;
-				break;
-			case 4:  // -V方向に押し出し（下から頭をぶつけた）
-				pushDir3 = { -prism->v.x, -prism->v.y, -prism->v.z };
-				break;
-			case 5:  // +N方向に押し出し
-				pushDir3 = prism->n;
-				if (prism->n.y > 0.5f) isGroundHit = true;
-				break;
-			case 6:  // -N方向に押し出し
-				pushDir3 = { -prism->n.x, -prism->n.y, -prism->n.z };
-				break;
-			}
-
-			// 押し出しを適用
-			player->Position.x += pushDir3.x * minPen;
-			player->Position.y += pushDir3.y * minPen;
-			player->Position.z += pushDir3.z * minPen;
-
-			// 速度の該当成分を停止
-			float velDot = Dot(player->Velocity, pushDir3);
-			if (velDot < 0)  // 衝突方向に向かっている場合のみ停止
-			{
-				player->Velocity.x -= velDot * pushDir3.x;
-				player->Velocity.y -= velDot * pushDir3.y;
-				player->Velocity.z -= velDot * pushDir3.z;
-			}
-
-			// 接地判定
-			if (isGroundHit && player->Velocity.y <= 0.01f)
-			{
-				player->isGround = true;
+				player->Velocity.y = 0.0f;
 			}
 
 			hitThisIter = true;
 			hitAny = true;
 		}
 
-		// この反復で衝突がなければ終了
 		if (!hitThisIter) break;
 	}
 
@@ -1001,11 +1225,10 @@ bool Player2DShadow_Collision()
 }
 
 
-
-// デバッグ描画
+// �f�o�b�O�`��
 void Collision_DebugDraw()
 {
-	// 3Dプレイヤーコライダー
+	// 3D�v���C���[�R���C�_�[
 	PLAYER* player3D = GetPlayer3D();
 	if (player3D)
 	{
@@ -1017,7 +1240,7 @@ void Collision_DebugDraw()
 		XMFLOAT3 tH = Player3D_GetTriggerHalfSize();
 		DebugDrawOBB_Yaw(tC, tH, player3D->Rotation.y, IM_COL32(255, 255, 255, 255));
 	}
-	// 2Dプレイヤーコライダー
+	// 2D�v���C���[�R���C�_�[
 	PLAYER* player2D = GetPlayer2D();
 	if (player2D)
 	{
@@ -1026,7 +1249,7 @@ void Collision_DebugDraw()
 		DebugDrawOBB_Yaw(pC, pH, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));
 	}
 
-	// フィールドトリガー
+	// �t�B�[���h�g���K�[
 	std::vector<MAPDATA>& map = GetFieldMap();
 	if (player3D && !map.empty())
 	{
@@ -1035,14 +1258,14 @@ void Collision_DebugDraw()
 
 		for (size_t i = 0; i < map.size(); ++i)
 		{
-
-			//if (!Field_IsTrigger(map[i].no)) continue;
-
-			XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
-			bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
-				map[i].pos, boxH, map[i].rotate.y);
-			ImU32 col = hit ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
-			DebugDrawOBB_Yaw(map[i].pos, boxH, map[i].rotate.y, col);
+			if (!Field_IsTrigger(map[i].no)) continue;
+			{
+				XMFLOAT3 boxH = Field_GetHalfSize(map[i]);
+				bool hit = OBB_Intersect_Yaw(tC, tH, player3D->Rotation.y,
+					map[i].pos, boxH, map[i].rotate.y);
+				ImU32 col = hit ? IM_COL32(255, 0, 0, 255) : IM_COL32(0, 255, 255, 255);
+				DebugDrawOBB_Yaw(map[i].pos, boxH, map[i].rotate.y, col);
+			}
 		}
 	}
 
@@ -1076,4 +1299,5 @@ void Collision_DebugDraw()
 		else
 			DebugDrawAABB(box.center, box.half, box.color);
 	}
+
 }

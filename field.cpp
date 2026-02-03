@@ -6,207 +6,212 @@
 #include <sstream>
 #include <iostream>
 
+#include "debug.h"
+#include "player3D.h"
+#include "Seesaw.h"
+
+static bool debugMode;
 //=========================================================================================================
-// ƒ}ƒNƒ’è‹`
+// ãƒã‚¯ãƒ­å®šç¾©
 //=========================================================================================================
 #define BOX_NUM_VERTEX (36)
 
 //=========================================================================================================
-//\‘¢‘Ì’è‹`E’è‹`
+//æ§‹é€ ä½“å®šç¾©ãƒ»å®šç¾©
 //=========================================================================================================
 static Vertex3D Box_vdata[BOX_NUM_VERTEX]
 {
 	//==================
-	// ³–Êi+Z–Êj
+	// æ­£é¢ï¼ˆ+Zé¢ï¼‰
 	//==================
-	//’¸“_‚O@¶ã
+	//é ‚ç‚¹ï¼ã€€å·¦ä¸Š
 	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//’¸“_À•W
+		XMFLOAT3(-0.5f,0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_1@‰Eã
+	//é ‚ç‚¹1ã€€å³ä¸Š
 	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_2@¶‰º
+	//é ‚ç‚¹2ã€€å·¦ä¸‹
 	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//’¸“_À•W
+		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
 
-	//’¸“_3@‰E‰º
+	//é ‚ç‚¹3ã€€å³ä¸‹
 	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,-0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
-	},
-
-	//==================
-	// ‰E–Êi+X–Êj
-	//==================
-	// ’¸“_4@¶ã
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//’¸“_À•W
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
-	},
-	// ’¸“_5@‰Eã
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//’¸“_À•W
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
-	},
-	//’¸“_6@¶‰º
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//’¸“_À•W
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
-	},
-	// ’¸“_7@‰E‰º
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//’¸“_À•W
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
 
 	//==================
-	// — –Êi-Z–Êj
+	// å³é¢ï¼ˆ+Xé¢ï¼‰
 	//==================
-	// ’¸“_8@¶ã
+	// é ‚ç‚¹4ã€€å·¦ä¸Š
 	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//’¸“_À•W7
+		XMFLOAT3(0.5f,0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	// ’¸“_9@‰Eã
+	// é ‚ç‚¹5ã€€å³ä¸Š
 	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,0.5f,0.5f),				//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	// ’¸“_10@¶‰º
+	//é ‚ç‚¹6ã€€å·¦ä¸‹
 	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,-0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	// ’¸“_11@‰E‰º
+	// é ‚ç‚¹7ã€€å³ä¸‹
 	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,-0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
 
 	//==================
-	// ¶–Êi-X–Êj
+	// è£é¢ï¼ˆ-Zé¢ï¼‰
 	//==================
-	// ’¸“_12@¶ã
+	// é ‚ç‚¹8ã€€å·¦ä¸Š
 	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,0.5f,0.5f),				//é ‚ç‚¹åº§æ¨™7
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	// ’¸“_13@‰Eã
+	// é ‚ç‚¹9ã€€å³ä¸Š
 	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//’¸“_À•W
+		XMFLOAT3(-0.5f,0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	// ’¸“_14@¶‰º
+	// é ‚ç‚¹10ã€€å·¦ä¸‹
 	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,-0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	// ’¸“_15@‰E‰º
+	// é ‚ç‚¹11ã€€å³ä¸‹
 	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//’¸“_À•W
+		XMFLOAT3(-0.5f,-0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
 
 	//==================
-	// “V–Êi+Y–Êj
+	// å·¦é¢ï¼ˆ-Xé¢ï¼‰
 	//==================
-	//’¸“_16@¶ã
+	// é ‚ç‚¹12ã€€å·¦ä¸Š
 	{
-		XMFLOAT3(-0.5f, 0.5f, 0.5f),			//’¸“_À•W
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f, 0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT3(-0.5f,0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_17@‰Eã
+	// é ‚ç‚¹13ã€€å³ä¸Š
 	{
-		XMFLOAT3(0.5f, 0.5f, 0.5f),			//’¸“_À•W
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f, 0.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT3(-0.5f,0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_18@¶‰º
+	// é ‚ç‚¹14ã€€å·¦ä¸‹
 	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//’¸“_À•W
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,0.25f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT3(-0.5f,-0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_19@‰E‰º
+	// é ‚ç‚¹15ã€€å³ä¸‹
 	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//’¸“_À•W
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,0.25f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.5f,0.5f,0.5f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
 
 	//==================
-	// ’ê–Êi-‚x–Êj
+	// å¤©é¢ï¼ˆ+Yé¢ï¼‰
 	//==================
-	//’¸“_20@¶ã
+	//é ‚ç‚¹16ã€€å·¦ä¸Š
 	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//’¸“_À•W
+		XMFLOAT3(-0.5f, 0.5f, 0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,0.75f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f, 0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_21@‰Eã
+	//é ‚ç‚¹17ã€€å³ä¸Š
 	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f, 0.5f, 0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,0.75f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f, 0.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_22@¶‰º
+	//é ‚ç‚¹18ã€€å·¦ä¸‹
 	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(-0.5f,0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(0.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,0.25f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
-	//’¸“_23@‰E‰º
+	//é ‚ç‚¹19ã€€å³ä¸‹
 	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//’¸“_À•W
+		XMFLOAT3(0.5f,0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
 		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ƒJƒ‰[
-		XMFLOAT2(1.0f,1.0f)					    //ƒeƒNƒXƒ`ƒƒÀ•W
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,0.25f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	},
+
+	//==================
+	// åº•é¢ï¼ˆ-ï¼¹é¢ï¼‰
+	//==================
+	//é ‚ç‚¹20ã€€å·¦ä¸Š
+	{
+		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.0f,1.0f,0.0f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,0.75f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	},
+	//é ‚ç‚¹21ã€€å³ä¸Š
+	{
+		XMFLOAT3(0.5f,-0.5f,-0.5f),			//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.0f,1.0f,0.0f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,0.75f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	},
+	//é ‚ç‚¹22ã€€å·¦ä¸‹
+	{
+		XMFLOAT3(-0.5f,-0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.0f,1.0f,0.0f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(0.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+	},
+	//é ‚ç‚¹23ã€€å³ä¸‹
+	{
+		XMFLOAT3(0.5f,-0.5f,0.5f),			//é ‚ç‚¹åº§æ¨™
+		XMFLOAT3(0.0f,1.0f,0.0f),
+		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//ã‚«ãƒ©ãƒ¼
+		XMFLOAT2(1.0f,1.0f)					    //ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
 	},
 };
 static UINT Box_idxdata[6 * 6] =
@@ -221,13 +226,15 @@ static UINT Box_idxdata[6 * 6] =
 };
 
 //=========================================================================================================
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//ƒeƒNƒXƒ`ƒƒ•Ï”
-static ID3D11Buffer* g_VertexBuffer = NULL;		// ’¸“_ƒoƒbƒtƒ@
-static ID3D11Buffer* g_IndexBuffer = NULL;		// ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@
+static ID3D11ShaderResourceView* g_Texture;		//ãƒ†ã‚¯ã‚¹ãƒãƒ£å¤‰æ•°
+static ID3D11Buffer* g_VertexBuffer = NULL;		// é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡
+static ID3D11Buffer* g_IndexBuffer = NULL;		// ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡
+// è¿½åŠ : ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼åˆæœŸä½ç½®ï¼ˆRã®èª­ã¿å–ã‚Šçµæœï¼‰ã‚’ä¿æŒ
+static XMFLOAT3 g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 MODEL* Model[FIELD_MAX] = { NULL };
 static std::vector<MAPDATA> g_MapData;
@@ -239,38 +246,27 @@ static void EnsureBoxCreated()
 }
 
 //=========================================================================================================
-// ‰Šú‰»
+// åˆæœŸåŒ–
 //=========================================================================================================
 void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// ƒeƒNƒXƒ`ƒƒ
+	Seesaw_Initialize();
+
+	// ãƒ†ã‚¯ã‚¹ãƒãƒ£
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\block_field.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
 	{
 		// Error:  could not load map
-		MessageBox(nullptr, "Failed to load map file! Error", "ƒGƒ‰[", MB_OK);
+		MessageBox(nullptr, "Failed to load map file! Error", "ã‚¨ãƒ©ãƒ¼", MB_OK);
 	}
-
-	//if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
-	//{
-	//	// Error:  could not load map
-	//	MessageBox(nullptr, "Failed to load map file! Error", "ƒGƒ‰[", MB_OK);
-	//}
-
-	for (size_t i = 0; i < g_MapData.size(); ++i)
-	{
-		g_MapData[i].scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-		g_MapData[i].rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	}
-
 
 	bool hasGround = false;
 	bool hasWall = false;
@@ -281,24 +277,52 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
+	if (!Model[FIELD_GROUND])
+	{
+		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
 	if (!Model[FIELD_OBJ_BOX])
 	{
-		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
+		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Wooden_Box.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
+	if (!Model[FIELD_OBJ_1])
+	{
+		Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\Building_A.fbx");
+	}
+	if (!Model[FIELD_OBJ_2])
+	{
+		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\Building_B.fbx");
 	}
 	if (!Model[FIELD_GOAL])
 	{
 		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
 	}
-
+	if (!Model[FIELD_SEESAW_1])
+	{
+		Model[FIELD_SEESAW_1] = ModelLoad("asset\\model\\Seesaw_dodai.fbx");
+	}
+	if (!Model[FIELD_SEESAW_2])
+	{
+		Model[FIELD_SEESAW_2] = ModelLoad("asset\\model\\Seesaw_siso.fbx");
+	}
 	
 }
 
 
 //=========================================================================================================
-// I—¹
+// çµ‚äº†
 //=========================================================================================================
 void field_Finalize(void)
 {
+	Seesaw_Finalize();
 	g_MapData.clear();  // Clear the vector
 
 	for (int i = 0; i < FIELD_MAX; i++)
@@ -314,22 +338,38 @@ void field_Finalize(void)
 }
 
 //=========================================================================================================
-// XV
+// æ›´æ–°
 //=========================================================================================================
 void field_Update(void)
 {
+	ImGui::Begin("Debug - han");
+	if (ImGui::TreeNode("Filed.cpp"))
+	{
+		
+		ImGui::TreePop();
+	}
+	ImGui::End();
+
+	const float deltaTime = 1.0f / 60.0f;
+	Seesaw_UpdateAll(deltaTime);
+
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
 		if (g_MapData[i].no == FIELD_OBJ_1)
 		{
-			g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 5.0f);
-			g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
+			g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 10.0f);
+			//g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
+		}
+		else if (g_MapData[i].no == FIELD_SEESAW_2)
+		{
+			//g_MapData[i].colliderHalf = XMFLOAT3(0.37f, 0.2f, 2.7f);
+			//g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
 		}
 	}
 }
 
 //=========================================================================================================
-// •`‰æ
+// æç”»
 //=========================================================================================================
 void field_Draw(void)
 {
@@ -381,11 +421,11 @@ void field_Draw(void)
 }
 
 //=========================================================================================================
-// Boxì¬
+// Boxä½œæˆ
 //=========================================================================================================
 void CreateBox()
 {
-	// ’¸“_ƒoƒbƒtƒ@
+	// é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DYNAMIC;
 	bd.ByteWidth = sizeof(Vertex3D) * BOX_NUM_VERTEX;
@@ -399,13 +439,13 @@ void CreateBox()
 	CopyMemory(vertex, Box_vdata, sizeof(Vertex3D) * BOX_NUM_VERTEX);
 	g_pContext->Unmap(g_VertexBuffer, 0);
 
-	// ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@
+	// ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡
 	{
-		//’¸“_ƒoƒbƒtƒ@ì¬
+		//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ä½œæˆ
 		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));//0‚ÅƒNƒŠƒA
+		ZeroMemory(&bd, sizeof(bd));//0ã§ã‚¯ãƒªã‚¢
 		bd.Usage = D3D11_USAGE_DYNAMIC;
-		bd.ByteWidth = sizeof(UINT) * BOX_NUM_VERTEX;//Ši”[‚Å‚«‚é’¸“_”*’¸“_ƒTƒCƒY
+		bd.ByteWidth = sizeof(UINT) * BOX_NUM_VERTEX;//æ ¼ç´ã§ãã‚‹é ‚ç‚¹æ•°*é ‚ç‚¹ã‚µã‚¤ã‚º
 		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		g_pDevice->CreateBuffer(&bd, NULL, &g_IndexBuffer);
@@ -462,21 +502,23 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 }
 
+
+
+
+
 //=========================================================================================================
-// txtƒ[ƒh
+// txtãƒ­ãƒ¼ãƒ‰
 //=========================================================================================================
 std::vector<MAPDATA>& GetFieldMap()
 {
 	return g_MapData;
 }
 
-
 bool LoadMapFromFile(const char* filename)
 {
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
-	// Detect map 1 (stage1)
 	bool isMap1 = false;
 	if (strstr(filename, "stage1") != nullptr)
 	{
@@ -490,16 +532,19 @@ bool LoadMapFromFile(const char* filename)
 	}
 
 	g_MapData.clear();
+	Seesaw_ClearAll();
+
+	// è¿½åŠ : èª­ã¿è¾¼ã¿é–‹å§‹æ™‚ã«åˆæœŸä½ç½®ã‚’ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¸
+	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
 	std::string line;
 	int y = 0;  // height layer
 	int z = 0;  // depth
 
 	while (std::getline(file, line))
 	{
-		// Skip comments
 		if (line.empty() || line[0] == '#')
 		{
-			// Check for new layer
 			if (line.find("Layer") != std::string::npos) {
 				y++;
 				z = 0;
@@ -507,46 +552,63 @@ bool LoadMapFromFile(const char* filename)
 			continue;
 		}
 
-		// Parse each character
 		for (int x = 0; x < (int)line.length(); x++)
 		{
+			char c = line[x];
+			if (c == 'S')
+			{
+				Seesaw_Create(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z,
+					g_MapData
+				);
+				continue;
+			}
+
+			// è¿½åŠ : 'R' ã¯ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼åˆæœŸä½ç½®ãƒãƒ¼ã‚«ãƒ¼
+			if (c == 'R')
+			{
+				// ãƒãƒƒãƒ—åº§æ¨™ç³»ã¨åŒæ§˜ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆã§è¨­å®š
+				g_PlayerStartPos = XMFLOAT3(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z
+				);
+				Playe3D_setposition(g_PlayerStartPos);
+				// ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã—ã¦ã¯è¿½åŠ ã—ãªã„
+				continue;
+			}
+
 			FIELD type;
 			bool valid = true;
 
-			switch (line[x])
+			switch (c)
 			{
 			case 'G': type = FIELD_GROUND;   break;
-			case 'W':  type = FIELD_WALL; break;
-			case 'B':  type = FIELD_OBJ_BOX;  break;
-			case 'E':  type = FIELD_EMPTY_BOX;  break;
-			case '1':  type = FIELD_GOAL;  break;
-			case 'S':  type = FIELD_OBJ_1;  break;
-			case '2':  type = FIELD_OBJ_2;  break;
-			case '.': valid = false;      break;  // Empty
-			case ' ': valid = false;      break;  // Space
-			default:  valid = false;      break;
+			case 'W': type = FIELD_WALL;     break;
+			case 'B': type = FIELD_OBJ_BOX;  break;
+			case 'E': type = FIELD_EMPTY_BOX; break;
+			case '1': type = FIELD_GOAL;     break;
+			case 'O': type = FIELD_OBJ_1;    break;
+			case '2': type = FIELD_OBJ_2;    break;
+			case 'M':type = FIELD_MANHOLE;
+			case '.': valid = false;         break;
+			case ' ': valid = false;         break;
+			default:  valid = false;         break;
 			}
 
 			if (valid)
 			{
 				MAPDATA data;
-				if (isMap1 || isMapTitle)
-				{
-					data.pos = XMFLOAT3(
-						(float)(x - 2),
-						(float)(y - 1),
-						(float)(z - 2)
-					);
-				}
-				else
-				{
-					data.pos = XMFLOAT3(
-						(float)x,
-						(float)y,
-						(float)z
-					);
-				}
+				data.pos = XMFLOAT3(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z
+				);
 				data.no = type;
+				data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+				data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 				g_MapData.push_back(data);
 			}
 		}
@@ -555,4 +617,9 @@ bool LoadMapFromFile(const char* filename)
 
 	file.close();
 	return true;
+}
+
+XMFLOAT3 Field_GetPlayerStartPosition()
+{
+	return g_PlayerStartPos;
 }
