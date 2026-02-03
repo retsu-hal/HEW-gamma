@@ -13,7 +13,7 @@ GGGGGGGGGGGGGGGGGG
 EEEEEEEEEEEEEEEEEE
 G................G
 G................G
-G............2...G
+G................G
 G................G 
 G................G
 GGGGGGGGGGGGGGGGGG
@@ -21,7 +21,7 @@ GGGGGGGGGGGGGGGGGG
 
 # Layer Y=2
 EEEEEEEEEEEEEEEEEE
-GS...............G
+G................G
 G................G
 G................G
 G................G 
