@@ -8,7 +8,6 @@
 #include "manager.h"
 #include "Input.h"
 
-#include "debug.h"
 #include "MathUtil.h"
 using namespace mu;
 
@@ -28,7 +27,7 @@ ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 static float g_StopTime = 0.0f;
 
-// �R���g���[���[
+// コントローラー
 extern Controller gPad;
 
 // ���̓x�N�g��
@@ -44,16 +43,6 @@ static PLAYER_STATE		FirstState;
 static PLAYER_ANIM		FirstAnim;
 static float			FirstStopTime;
 static XMVECTOR			FirstQuaternion;
-
-// �v���C���[�X�e�[�^�X
-static float moveSpeed = 0.005f;		//�ړ����x
-static float maxMoveSpeed = 1.0f;		//�ő�ړ����x
-static float maxFallSpeed = -0.5f;		//�ő嗎�����x
-static float  dampingXZ = 0.925f;		//���C�W��
-static float gravityPower = -1.0f;		//�d�͉����x
-static float jumpPower = 0.175f;		//�W�����v��
-
-float FirstMaxMoveSpeed = maxMoveSpeed;
 
 static XMFLOAT3 g_SolidHalfSize = XMFLOAT3(
 	PLAYER3D_SOLID_HALF_X,
@@ -90,7 +79,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
 
 	Firstposition = g_Player3D.Position = XMFLOAT3(0.0f, 1.2f, 0.0f);
-	FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 180.0f, 0.0f);
 	FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
@@ -98,7 +87,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	FirstStopTime = g_StopTime = 0.0f;
 	FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
 
-	FirstMaxMoveSpeed = maxMoveSpeed;	//�����ő�ړ����x
+	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//�����ő�ړ����x
 
 	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//初期最大移動速度
 }
@@ -171,7 +160,7 @@ XMFLOAT3 GetPlayer3DPosition()
 void Player3D_Gravity()
 {
 	// --- �d�͉��Z�i�󒆂̂݁j ---
-	if (g_Player3D.Velocity.x >= maxMoveSpeed) g_Player3D.Velocity.x = maxMoveSpeed;
+	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
 	else g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 
 	if (g_Player3D.Velocity.z >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.z = g_Player3D.maxMoveSpeed;
@@ -341,7 +330,7 @@ void Player3D_Move()
 	// ���͖����̂Ƃ��͉�]��ύX���Ȃ��i�Ō�Ɍ����Ă���������ێ��j
 
 	//���x����
-	if (g_Player3D.Velocity.x >= maxMoveSpeed)
+	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed)
 	{
 		g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
 	}
