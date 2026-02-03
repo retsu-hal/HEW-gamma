@@ -24,7 +24,9 @@ enum PLAYER_STATE
 	PLAYER_STATE_IDLE = 0,		//何もしない
 	PLAYER_STATE_MOVE,			//移動中
 	PLAYER_STATE_FALL,			//落下中
-	PLAYER_STATE_UP,			//上昇中
+	PLAYER_STATE_JUMP,			//上昇中
+	PLAYER_STATE_DASH,			//ダッシュ中
+	PLAYER_STATE_RESPAWN,		//変身中
 	PLAYER_STATE_ACTION,		//アクション中(3D限定)
 
 

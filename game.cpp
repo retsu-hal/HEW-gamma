@@ -25,7 +25,7 @@
 #include	 <map>
 #include "Seesaw.h"
 
-static bool debugMode = TRUE;
+static bool debugMode;
 
 static	int	g_BgmID = NULL;
 
@@ -50,6 +50,20 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	Player3D_Initialize(pDevice, pContext);
 	Player2D_Initialize(pDevice, pContext);
+	{
+		XMFLOAT3 start = Field_GetPlayerStartPosition();
+
+		if (PLAYER* p3 = GetPlayer3D())
+		{
+			p3->Position = start;
+			p3->Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+		if (PLAYER* p2 = GetPlayer2D())
+		{
+			p2->Position = start;
+			p2->Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+	}
 
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);

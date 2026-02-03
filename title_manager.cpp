@@ -32,6 +32,7 @@ void Title_Manager_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 	Player3D_Initialize(pDevice, pContext);
 	Player2D_Initialize(pDevice, pContext);
 
+
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();

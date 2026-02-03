@@ -11,7 +11,7 @@
 using namespace DirectX;
 using namespace mu;
 
-static bool debugMode = TRUE;
+static bool debugMode;
 
 static std::vector<const ShadowPrism*> g_ShadowPrisms;
 static ShadowDebugOptions g_ShadowDebugOpts;

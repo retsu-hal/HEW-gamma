@@ -233,6 +233,8 @@ static ID3D11DeviceContext* g_pContext = NULL;
 static ID3D11ShaderResourceView* g_Texture;		//テクスチャ変数
 static ID3D11Buffer* g_VertexBuffer = NULL;		// 頂点バッファ
 static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
+// 追加: プレイヤー初期位置（Rの読み取り結果）を保持
+static XMFLOAT3 g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 MODEL* Model[FIELD_MAX] = { NULL };
 static std::vector<MAPDATA> g_MapData;
@@ -260,7 +262,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
 	{
 		// Error:  could not load map
 		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
@@ -275,9 +277,29 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
+	if (!Model[FIELD_GROUND])
+	{
+		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
 	if (!Model[FIELD_OBJ_BOX])
 	{
-		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
+		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Wooden_Box.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
+	if (!Model[FIELD_OBJ_1])
+	{
+		Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\Building_A.fbx");
+	}
+	if (!Model[FIELD_OBJ_2])
+	{
+		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\Building_B.fbx");
 	}
 	if (!Model[FIELD_GOAL])
 	{
@@ -480,6 +502,10 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 }
 
+
+
+
+
 //=========================================================================================================
 // txtロード
 //=========================================================================================================
@@ -493,7 +519,6 @@ bool LoadMapFromFile(const char* filename)
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
-	// Detect map 1 (stage1)
 	bool isMap1 = false;
 	if (strstr(filename, "stage1") != nullptr)
 	{
@@ -509,16 +534,17 @@ bool LoadMapFromFile(const char* filename)
 	g_MapData.clear();
 	Seesaw_ClearAll();
 
+	// 追加: 読み込み開始時に初期位置をデフォルトへ
+	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
 	std::string line;
 	int y = 0;  // height layer
 	int z = 0;  // depth
 
 	while (std::getline(file, line))
 	{
-		// Skip comments
 		if (line.empty() || line[0] == '#')
 		{
-			// Check for new layer
 			if (line.find("Layer") != std::string::npos) {
 				y++;
 				z = 0;
@@ -526,10 +552,8 @@ bool LoadMapFromFile(const char* filename)
 			continue;
 		}
 
-		// Parse each character
 		for (int x = 0; x < (int)line.length(); x++)
 		{
-
 			char c = line[x];
 			if (c == 'S')
 			{
@@ -542,35 +566,47 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
-
-
+			// 追加: 'R' はプレイヤー初期位置マーカー
+			if (c == 'R')
+			{
+				// マップ座標系と同様のオフセットで設定
+				g_PlayerStartPos = XMFLOAT3(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z
+				);
+				Playe3D_setposition(g_PlayerStartPos);
+				// フィールドオブジェクトとしては追加しない
+				continue;
+			}
 
 			FIELD type;
 			bool valid = true;
 
-			switch (line[x])
+			switch (c)
 			{
 			case 'G': type = FIELD_GROUND;   break;
-			case 'W':  type = FIELD_WALL; break;
-			case 'B':  type = FIELD_OBJ_BOX;  break;
-			case 'E':  type = FIELD_EMPTY_BOX;  break;
-			case '1':  type = FIELD_GOAL;  break;
-			case 'O':  type = FIELD_OBJ_1;  break;
-			case '2':  type = FIELD_OBJ_2;  break;
-			case '.': valid = false;      break;  // Empty
-			case ' ': valid = false;      break;  // Space
-			default:  valid = false;      break;
+			case 'W': type = FIELD_WALL;     break;
+			case 'B': type = FIELD_OBJ_BOX;  break;
+			case 'E': type = FIELD_EMPTY_BOX; break;
+			case '1': type = FIELD_GOAL;     break;
+			case 'O': type = FIELD_OBJ_1;    break;
+			case '2': type = FIELD_OBJ_2;    break;
+			case 'M':type = FIELD_MANHOLE;
+			case '.': valid = false;         break;
+			case ' ': valid = false;         break;
+			default:  valid = false;         break;
 			}
 
 			if (valid)
 			{
 				MAPDATA data;
 				data.pos = XMFLOAT3(
-					(float)(x - 2),  // Center X (adjust offset as needed)
+					(float)(x - 2),
 					(float)(y - 1),
 					(float)z
 				);
-				data.no = type; 
+				data.no = type;
 				data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 				data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 				g_MapData.push_back(data);
@@ -581,4 +617,9 @@ bool LoadMapFromFile(const char* filename)
 
 	file.close();
 	return true;
+}
+
+XMFLOAT3 Field_GetPlayerStartPosition()
+{
+	return g_PlayerStartPos;
 }

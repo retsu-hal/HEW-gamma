@@ -5,13 +5,19 @@
 #include "player3D.h"
 #include "debug.h"
 #include "Player2D.h"
+#include <iostream>
+
+#if defined (_DEBUG)
+static bool debugMode = true;
+#else 
+static bool debugMode = false;
+#endif
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
-static bool debugMode = TRUE;
 
 
 //マウス操作用変数
@@ -191,6 +197,7 @@ void Title_Camera_Update()
 //=========================================================================================================
 void Camera_Draw()
 {
+
 	if (debugMode)
 	{
 		ImGui::Begin("Debug - han");
