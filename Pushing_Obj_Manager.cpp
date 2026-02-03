@@ -5,7 +5,7 @@
 #include "collision.h"
 #include "player3D.h"
 #include "keyboard.h"
-#include "KeyBind.h"
+#include "newKeyBind.h"
 #include "Input.h"
 #include "Bill_Board.h"
 
