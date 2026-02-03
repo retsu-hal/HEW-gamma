@@ -498,7 +498,7 @@ void Player3D_SetActive(bool active)
 //=========================================================================================================
 // mapの読み込み時の初期位置設定用
 //=========================================================================================================
-void Playe3D_setposition(XMFLOAT3 pos)
+void Player3D_setposition(XMFLOAT3 pos)
 {
 	g_Player3D.Firstposition = pos;
 

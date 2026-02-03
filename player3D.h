@@ -48,4 +48,4 @@ XMFLOAT3 Player3D_GetTriggerHalfSize();
 XMFLOAT3 Player3D_GetForward();
 void     Player3D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot);
 void     Player3D_SetActive(bool active);
-void Playe3D_setposition(XMFLOAT3 pos);
+void	 Player3D_setposition(XMFLOAT3 pos);
