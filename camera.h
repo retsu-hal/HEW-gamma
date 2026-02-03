@@ -29,6 +29,7 @@ void Camera_Initialize();
 void Camera_Finalize();
 void Player3DCamera_Update();
 void Player2DCamera_Update();
+void Title_Camera_Update();
 void Camera_Draw();
 void SetCameraFov(float);
 void SetCameraAspect(float);

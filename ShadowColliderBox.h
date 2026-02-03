@@ -28,7 +28,7 @@ struct ShadowPrism
     int casterIndex = -1;
     DirectX::XMFLOAT3 cachedLightPos{};
     DirectX::XMFLOAT3 cachedCasterPos{};
-    float cachedCasterYaw = 0.0f;
+    DirectX::XMFLOAT3 cachedCasterRotate{};
 };
 
 // ============================================================

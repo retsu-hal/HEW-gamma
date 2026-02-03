@@ -32,6 +32,7 @@ void Title_Manager_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 	Player3D_Initialize(pDevice, pContext);
 	Player2D_Initialize(pDevice, pContext);
 
+
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
@@ -58,6 +59,7 @@ void Title_Manager_Finalize()
 }
 void Title_Manager_Update()
 {
+	Title_Camera_Update();
 	Light_Update();
 	field_Update();
 
@@ -152,7 +154,7 @@ void Title_Manager_Update()
 		Player2D_Update();
 		//Player2DCamera_Update();
 	}
-	Player3DCamera_Update();
+	
 }
 void Title_Manager_Draw()
 {

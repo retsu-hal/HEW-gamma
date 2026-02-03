@@ -136,6 +136,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="Bill_Board.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="controller.cpp" />
@@ -165,17 +166,20 @@
     <ClCompile Include="Player3D.cpp" />
     <ClCompile Include="PlayerModeSwitchManager.cpp" />
     <ClCompile Include="Polygon3D.cpp" />
+    <ClCompile Include="Pushing_Obj_Manager.cpp" />
     <ClCompile Include="Result.cpp" />
     <ClCompile Include="score.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="ShadowColliderBox.cpp" />
     <ClCompile Include="sprite.cpp" />
+    <ClCompile Include="Seesaw.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="title_manager.cpp" />
     <ClCompile Include="Trail.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h" />
+    <ClInclude Include="Bill_Board.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="Collision.h" />
     <ClInclude Include="controller.h" />
@@ -203,11 +207,13 @@
     <ClInclude Include="PlayerModeSwitchManager.h" />
     <ClInclude Include="PlayerStatus.h" />
     <ClInclude Include="Polygon3D.h" />
+    <ClInclude Include="Pushing_Obj_Manager.h" />
     <ClInclude Include="result.h" />
     <ClInclude Include="score.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="ShadowColliderBox.h" />
     <ClInclude Include="sprite.h" />
+    <ClInclude Include="Seesaw.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="title_manager.h" />
     <ClInclude Include="Trail.h" />

@@ -14,15 +14,18 @@
 #include	"camera.h"
 #include	"direct3d.h"
 #include	"Collision.h"
+#include	"Bill_Board.h"
 
 #include	"PlayerModeSwitchManager.h"
+#include	"Pushing_Obj_Manager.h"
 
 #include	"debug.h"
 #include	"ShadowColliderBox.h"
 
 #include	 <map>
+#include "Seesaw.h"
 
-static bool debugMode = TRUE;
+static bool debugMode;
 
 static	int	g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
@@ -41,15 +44,30 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	PlayerModeSwitchManager_Init();
+	PlayerPushManager_Init();
 
 
 	Player3D_Initialize(pDevice, pContext);
 	Player2D_Initialize(pDevice, pContext);
+	{
+		XMFLOAT3 start = Field_GetPlayerStartPosition();
+
+		if (PLAYER* p3 = GetPlayer3D())
+		{
+			p3->Position = start;
+			p3->Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+		if (PLAYER* p2 = GetPlayer2D())
+		{
+			p2->Position = start;
+			p2->Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+	}
 
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
-	
+	InitializeBillBoard();
 
 	// Initialize the ball's light source
 	g_BallLight.SetEnable(false);
@@ -69,21 +87,24 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	debugOpts.normalColor = IM_COL32(255, 255, 0, 255);
 	debugOpts.vertexColor = IM_COL32(0, 255, 0, 255);
 	Collision_SetShadowDebugOptions(debugOpts);
+
+	GetShadowManager()->Initialize();
 }
 
 
 void Game_Finalize()
 {
-	g_ShadowPrisms.clear();
-	g_ActiveShadowPrisms.clear();
+	GetShadowManager()->Finalize();
 
 	field_Finalize();
 	Polygon3D_Finalize();
 	Light_Finalize();
 	Camera_Finalize();
-	
+
+	PlayerPushManager_Finalize();
 	Player3D_Finalize();
 	Player2D_Finalize();
+	FinalizeBillBoard();
 
 }
 
@@ -99,6 +120,11 @@ void Game_Update()
 
 	PlayerModeSwitchManager_Update();
 
+	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
+	{
+		PlayerPushManager_Update();
+	}
+
 	XMFLOAT3 LightPos = GetLight_Position();
 	//g_BallLight.SetEnable(true);
 	g_BallLight.SetDirection(XMFLOAT4(LightPos.x, LightPos.y, LightPos.z, 1.0f));
@@ -109,71 +135,18 @@ void Game_Update()
 
 	auto& map = GetFieldMap();
 
+	GetShadowManager()->UpdateAllShadows(LightPos, map, g_ShadowConfig);
+
 	g_ActiveShadowPrisms.clear();
-	std::vector<int> casterIndices;
-	for (int i = 0; i < (int)map.size(); ++i)
+	const auto& shadows = GetShadowManager()->GetShadows();
+	for (const auto& shadow : shadows)
 	{
-		if (map[i].no == FIELD_OBJ_2)
+		if (shadow.isValid)
 		{
-			casterIndices.push_back(i);
+			g_ActiveShadowPrisms.push_back(&shadow);
 		}
 	}
 
-	std::vector<int> keysToRemove;
-	for (auto& pair : g_ShadowPrisms)
-	{
-		bool found = false;
-		for (int idx : casterIndices)
-		{
-			if (pair.first == idx)
-			{
-				found = true;
-				break;
-			}
-		}
-		if (!found)
-		{
-			keysToRemove.push_back(pair.first);
-		}
-	}
-	for (int key : keysToRemove)
-	{
-		g_ShadowPrisms.erase(key);
-	}
-
-	for (int casterIdx : casterIndices)
-	{
-		if (g_ShadowPrisms.find(casterIdx) == g_ShadowPrisms.end())
-		{
-			g_ShadowPrisms[casterIdx] = ShadowPrism();
-		}
-
-		ShadowPrism& prism = g_ShadowPrisms[casterIdx];
-		const MAPDATA& caster = map[casterIdx];
-
-		bool needsRebuild = Shadow_NeedsRebuild(prism, LightPos, caster, 0.01f);
-
-		if (needsRebuild)
-		{
-			bool buildSuccess = Shadow_Build(
-				prism,
-				caster,
-				LightPos,
-				map,
-				g_ShadowConfig
-			);
-
-			if (!buildSuccess)
-			{
-				prism.isValid = false;
-			}
-		}
-
-		if (prism.isValid)
-		{
-			g_ActiveShadowPrisms.push_back(&prism);
-		}
-	}
 
 	Collision_SetShadowPrisms(g_ActiveShadowPrisms);
 
@@ -264,6 +237,12 @@ void Game_Draw()
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		Player3D_Draw();
+
+		g_BallLight.SetEnable(FALSE);
+		Shader_SetLight(g_BallLight.Light);
+		PlayerPushManager_Draw();
+		g_BallLight.SetEnable(TRUE);
+		Shader_SetLight(g_BallLight.Light);
 	}
 	else
 	{
@@ -271,6 +250,7 @@ void Game_Draw()
 	}
 
 	Collision_DebugDraw();
+	Seesaw_DebugDraw();
 
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);
