@@ -21,4 +21,5 @@ void	Manager_Finalize();
 void	Manager_Update();
 void	Manager_Draw();
 void	SetScene(SCENE scene);
+int		GetScene(void);
 

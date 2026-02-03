@@ -9,6 +9,7 @@
 #include "debug.h"
 #include "player3D.h"
 #include "Seesaw.h"
+#include "manager.h"
 
 static bool debugMode;
 //=========================================================================================================
@@ -262,10 +263,21 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+	if (GetScene() == SCENE_TITLE)
 	{
-		// Error:  could not load map
-		MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+		if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+		{
+			// Error:  could not load map
+			MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+		}
+	}
+	else if (GetScene() == SCENE_GAME)
+	{
+		if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
+		{
+			// Error:  could not load map
+			MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+		}
 	}
 
 	bool hasGround = false;
@@ -601,15 +613,34 @@ bool LoadMapFromFile(const char* filename)
 			if (valid)
 			{
 				MAPDATA data;
-				data.pos = XMFLOAT3(
-					(float)(x - 2),
-					(float)(y - 1),
-					(float)z
-				);
-				data.no = type;
-				data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-				data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-				g_MapData.push_back(data);
+
+				if (isMapTitle)
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 3),
+						(float)(y - 3),
+						(float)(z - 1)
+					);
+
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
+				else
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 1),
+						(float)z
+					);
+
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
+
 			}
 		}
 		z++;
