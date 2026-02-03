@@ -154,8 +154,6 @@
     <ClCompile Include="imgui-docking\imgui_tables.cpp" />
     <ClCompile Include="imgui-docking\imgui_widgets.cpp" />
     <ClCompile Include="Input.cpp" />
-    <ClCompile Include="KeyBind.cpp" />
-    <ClCompile Include="KeyBind.h" />
     <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="LightSource.cpp" />
     <ClCompile Include="main.cpp" />
@@ -163,6 +161,7 @@
     <ClCompile Include="memo.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
+    <ClCompile Include="newKeyBind.cpp" />
     <ClCompile Include="Player2D.cpp" />
     <ClCompile Include="Player3D.cpp" />
     <ClCompile Include="PlayerModeSwitchManager.cpp" />
@@ -202,6 +201,7 @@
     <ClInclude Include="MathUtil.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
+    <ClInclude Include="newKeyBind.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
     <ClInclude Include="PlayerModeSwitchManager.h" />

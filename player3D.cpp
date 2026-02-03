@@ -6,6 +6,7 @@
 #include "Collision.h"
 #include "manager.h"
 #include "Input.h"
+
 #include "field.h"
 #include "debug.h"
 #include "MathUtil.h"
@@ -21,6 +22,8 @@ PLAYER g_Player3D;
 ID3D11Device* g_pDevice;
 ID3D11DeviceContext* g_pContext;
 static float g_StopTime = 0.0f;
+
+// コントローラー
 extern Controller gPad;
 static XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 float FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;

@@ -59,13 +59,13 @@ public:
 	XMVECTOR Quaternion;		//クォータニオン回転
 
 	// プレイヤーステータス
-	float moveSpeed = 0.01f;			//移動速度
-	float maxMoveSpeed = 2.0f;			//最大移動速度
+	float moveSpeed = 0.009f;			//移動速度
+	float maxMoveSpeed = 0.5f;			//最大移動速度
 	float maxFallSpeed = -0.5f;			//最大落下速度
 	float dampingXZ = 0.925f;			//摩擦係数
 	float gravityPower = -1.0f;			//重力加速度（もしかしたら使う予定）
 	float jumpPower = 0.175f;			//ジャンプ力
-	float dashMoveSpeed = 1.5f;			//ダッシュ移動速度倍率	
+	float dashMoveSpeed = 2.0f;			//ダッシュ移動速度倍率	
 	bool isGround = false;				//接地判定
 	bool isDash = false;				//ダッシュ判定
 

@@ -6,7 +6,7 @@
 #include "direct3d.h"
 #include "model.h"
 #include "PlayerStatus.h"
-#include "KeyBind.h"
+#include "newKeyBind.h"
 
 //=========================================================================================================
 // É}ÉNÉçíËã`
