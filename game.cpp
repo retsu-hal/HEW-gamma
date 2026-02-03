@@ -30,6 +30,13 @@ static bool debugMode;
 static	int	g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
 
+// BGM管理
+static int g_Bgm3D = -1;  // 3DモードのBGM
+static int g_Bgm2D = -1;  // 2DモードのBGM
+static PLAYER_MODE g_PrevMode = MODE_3D;  // 前フレームのモード
+static const float CROSSFADE_DURATION = 2.0f;  // クロスフェード時間（秒）
+
+
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 
@@ -88,12 +95,45 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	debugOpts.vertexColor = IM_COL32(0, 255, 0, 255);
 	Collision_SetShadowDebugOptions(debugOpts);
 
+	// BGM初期化
+	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3DモードのBGMファイル名を指定
+	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2DモードのBGMファイル名を指定
+
+	// 初期状態は3DモードなのでBGM3Dを再生
+	if (g_Bgm3D >= 0)
+	{
+		PlayAudio(g_Bgm3D, true);  // ループ再生
+		SetAudioVolume(g_Bgm3D, 1.0f);
+	}
+
+	// 2DモードのBGMは無音で待機
+	if (g_Bgm2D >= 0)
+	{
+		PlayAudio(g_Bgm2D, true);  // ループ再生
+		SetAudioVolume(g_Bgm2D, 0.0f);  // 無音
+	}
+
+	g_PrevMode = MODE_3D;
+
 	GetShadowManager()->Initialize();
 }
 
 
 void Game_Finalize()
 {
+
+	// BGM解放
+	if (g_Bgm3D >= 0)
+	{
+		UnloadAudio(g_Bgm3D);
+		g_Bgm3D = -1;
+	}
+	if (g_Bgm2D >= 0)
+	{
+		UnloadAudio(g_Bgm2D);
+		g_Bgm2D = -1;
+	}
+
 	GetShadowManager()->Finalize();
 
 	field_Finalize();
@@ -111,6 +151,44 @@ void Game_Finalize()
 
 void Game_Update()
 {
+
+	// BGM更新（フェード処理）
+	UpdateAudio();
+
+	// モード切り替え検出とクロスフェード
+	PLAYER_MODE currentMode = PlayerModeSwitchManager_GetMode();
+
+	if (currentMode != g_PrevMode)
+	{
+		// モードが切り替わった
+		if (currentMode == MODE_3D)
+		{
+			// 2D→3D切り替え：3DのBGMをフェードイン、2DのBGMをフェードアウト
+			if (g_Bgm3D >= 0)
+			{
+				FadeInAudio(g_Bgm3D, CROSSFADE_DURATION, 1.0f);
+			}
+			if (g_Bgm2D >= 0)
+			{
+				FadeOutAudio(g_Bgm2D, CROSSFADE_DURATION);
+			}
+		}
+		else if (currentMode == MODE_2D)
+		{
+			// 3D→2D切り替え：2DのBGMをフェードイン、3DのBGMをフェードアウト
+			if (g_Bgm2D >= 0)
+			{
+				FadeInAudio(g_Bgm2D, CROSSFADE_DURATION, 1.0f);
+			}
+			if (g_Bgm3D >= 0)
+			{
+				FadeOutAudio(g_Bgm3D, CROSSFADE_DURATION);
+			}
+		}
+
+		g_PrevMode = currentMode;
+	}
+
 	Collision_DebugClearExtraBoxes();
 
 
