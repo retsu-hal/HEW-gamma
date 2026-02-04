@@ -280,6 +280,8 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		}
 	}
 
+	
+
 	bool hasGround = false;
 	bool hasWall = false;
 	for (const auto& m : g_MapData) {
@@ -640,8 +642,17 @@ bool LoadMapFromFile(const char* filename)
 					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 					g_MapData.push_back(data);
-				}
+				}*/
+				data.pos = XMFLOAT3(
+							(float)(x - 2),
+							(float)(y - 1),
+							(float)z
+						);
 
+						data.no = type;
+						data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+						data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+						g_MapData.push_back(data);
 			}
 		}
 		z++;

@@ -15,7 +15,6 @@ using namespace mu;
 //=========================================================================================================
 // åƒ¨åƒ¶åƒ¢åƒŒæ¢?
 //=========================================================================================================
-#include "debug.h"
 
 //=========================================================================================================
 // åƒŒåEä¹•åƒ¶å„–æ›„æ‚?
@@ -115,28 +114,31 @@ void Player2D_Finalize(void)
 //=========================================================================================================
 void Player2D_Update()
 {
-	if (!g_Player2DActive) return;
+	if (!g_Player2D.Active) return;
 
-	Player2D_Respawn();	//å„•åEå„E¹•åE
+	
 
 	Player2D_Gravity();	//å»³æ¤¡å¼µæ£E
 
-	// åƒ¾å„—åƒ€å„ä¹•æEå¶E
-	Player2D_Move();	//å æ‘¦
-	Player2D_Jump();	//åƒ•å„å„åE
-	Player2D_Change();	//å¡­æ›EE
+	if (g_Player2D.Position.y < -10.0f)
+	{
+		Player2D_Respawn();	
+	}
 
-
+	Player2D_Move();
 	switch (g_Player2D.state)
 	{
 	case PLAYER_STATE_IDLE:
-		//Idleå‚¾åƒ¯å„Šä¹•åƒ”å„‘åE
+
 		break;
 	case PLAYER_STATE_MOVE:
-		//Moveå‚¾åƒ¯å„Šä¹•åƒ”å„‘åE
+		
 		break;
 	case PLAYER_STATE_FALL:
-		//Fallå‚¾åƒ¯å„Šä¹•åƒ”å„‘åE
+
+		break;
+	case PLAYER_STATE_JUMP:
+		Player2D_Jump();
 		break;
 
 
@@ -312,18 +314,6 @@ void Player2D_Jump()
 	}
 }
 
-void Player2D_Change()
-{
-	if (IsInputTrigger(ChangeKey, gPad))
-	{
-		// ¡ED¤Ë‰äÉE
-		// 
-		// 3D¥­¥ã¥é¥¯¥¿©`¤ED¥×¥E¤¥ä©`¤Î×ù˜Ë¤ò²ÎÕÕ¤·¤ÆÉú³É
-		// ¡ı
-		// 2D¥×¥E¤¥ä©`¤òÏ÷³ı¤¹¤E
-		//
-	}
-}
 
 void Player2D_Reset()
 {

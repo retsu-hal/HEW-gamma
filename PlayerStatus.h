@@ -68,7 +68,7 @@ public:
 	float dashMoveSpeed = 2.0f;			//ダッシュ移動速度倍率	
 	bool isGround = false;				//接地判定
 	bool isDash = false;				//ダッシュ判定
-
+	bool Active = true;
 	float FirstMaxMoveSpeed = maxMoveSpeed;
 
 	// プレイヤー変身フラグ
