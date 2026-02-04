@@ -34,7 +34,7 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Title_Manager_Initialize(pDevice, pContext);
 
 
-	g_BgmID = LoadAudio("asset\\Audio\\title_1.wav");	//サウンドロード
+	g_BgmID = LoadAudio("asset\\Audio\\title.wav");	//サウンドロード
 	SetAudioVolume(g_BgmID, 0.05f);
 	PlayAudio(g_BgmID, true);	//再生開始（ループあり）
 
