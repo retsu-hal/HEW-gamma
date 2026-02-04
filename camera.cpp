@@ -96,8 +96,8 @@ void Player3DCamera_Update()
 
 	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
 	{
-		const float sensYaw = 0.25f;
-		const float sensPitch = 0.25f;
+		const float sensYaw = 1.0f;
+		const float sensPitch = 1.0f;
 		gYawDeg += ms.x * sensYaw;
 		gPitchDeg -= ms.y * sensPitch;
 
