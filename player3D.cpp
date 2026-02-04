@@ -13,7 +13,13 @@
 using namespace mu;
 
 #include "Seesaw.h"
+
+#ifdef _DEBUG	//デバッグビルドの時だけ変数が作られる
 static bool debugMode = true;
+#else
+static bool debugMode = false;
+#endif
+
 
 //=========================================================================================================
 // グローバル変数
@@ -37,7 +43,6 @@ static XMFLOAT3 g_TriggerHalfSize = XMFLOAT3(
 	PLAYER3D_TRIGGER_HALF_Y,
 	PLAYER3D_TRIGGER_HALF_Z
 );
-static bool g_Player3DActive = true;
 static bool isTrigger = false;
 
 
@@ -60,7 +65,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
 
 	g_Player3D.Firstposition = g_Player3D.Position;
-	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 180.0f, 0.0f);
 	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	g_Player3D.FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player3D.FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
@@ -70,7 +75,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 
-	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//弶婜嵟戝堏摦懍搙
+	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 }
 
 //=========================================================================================================
@@ -105,24 +110,13 @@ void Player3D_Update()
 		ImGui::End();
 	}
 
-	if (!g_Player3DActive) return;
+	if (!g_Player3D.Active) return;
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Respawn();
 	}
 	
-
 	Player3D_Gravity();
-
-	// プレイヤー操作
-
-
-	
-	
-	
-	Player3D_Change();	//影変身
-	
-
 
 	switch (g_Player3D.state)
 	{
@@ -338,9 +332,14 @@ void Player3D_Move()
 	{
 		g_Player3D.state = PLAYER_STATE_JUMP;
 	}
-	if (IsInputPress(DashKey, gPad))
+	
+	// Dash開始（MOVE -> DASH遷移）
+	if (IsInputTrigger(DashKey, gPad))
 	{
-		Player3D_Dash();
+		g_Player3D.state = PLAYER_STATE_DASH;
+		// 当フレームからダッシュ速度を適用
+		g_Player3D.isDash = true;
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 	}
 }
 
@@ -366,13 +365,16 @@ void Player3D_Dash()
 		// ダッシュ開始/継続
 		g_Player3D.isDash = true;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
+
+		// ダッシュ中も移動入力を反映
+		Player3D_Move();
 	}
 	else
 	{
 		// ダッシュ解除
 		g_Player3D.isDash = false;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
-
+		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
 }
 
@@ -469,7 +471,7 @@ XMFLOAT3 Player3D_GetForward()
 
 	XMMATRIX R = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 
-	XMVECTOR f = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), R);
+	XMVECTOR f = XMVector3TransformNormal(XMVectorSet(0, 0, -1, 0), R);
 	f = XMVector3Normalize(f);
 
 	XMFLOAT3 out;

@@ -29,7 +29,7 @@ XMFLOAT3 GetPlayer2DPosition();
 void Player2D_Gravity();
 void Player2D_Move();
 void Player2D_Jump();
-void Player2D_Change();
+
 
 void Player2D_Reset();
 void Player2D_Respawn();
