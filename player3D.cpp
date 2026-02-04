@@ -6,6 +6,7 @@
 #include "Collision.h"
 #include "manager.h"
 #include "Input.h"
+#include "fade.h"
 
 #include "field.h"
 #include "debug.h"
@@ -117,6 +118,7 @@ void Player3D_Update()
 	}
 	
 	Player3D_Gravity();
+	Player3D_CheckGoal();
 
 	switch (g_Player3D.state)
 	{
@@ -249,11 +251,14 @@ void Player3D_Move()
 	}
 
 	// アニメ切替
-	if (isMoving) {
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
-	}
-	else {
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+	if (!g_Player3D.isPushing)
+	{
+		if (isMoving) {
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+		}
+		else {
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+		}
 	}
 
 	// カメラ基準移動
@@ -397,10 +402,6 @@ void Player3D_Action()
 	case FIELD_OBJ_1:
 		isTrigger = true;
 		break;
-	case FIELD_OBJ_2:
-		// 何かの処理
-		break;
-
 	default:
 		break;
 	}
@@ -408,7 +409,7 @@ void Player3D_Action()
 
 void Player3D_Draw(void)
 {
-	if (!g_Player3DActive) return;
+	if (!g_Player3D.Active) return;
 
 	if (debugMode)
 	{
@@ -494,7 +495,7 @@ void Player3D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
 
 void Player3D_SetActive(bool active)
 {
-	g_Player3DActive = active;
+	g_Player3D.Active = active;
 }
 
 //=========================================================================================================
@@ -542,9 +543,42 @@ void Player3D_Idle()
 	{
 		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
-	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+
+	// Only set IDLE animation if not pushing
+	if (!g_Player3D.isPushing)
+	{
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+	}
 
 	// 横方向は緩やかに減速
 	g_Player3D.Velocity.x *= g_Player3D.dampingXZ;
 	g_Player3D.Velocity.z *= g_Player3D.dampingXZ;
+}
+
+void Player3D_CheckGoal()
+{
+	TRIGGER_HIT hit;
+	if (!Collision_PlayerTrigger(&hit, 0.0f)) return;
+
+	if (hit.type == FIELD_GOAL)
+	{
+		// ゴール処理 - リザルト画面へ遷移
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_RESULT);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_1)
+	{
+
+	}
+	else if (hit.type == FIELD_STAGE_2)
+	{
+
+	}
+	else if (hit.type == FIELD_STAGE_3)
+	{
+
+	}
 }

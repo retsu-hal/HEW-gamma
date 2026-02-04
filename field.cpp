@@ -20,201 +20,109 @@ static bool debugMode;
 //=========================================================================================================
 //構造体定義・定義
 //=========================================================================================================
-static Vertex3D Box_vdata[BOX_NUM_VERTEX]
-{
-	//==================
-	// 正面（+Z面）
-	//==================
-	//頂点０　左上
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	//頂点1　右上
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	//頂点2　左下
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
 
-	//頂点3　右下
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
+	// +Z (Front)
+	{{ 0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {0,0}},
+	{{-0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {1,0}},
+	{{ 0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {0,1}},
+	{{-0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 右面（+X面）
-	//==================
-	// 頂点4　左上
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点5　右上
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	//頂点6　左下
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
-	// 頂点7　右下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+	// -Z (Back)
+	{{-0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {1,0}},
+	{{-0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 裏面（-Z面）
-	//==================
-	// 頂点8　左上
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//頂点座標7
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点9　右上
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点10　左下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
-	// 頂点11　右下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
+	// +X (Right)
+	{{ 0.5f,  0.5f, -0.5f}, { 1,  0,  0}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f,  0.5f}, { 1,  0,  0}, {1,1,1,1}, {1,0}},
+	{{ 0.5f, -0.5f, -0.5f}, { 1,  0,  0}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f,  0.5f}, { 1,  0,  0}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 左面（-X面）
-	//==================
-	// 頂点12　左上
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点13　右上
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点14　左下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
-	// 頂点15　右下
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+	// -X (Left)
+	{{-0.5f,  0.5f,  0.5f}, {-1,  0,  0}, {1,1,1,1}, {0,0}},
+	{{-0.5f,  0.5f, -0.5f}, {-1,  0,  0}, {1,1,1,1}, {1,0}},
+	{{-0.5f, -0.5f,  0.5f}, {-1,  0,  0}, {1,1,1,1}, {0,1}},
+	{{-0.5f, -0.5f, -0.5f}, {-1,  0,  0}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 天面（+Y面）
-	//==================
-	//頂点16　左上
-	{
-		XMFLOAT3(-0.5f, 0.5f, 0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(0.0f, 0.0f)					    //テクスチャ座標
-	},
-	//頂点17　右上
-	{
-		XMFLOAT3(0.5f, 0.5f, 0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(1.0f, 0.0f)					    //テクスチャ座標
-	},
-	//頂点18　左下
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.25f)					    //テクスチャ座標
-	},
-	//頂点19　右下
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.25f)					    //テクスチャ座標
-	},
+	// +Y (Top)
+	{{-0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1,1,1,1}, {1,0}},
+	{{-0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1,1,1,1}, {0.0f,0.25f}},
+	{{ 0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1,1,1,1}, {1.0f,0.25f}},
 
-	//==================
-	// 底面（-Ｙ面）
-	//==================
-	//頂点20　左上
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.75f)					    //テクスチャ座標
-	},
-	//頂点21　右上
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.75f)					    //テクスチャ座標
-	},
-	//頂点22　左下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
-	//頂点23　右下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+	// -Y (Bottom)
+	{{-0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1,1,1,1}, {0.0f,0.75f}},
+	{{ 0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1,1,1,1}, {1.0f,0.75f}},
+	{{-0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1,1,1,1}, {1,1}},
 };
+
+//static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
+//	//座標                  Normal               色                    テクスチャ座標
+//
+//	//前面 (Z+)
+//	//頂点0 LEFT-TOP
+//	{{ 0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点1 RIGHT-TOP						  
+//	{{-0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点2 LEFT-BOTTOM						  
+//	{{ 0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点3 RIGHT-BOTTOM
+//	{{-0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (Z-)
+//	//頂点4 LEFT-TOP
+//	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点5 RIGHT-TOP		
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点6 LEFT-BOTTOM	 
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点7 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (X+)
+//	//頂点8 LEFT-TOP
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点9 RIGHT-TOP
+//	{{ 0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点10 LEFT-BOTTOM
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点11 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (X-)
+//	//頂点12 LEFT-TOP
+//	{{-0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点13 RIGHT-TOP
+//	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点14 LEFT-BOTTOM
+//	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点15 RIGHT-BOTTOM
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (Y+)
+//	//頂点16 LEFT-TOP
+//	{{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点17 RIGHT-TOP
+//	{{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点18 LEFT-BOTTOM
+//	{{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.25f}},
+//	//頂点19 RIGHT-BOTTOM
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,0.25f}},
+//
+//	//前面 (Y-)
+//	//頂点20 LEFT-TOP
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.75f}},
+//	//頂点21 RIGHT-TOP
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.75f}},
+//	//頂点22 LEFT-BOTTOM
+//	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点23 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//};
+
 static UINT Box_idxdata[6 * 6] =
 {
 	0,  1,  2,  2,  1,  3,//-Z
@@ -273,6 +181,12 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	else if (GetScene() == SCENE_GAME)
 	{
+		//if (!LoadMapFromFile("asset\\MapData\\stage_select.txt"))
+		//{
+		//	// Error:  could not load map
+		//	MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+		//}
+
 		if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
 		{
 			// Error:  could not load map
@@ -289,11 +203,12 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (m.no == FIELD_WALL)   hasWall = true;
 	}
 
-	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_OBJ_3] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
 	if (!Model[FIELD_GROUND])
 	{
-		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
+		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
+		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Building_B.fbx");
 	}
 	if (!Model[FIELD_WALL])
 	{
@@ -314,10 +229,28 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	if (!Model[FIELD_OBJ_2])
 	{
 		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\Building_B.fbx");
+		//CreateBox();
+	}
+	if (!Model[FIELD_OBJ_3])
+	{
+		Model[FIELD_OBJ_3] = ModelLoad("asset\\model\\Building_B.fbx");
 	}
 	if (!Model[FIELD_GOAL])
 	{
 		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
+	}
+
+	if (!Model[FIELD_STAGE_1])
+	{
+		Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\test.fbx");
+	}
+	if (!Model[FIELD_STAGE_2])
+	{
+		Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\test.fbx");
+	}
+	if (!Model[FIELD_STAGE_3])
+	{
+		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
 	}
 	if (!Model[FIELD_SEESAW_1])
 	{
@@ -573,7 +506,7 @@ bool LoadMapFromFile(const char* filename)
 			{
 				Seesaw_Create(
 					(float)(x - 2),
-					(float)(y - 1),
+					(float)(y - 2),
 					(float)z,
 					g_MapData
 				);
@@ -586,7 +519,7 @@ bool LoadMapFromFile(const char* filename)
 				// マップ座標系と同様のオフセットで設定
 				g_PlayerStartPos = XMFLOAT3(
 					(float)(x - 2),
-					(float)(y - 1),
+					(float)(y - 2),
 					(float)z
 				);
 				Player3D_setposition(g_PlayerStartPos);
@@ -607,6 +540,10 @@ bool LoadMapFromFile(const char* filename)
 			case '1': type = FIELD_GOAL;     break;
 			case 'O': type = FIELD_OBJ_1;    break;
 			case '2': type = FIELD_OBJ_2;    break;
+			case '3': type = FIELD_OBJ_3;    break;
+			case '7': type = FIELD_STAGE_1;    break;
+			case '8': type = FIELD_STAGE_2;    break;
+			case '9': type = FIELD_STAGE_3;    break;
 			case 'M':type = FIELD_MANHOLE;
 			case '.': valid = false;         break;
 			case ' ': valid = false;         break;
@@ -621,7 +558,7 @@ bool LoadMapFromFile(const char* filename)
 				{
 					data.pos = XMFLOAT3(
 						(float)(x - 2),
-						(float)(y - 1),
+						(float)(y - 2),
 						(float)z
 					);
 
@@ -634,7 +571,7 @@ bool LoadMapFromFile(const char* filename)
 				{
 					data.pos = XMFLOAT3(
 						(float)(x - 2),
-						(float)(y - 1),
+						(float)(y - 2),
 						(float)z
 					);
 
@@ -642,17 +579,7 @@ bool LoadMapFromFile(const char* filename)
 					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 					g_MapData.push_back(data);
-				}*/
-				data.pos = XMFLOAT3(
-							(float)(x - 2),
-							(float)(y - 1),
-							(float)z
-						);
-
-						data.no = type;
-						data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-						data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-						g_MapData.push_back(data);
+				}
 			}
 		}
 		z++;

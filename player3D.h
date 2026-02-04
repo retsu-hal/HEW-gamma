@@ -39,6 +39,7 @@ void Player3D_Dash();
 void Player3D_Change();
 void Player3D_Action();
 void Player3D_Respawn();
+void Player3D_CheckGoal();
 
 PLAYER* GetPlayer3D();
 
