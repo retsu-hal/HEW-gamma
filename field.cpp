@@ -589,7 +589,8 @@ bool LoadMapFromFile(const char* filename)
 					(float)(y - 1),
 					(float)z
 				);
-				Playe3D_setposition(g_PlayerStartPos);
+				Player3D_setposition(g_PlayerStartPos);
+				Player3D_InitAt(g_PlayerStartPos, XMFLOAT3(0.0f, 180.0f, 0.0f));
 				// フィールドオブジェクトとしては追加しない
 				continue;
 			}
@@ -616,24 +617,19 @@ bool LoadMapFromFile(const char* filename)
 			{
 				MAPDATA data;
 
-				//if (isMapTitle)
-				//{
-				//	/*data.pos = XMFLOAT3(
-				//		(float)(x - 3),
-				//		(float)(y - 3),
-				//		(float)(z - 1)
-				//	);*/
-				//	data.pos = XMFLOAT3(
-				//		(float)(x - 2),
-				//		(float)(y - 1),
-				//		(float)z
-				//	);
+				if (isMapTitle)
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 1),
+						(float)z
+					);
 
-				//	data.no = type;
-				//	data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-				//	data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-				//	g_MapData.push_back(data);
-				/*}
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
 				else
 				{
 					data.pos = XMFLOAT3(
