@@ -571,14 +571,33 @@ void Player3D_CheckGoal()
 	}
 	else if (hit.type == FIELD_STAGE_1)
 	{
-
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 1
+			SetCurrentStage(STAGE_1);
+		}
 	}
 	else if (hit.type == FIELD_STAGE_2)
 	{
-
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 2
+			SetCurrentStage(STAGE_2);
+		}
 	}
 	else if (hit.type == FIELD_STAGE_3)
 	{
-
+		// Load Hard Stage
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 3
+			SetCurrentStage(STAGE_3);
+		}
 	}
 }

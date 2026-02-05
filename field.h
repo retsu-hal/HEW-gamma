@@ -38,6 +38,17 @@ enum FIELD
     FIELD_MAX,
 };
 
+enum GAME_STAGE
+{
+    STAGE_NONE = 0,
+    STAGE_SELECT,
+    STAGE_1,
+    STAGE_2,
+    STAGE_3,
+
+    STAGE_MAX,
+};
+
 class MAPDATA
 {
 public:
@@ -79,3 +90,6 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i);
 
 // 追加: マップで見つけたプレイヤー初期位置を取得
 XMFLOAT3 Field_GetPlayerStartPosition();
+
+void SetCurrentStage(GAME_STAGE stage);
+GAME_STAGE GetCurrentStage();

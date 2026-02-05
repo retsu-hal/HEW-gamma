@@ -100,6 +100,26 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	debugOpts.vertexColor = IM_COL32(0, 255, 0, 255);
 	Collision_SetShadowDebugOptions(debugOpts);
 
+	GAME_STAGE currentStage = GetCurrentStage();
+
+	if (currentStage == STAGE_1)
+	{
+		LoadMapFromFile("asset\\MapData\\stage1.txt");
+	}
+	else if (currentStage == STAGE_2)
+	{
+		LoadMapFromFile("asset\\MapData\\stage2.txt");
+	}
+	else if (currentStage == STAGE_3)
+	{
+		LoadMapFromFile("asset\\MapData\\stage3.txt");
+	}
+	else
+	{
+		// Default: load stage select
+		LoadMapFromFile("asset\\MapData\\stage_select.txt");
+	}
+
 	// BGM初期化
 	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3DモードのBGMファイル名を指定
 	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2DモードのBGMファイル名を指定

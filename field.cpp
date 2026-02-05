@@ -148,6 +148,8 @@ static XMFLOAT3 g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 MODEL* Model[FIELD_MAX] = { NULL };
 static std::vector<MAPDATA> g_MapData;
 
+static GAME_STAGE g_CurrentStage = STAGE_NONE;
+
 static void EnsureBoxCreated()
 {
 	if (g_VertexBuffer && g_IndexBuffer) return;
@@ -174,20 +176,6 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	if (GetScene() == SCENE_TITLE)
 	{
 		if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
-		{
-			// Error:  could not load map
-			MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
-		}
-	}
-	else if (GetScene() == SCENE_GAME)
-	{
-		//if (!LoadMapFromFile("asset\\MapData\\stage_select.txt"))
-		//{
-		//	// Error:  could not load map
-		//	MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
-		//}
-
-		if (!LoadMapFromFile("asset\\MapData\\stage1.txt"))
 		{
 			// Error:  could not load map
 			MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
@@ -466,6 +454,24 @@ bool LoadMapFromFile(const char* filename)
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
+	// Detect which stage we're loading
+	if (strstr(filename, "stage_select") != nullptr)
+	{
+		g_CurrentStage = STAGE_SELECT;
+	}
+	else if (strstr(filename, "stage1") != nullptr)
+	{
+		g_CurrentStage = STAGE_1;
+	}
+	else if (strstr(filename, "stage2") != nullptr)
+	{
+		g_CurrentStage = STAGE_2;
+	}
+	else if (strstr(filename, "stage3") != nullptr)
+	{
+		g_CurrentStage = STAGE_3;
+	}
+
 	bool isMap1 = false;
 	if (strstr(filename, "stage1") != nullptr)
 	{
@@ -592,4 +598,14 @@ bool LoadMapFromFile(const char* filename)
 XMFLOAT3 Field_GetPlayerStartPosition()
 {
 	return g_PlayerStartPos;
+}
+
+void SetCurrentStage(GAME_STAGE stage)
+{
+	g_CurrentStage = stage;
+}
+
+GAME_STAGE GetCurrentStage()
+{
+	return g_CurrentStage;
 }
