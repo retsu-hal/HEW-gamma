@@ -301,9 +301,7 @@ void Game_Update()
 
 void Game_Draw()
 { 
-
 	Camera_Draw();
-	Light_Draw();
 
 	g_BallLight.SetEnable(TRUE);
 	Shader_SetLight(g_BallLight.Light);
@@ -313,7 +311,6 @@ void Game_Draw()
 	{
 
 	}
-
 
 	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
@@ -351,7 +348,6 @@ void Game_Draw()
 	}
 
 	Direct3D_EndShadowPass();
-	
 			
 	Shader_Begin();
 	Shader_SetLight(g_BallLight.Light);
@@ -360,10 +356,10 @@ void Game_Draw()
 	Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 0.0f);
 
 	{
-		field_Draw();
+		SkyDome_Draw();
 	}
 	{
-		Light_Draw();
+		field_Draw();
 	}
 
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
@@ -383,6 +379,8 @@ void Game_Draw()
 		Player2D_Draw();
 	
 	}
+
+	// ===== UNBIND shadow map and DISABLE light before SkyDome =====
 
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);
@@ -419,10 +417,9 @@ void Game_Draw()
 		}
 	}
 
-	SkyDome_Draw();
+	
 
 	SetDepthTest(FALSE);
 
-	
 }
 

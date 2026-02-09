@@ -420,7 +420,9 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 	if (g_MapData[i].no == FIELD_EMPTY_BOX)
 		return;
-	
+
+	if (g_MapData[i].no == FIELD_OBJ_3)
+		return;
 	if (Model[g_MapData[i].no])
 	{
 		ModelDraw(Model[g_MapData[i].no]);
@@ -550,7 +552,7 @@ bool LoadMapFromFile(const char* filename)
 			case '7': type = FIELD_STAGE_1;    break;
 			case '8': type = FIELD_STAGE_2;    break;
 			case '9': type = FIELD_STAGE_3;    break;
-			case 'M':type = FIELD_MANHOLE;
+			case 'M':type = FIELD_MANHOLE;	   break;
 			case '.': valid = false;         break;
 			case ' ': valid = false;         break;
 			default:  valid = false;         break;
