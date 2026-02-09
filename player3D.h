@@ -50,3 +50,7 @@ XMFLOAT3 Player3D_GetForward();
 void     Player3D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot);
 void     Player3D_SetActive(bool active);
 void	 Player3D_setposition(XMFLOAT3 pos);
+
+void Player3D_StartAutoWalk(float targetYawDeg);  // タイトル画面用自動歩行開始
+void Player3D_AutoWalk();                         // タイトル画面用自動歩行更新
+bool Player3D_IsAutoWalking();                    // 自動歩行中かチェック

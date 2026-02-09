@@ -28,7 +28,7 @@ enum PLAYER_STATE
 	PLAYER_STATE_DASH,			//ダッシュ中
 	PLAYER_STATE_RESPAWN,		//変身中
 	PLAYER_STATE_ACTION,		//アクション中(3D限定)
-
+	PLAYER_STATE_AUTO_WALK,		// タイトル画面の自動歩行
 
 	PLAYER_STATE_MAX,
 };
@@ -69,6 +69,7 @@ public:
 	bool isGround = false;				//接地判定
 	bool isDash = false;				//ダッシュ判定
 	bool isPushing = false;
+	bool isAuto = false;
 	bool Active = true;
 	float FirstMaxMoveSpeed = maxMoveSpeed;
 

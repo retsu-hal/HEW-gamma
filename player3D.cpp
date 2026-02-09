@@ -112,6 +112,14 @@ void Player3D_Update()
 	}
 
 	if (!g_Player3D.Active) return;
+
+	if (g_Player3D.state == PLAYER_STATE_AUTO_WALK)
+	{
+		Player3D_Gravity();
+		Player3D_AutoWalk();
+		return;  // No player input allowed during auto-walk
+	}
+
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Respawn();
@@ -126,6 +134,7 @@ void Player3D_Update()
 		Player3D_Idle();
 		break;
 	case PLAYER_STATE_MOVE:
+		if (!g_Player3D.isAuto)
 		Player3D_Move();	//移動
 		break;
 	case PLAYER_STATE_JUMP:
@@ -251,7 +260,7 @@ void Player3D_Move()
 	}
 
 	// アニメ切替
-	if (!g_Player3D.isPushing)
+	if (!g_Player3D.isPushing && !g_Player3D.isAuto)
 	{
 		if (isMoving) {
 			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
@@ -545,7 +554,7 @@ void Player3D_Idle()
 	}
 
 	// Only set IDLE animation if not pushing
-	if (!g_Player3D.isPushing)
+	if (!g_Player3D.isPushing || !g_Player3D.isAuto)
 	{
 		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 	}
@@ -600,4 +609,77 @@ void Player3D_CheckGoal()
 			SetCurrentStage(STAGE_3);
 		}
 	}
+}
+
+// =========================================================================================================
+// Auto-walk variables (add near the top with other statics)
+// =========================================================================================================
+static bool  g_AutoWalking = false;
+static float g_AutoWalkTargetYaw = 0.0f;     // Target yaw in degrees
+static bool  g_AutoWalkTurning = true;        // Currently turning phase
+static const float kAutoTurnSpeed = 3.0f;     // Degrees per frame for turning
+static const float kAutoWalkSpeed = 0.005f;   // Walk speed during auto-walk
+
+// =========================================================================================================
+// タイトル画面用：自動歩行開始（指定方向に向きを変えてまっすぐ歩く）
+// =========================================================================================================
+void Player3D_StartAutoWalk(float targetYawDeg)
+{
+	g_AutoWalking = true;
+	g_AutoWalkTargetYaw = targetYawDeg;
+	g_AutoWalkTurning = true;
+	g_Player3D.state = PLAYER_STATE_AUTO_WALK;
+	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+}
+
+// =========================================================================================================
+// 自動歩行中かチェック
+// =========================================================================================================
+bool Player3D_IsAutoWalking()
+{
+	return g_AutoWalking;
+}
+
+// =========================================================================================================
+// 自動歩行更新処理
+// =========================================================================================================
+void Player3D_AutoWalk()
+{
+	if (!g_AutoWalking) return;
+
+	// Phase 1: Turn towards target yaw
+	if (g_AutoWalkTurning)
+	{
+		float currentYaw = g_Player3D.Rotation.y;
+		float delta = g_AutoWalkTargetYaw - currentYaw;
+
+		// Shortest path
+		while (delta > 180.0f) delta -= 360.0f;
+		while (delta < -180.0f) delta += 360.0f;
+
+		if (fabsf(delta) < kAutoTurnSpeed)
+		{
+			// Close enough, snap and start walking
+			g_Player3D.Rotation.y = g_AutoWalkTargetYaw;
+			g_AutoWalkTurning = false;
+		}
+		else
+		{
+			// Smoothly rotate
+			float sign = (delta > 0.0f) ? 1.0f : -1.0f;
+			g_Player3D.Rotation.y += sign * kAutoTurnSpeed;
+		}
+	}
+
+	// Phase 2: Walk forward in the direction the player is facing
+	// The model faces -Z in local space (initial rotation is 180 degrees),
+	// so forward = (sin(yaw), 0, cos(yaw)) when yaw includes the 180 offset
+	float yawRad = XMConvertToRadians(g_Player3D.Rotation.y - g_Player3D.FirstRotation.y);
+	XMFLOAT3 forward = { sinf(yawRad), 0.0f, cosf(yawRad) };
+
+	g_Player3D.Velocity.x += forward.x * kAutoWalkSpeed;
+	g_Player3D.Velocity.z += forward.z * kAutoWalkSpeed;
+
+	// Keep walk animation
+	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
 }
