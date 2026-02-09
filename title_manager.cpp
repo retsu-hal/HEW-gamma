@@ -12,6 +12,7 @@
 #include	"ShadowColliderBox.h"
 #include	"fade.h"
 #include	"manager.h"
+#include	"SkyDome.h"
 
 #include	 <map>
 
@@ -30,7 +31,7 @@ static bool g_TitleActionStarted = false;
 static int  g_TitleActionTimer = 0;
 
 static const int kTitleTurnDuration = 30;    // ~0.5 seconds to turn left
-static const int kTitleWalkDuration = 600;   // ~3 seconds walking before transition
+static const int kTitleWalkDuration = 6;   // ~3 seconds walking before transition
 
 static float g_TitleTargetYaw = 0.0f;        // target yaw after turning left
 static float g_TitleStartYaw = 0.0f;         // yaw when action started
@@ -164,6 +165,7 @@ void Title_Manager_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 
 	field_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
+	SkyDome_Initialize(pDevice, pContext);
 	Camera_Initialize();
 
 	g_TitleLight.SetEnable(false);
@@ -186,6 +188,7 @@ void Title_Manager_Finalize()
 
 	field_Finalize();
 	Light_Finalize();
+	SkyDome_Finalize();
 	Camera_Finalize();
 
 	Player3D_Finalize();
@@ -197,6 +200,7 @@ void Title_Manager_Update()
 	Title_Camera_Update();
 	Light_Update();
 	field_Update();
+	SkyDome_Update();
 
 	// Check for Enter key to start title action (only if not already started)
 	if (!g_TitleActionStarted)
@@ -368,5 +372,8 @@ void Title_Manager_Draw()
 
 	g_TitleLight.SetEnable(FALSE);
 	Shader_SetLight(g_TitleLight.Light);
+
+	SkyDome_Draw();
+
 	SetDepthTest(FALSE);
 }

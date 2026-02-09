@@ -392,8 +392,6 @@ void PlayerPushManager_Draw()
         g_pContext = Direct3D_GetDeviceContext();
 
         Shader_Begin();
-        SetBlendState(BLENDSTATE_ALFA);
-        SetDepthTest(TRUE);
 
         g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 

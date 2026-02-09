@@ -15,6 +15,7 @@
 #include	"direct3d.h"
 #include	"Collision.h"
 #include	"Bill_Board.h"
+#include	"SkyDome.h"
 
 #include	"PlayerModeSwitchManager.h"
 #include	"Pushing_Obj_Manager.h"
@@ -77,6 +78,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 
 	field_Initialize(pDevice, pContext);
+	SkyDome_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
 	InitializeBillBoard();
@@ -117,7 +119,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	else
 	{
 		// Default: load stage select
-		LoadMapFromFile("asset\\MapData\\stage_select.txt");
+		LoadMapFromFile("asset\\MapData\\stage1.txt");
 	}
 
 	// BGM‰Šú‰»
@@ -177,6 +179,7 @@ void Game_Finalize()
 	GetShadowManager()->Finalize();
 
 	field_Finalize();
+	SkyDome_Finalize();
 	Polygon3D_Finalize();
 	Light_Finalize();
 	Camera_Finalize();
@@ -234,7 +237,7 @@ void Game_Update()
 
 	Light_Update();
 	field_Update();
-
+	SkyDome_Update();
 
 	PlayerModeSwitchManager_Update();
 
@@ -312,7 +315,7 @@ void Game_Draw()
 	}
 
 
-	///XMFLOAT3 lightPos = GetLight_Position();
+	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
 
 
@@ -330,7 +333,6 @@ void Game_Draw()
 			XMMATRIX world = Light_GetWorldMatrix();
 			Light_DrawRaw(world, world * lightViewProj);
 		}
-
 
 		{
 			std::vector<MAPDATA>& Map = GetFieldMap();
@@ -357,7 +359,6 @@ void Game_Draw()
 	Shader_SetShadowSampler(g_pShadowSamplerState);
 	Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 0.0f);
 
-
 	{
 		field_Draw();
 	}
@@ -369,6 +370,8 @@ void Game_Draw()
 	{
 		g_BallLight.SetEnable(FALSE);
 		Shader_SetLight(g_BallLight.Light);
+
+
 		Player3D_Draw();
 		PlayerPushManager_Draw();
 		g_BallLight.SetEnable(TRUE);
@@ -376,13 +379,14 @@ void Game_Draw()
 	}
 	else
 	{
+		
 		Player2D_Draw();
+	
 	}
 
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);
 	
-
 	Collision_DebugDraw();
 	Seesaw_DebugDraw();
 
@@ -415,7 +419,10 @@ void Game_Draw()
 		}
 	}
 
+	SkyDome_Draw();
+
 	SetDepthTest(FALSE);
 
+	
 }
 
