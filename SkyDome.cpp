@@ -17,7 +17,7 @@ void SkyDome_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Sky.Model = ModelLoad("asset\\model\\sky.fbx");
 	g_Sky.m_position = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Sky.m_rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	g_Sky.m_scaling = XMFLOAT3(100.0f, 30.0f, 100.0f);
+	g_Sky.m_scaling = XMFLOAT3(100.0f, 60.0f, 100.0f);
 
 	g_Sky.m_rotation_speed = ROTATION_SPEED;
 }

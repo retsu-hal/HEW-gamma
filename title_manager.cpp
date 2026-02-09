@@ -31,7 +31,7 @@ static bool g_TitleActionStarted = false;
 static int  g_TitleActionTimer = 0;
 
 static const int kTitleTurnDuration = 30;    // ~0.5 seconds to turn left
-static const int kTitleWalkDuration = 6;   // ~3 seconds walking before transition
+static const int kTitleWalkDuration = 450;   // ~3 seconds walking before transition
 
 static float g_TitleTargetYaw = 0.0f;        // target yaw after turning left
 static float g_TitleStartYaw = 0.0f;         // yaw when action started

@@ -119,7 +119,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	else
 	{
 		// Default: load stage select
-		LoadMapFromFile("asset\\MapData\\stage1.txt");
+		LoadMapFromFile("asset\\MapData\\stage_select.txt");
 	}
 
 	// BGM‰Šú‰»
