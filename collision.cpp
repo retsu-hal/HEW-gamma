@@ -268,6 +268,7 @@ static bool Field_IsSolid(FIELD t)
 	case FIELD_SEESAW_1:
 	case FIELD_SEESAW_2:
 	case FIELD_OBJ_2:
+	case FIELD_OBJ_3:
 		return true;
 	default:
 		return false;
@@ -282,6 +283,9 @@ static bool Field_IsTrigger(FIELD t)
 	{
 	case FIELD_GOAL:
 	case FIELD_OBJ_1:
+	case FIELD_STAGE_1:
+	case FIELD_STAGE_2:
+	case FIELD_STAGE_3:
 		return true;
 	default:
 		return false;

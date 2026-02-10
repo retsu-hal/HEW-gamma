@@ -6,6 +6,7 @@
 #include "Collision.h"
 #include "manager.h"
 #include "Input.h"
+#include "fade.h"
 
 #include "field.h"
 #include "debug.h"
@@ -111,12 +112,21 @@ void Player3D_Update()
 	}
 
 	if (!g_Player3D.Active) return;
+
+	if (g_Player3D.state == PLAYER_STATE_AUTO_WALK)
+	{
+		Player3D_Gravity();
+		Player3D_AutoWalk();
+		return;  // No player input allowed during auto-walk
+	}
+
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Respawn();
 	}
 	
 	Player3D_Gravity();
+	Player3D_CheckGoal();
 
 	switch (g_Player3D.state)
 	{
@@ -124,6 +134,7 @@ void Player3D_Update()
 		Player3D_Idle();
 		break;
 	case PLAYER_STATE_MOVE:
+		if (!g_Player3D.isAuto)
 		Player3D_Move();	//移動
 		break;
 	case PLAYER_STATE_JUMP:
@@ -249,11 +260,14 @@ void Player3D_Move()
 	}
 
 	// アニメ切替
-	if (isMoving) {
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
-	}
-	else {
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+	if (!g_Player3D.isPushing && !g_Player3D.isAuto)
+	{
+		if (isMoving) {
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+		}
+		else {
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+		}
 	}
 
 	// カメラ基準移動
@@ -397,10 +411,6 @@ void Player3D_Action()
 	case FIELD_OBJ_1:
 		isTrigger = true;
 		break;
-	case FIELD_OBJ_2:
-		// 何かの処理
-		break;
-
 	default:
 		break;
 	}
@@ -408,7 +418,7 @@ void Player3D_Action()
 
 void Player3D_Draw(void)
 {
-	if (!g_Player3DActive) return;
+	if (!g_Player3D.Active) return;
 
 	if (debugMode)
 	{
@@ -494,7 +504,7 @@ void Player3D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
 
 void Player3D_SetActive(bool active)
 {
-	g_Player3DActive = active;
+	g_Player3D.Active = active;
 }
 
 //=========================================================================================================
@@ -542,9 +552,134 @@ void Player3D_Idle()
 	{
 		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
-	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+
+	// Only set IDLE animation if not pushing
+	if (!g_Player3D.isPushing || !g_Player3D.isAuto)
+	{
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+	}
 
 	// 横方向は緩やかに減速
 	g_Player3D.Velocity.x *= g_Player3D.dampingXZ;
 	g_Player3D.Velocity.z *= g_Player3D.dampingXZ;
+}
+
+void Player3D_CheckGoal()
+{
+	TRIGGER_HIT hit;
+	if (!Collision_PlayerTrigger(&hit, 0.0f)) return;
+
+	if (hit.type == FIELD_GOAL)
+	{
+		// ゴール処理 - リザルト画面へ遷移
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_RESULT);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_1)
+	{
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 1
+			SetCurrentStage(STAGE_1);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_2)
+	{
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 2
+			SetCurrentStage(STAGE_2);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_3)
+	{
+		// Load Hard Stage
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 3
+			SetCurrentStage(STAGE_3);
+		}
+	}
+}
+
+// =========================================================================================================
+// Auto-walk variables (add near the top with other statics)
+// =========================================================================================================
+static bool  g_AutoWalking = false;
+static float g_AutoWalkTargetYaw = 0.0f;     // Target yaw in degrees
+static bool  g_AutoWalkTurning = true;        // Currently turning phase
+static const float kAutoTurnSpeed = 3.0f;     // Degrees per frame for turning
+static const float kAutoWalkSpeed = 0.005f;   // Walk speed during auto-walk
+
+// =========================================================================================================
+// タイトル画面用：自動歩行開始（指定方向に向きを変えてまっすぐ歩く）
+// =========================================================================================================
+void Player3D_StartAutoWalk(float targetYawDeg)
+{
+	g_AutoWalking = true;
+	g_AutoWalkTargetYaw = targetYawDeg;
+	g_AutoWalkTurning = true;
+	g_Player3D.state = PLAYER_STATE_AUTO_WALK;
+	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+}
+
+// =========================================================================================================
+// 自動歩行中かチェック
+// =========================================================================================================
+bool Player3D_IsAutoWalking()
+{
+	return g_AutoWalking;
+}
+
+// =========================================================================================================
+// 自動歩行更新処理
+// =========================================================================================================
+void Player3D_AutoWalk()
+{
+	if (!g_AutoWalking) return;
+
+	// Phase 1: Turn towards target yaw
+	if (g_AutoWalkTurning)
+	{
+		float currentYaw = g_Player3D.Rotation.y;
+		float delta = g_AutoWalkTargetYaw - currentYaw;
+
+		// Shortest path
+		while (delta > 180.0f) delta -= 360.0f;
+		while (delta < -180.0f) delta += 360.0f;
+
+		if (fabsf(delta) < kAutoTurnSpeed)
+		{
+			// Close enough, snap and start walking
+			g_Player3D.Rotation.y = g_AutoWalkTargetYaw;
+			g_AutoWalkTurning = false;
+		}
+		else
+		{
+			// Smoothly rotate
+			float sign = (delta > 0.0f) ? 1.0f : -1.0f;
+			g_Player3D.Rotation.y += sign * kAutoTurnSpeed;
+		}
+	}
+
+	// Phase 2: Walk forward in the direction the player is facing
+	// The model faces -Z in local space (initial rotation is 180 degrees),
+	// so forward = (sin(yaw), 0, cos(yaw)) when yaw includes the 180 offset
+	float yawRad = XMConvertToRadians(g_Player3D.Rotation.y - g_Player3D.FirstRotation.y);
+	XMFLOAT3 forward = { sinf(yawRad), 0.0f, cosf(yawRad) };
+
+	g_Player3D.Velocity.x += forward.x * kAutoWalkSpeed;
+	g_Player3D.Velocity.z += forward.z * kAutoWalkSpeed;
+
+	// Keep walk animation
+	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
 }

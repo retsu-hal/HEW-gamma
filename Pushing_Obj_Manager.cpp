@@ -46,6 +46,7 @@ static bool Field_IsPushable(FIELD t)
     switch (t)
     {
     case FIELD_OBJ_2:
+    case FIELD_OBJ_3:
         return true;
     default:
         return false;
@@ -335,7 +336,9 @@ void PlayerPushManager_Update()
                 g_ShowBillBoard = false;  // Hide billboard while pushing
 
                 // Set player animation to push
-                p3->CurrentAnimIndex = PLAYER_ANIM_PUSH;
+                PLAYER* p = GetPlayer3D();
+                p->isPushing = true;
+                p->CurrentAnimIndex = PLAYER_ANIM_PUSH;
             }
         }
     }
@@ -351,7 +354,8 @@ void PlayerPushManager_Update()
             g_CurrentTarget.fieldIndex = -1;
 
             // Reset player animation
-            p3->CurrentAnimIndex = PLAYER_ANIM_IDLE;
+            PLAYER* p = GetPlayer3D();
+            p->isPushing = false;
             break;
         }
 
@@ -373,7 +377,9 @@ void PlayerPushManager_Update()
         ApplyPushMovement(g_CurrentTarget.fieldIndex, g_CurrentTarget.pushDirection);
 
         // Keep push animation
-        p3->CurrentAnimIndex = PLAYER_ANIM_PUSH;
+        PLAYER* p = GetPlayer3D();
+        p->isPushing = true;
+        p->CurrentAnimIndex = PLAYER_ANIM_PUSH;
     }
     break;
     }
@@ -386,8 +392,6 @@ void PlayerPushManager_Draw()
         g_pContext = Direct3D_GetDeviceContext();
 
         Shader_Begin();
-        SetBlendState(BLENDSTATE_ALFA);
-        SetDepthTest(TRUE);
 
         g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 

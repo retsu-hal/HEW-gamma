@@ -132,6 +132,9 @@
     <ClCompile Include="Trail.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="SkyDome.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h">
@@ -249,6 +252,9 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="Trail.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyDome.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>
