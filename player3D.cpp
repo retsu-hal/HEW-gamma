@@ -6,6 +6,7 @@
 #include "Collision.h"
 #include "manager.h"
 #include "Input.h"
+#include "fade.h"
 
 #include "field.h"
 #include "debug.h"
@@ -13,7 +14,13 @@
 using namespace mu;
 
 #include "Seesaw.h"
+
+#ifdef _DEBUG	//デバッグビルドの時だけ変数が作られる
 static bool debugMode = true;
+#else
+static bool debugMode = false;
+#endif
+
 
 //=========================================================================================================
 // グローバル変数
@@ -37,13 +44,8 @@ static XMFLOAT3 g_TriggerHalfSize = XMFLOAT3(
 	PLAYER3D_TRIGGER_HALF_Y,
 	PLAYER3D_TRIGGER_HALF_Z
 );
-static bool g_Player3DActive = true;
 static bool isTrigger = false;
 
-// 前方宣言: 状態管理のための追加関数
-static bool Player3D_HasMoveInput();
-static void Player3D_HandleStateTransitions();
-static void Player3D_Idle();
 
 //=========================================================================================================
 // 初期化処理
@@ -64,17 +66,17 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
 
 	g_Player3D.Firstposition = g_Player3D.Position;
-	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 180.0f, 0.0f);
 	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	g_Player3D.FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player3D.FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
-	g_Player3D.FirstState = g_Player3D.state = PLAYER_STATE_MOVE;
+	g_Player3D.FirstState = g_Player3D.state = PLAYER_STATE_IDLE;
 	g_Player3D.FirstStopTime = g_StopTime = 0.0f;
 	g_Player3D.FirstQuaternion = g_Player3D.Quaternion = XMQuaternionIdentity();
 
 	FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 
-	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;	//弶婜嵟戝堏摦懍搙
+	g_Player3D.FirstMaxMoveSpeed = g_Player3D.maxMoveSpeed;
 }
 
 //=========================================================================================================
@@ -103,48 +105,50 @@ void Player3D_Update()
 			ImGui::Text("PosX: %.2f", g_Player3D.Position.x);
 			ImGui::Text("PosY: %.2f", g_Player3D.Position.y);
 			ImGui::Text("PosZ: %.2f", g_Player3D.Position.z);
+			ImGui::Text("State: %d", g_Player3D.state);
 			ImGui::TreePop();
 		}
 		ImGui::End();
 	}
 
-	if (!g_Player3DActive) return;
+	if (!g_Player3D.Active) return;
+
+	if (g_Player3D.state == PLAYER_STATE_AUTO_WALK)
+	{
+		Player3D_Gravity();
+		Player3D_AutoWalk();
+		return;  // No player input allowed during auto-walk
+	}
+
 	if (g_Player3D.Position.y < -10.0f)
 	{
 		Player3D_Respawn();
 	}
 	
-
 	Player3D_Gravity();
-
-	// プレイヤー操作
-
-
-	Player3D_Move();	//移動
-	Player3D_Dash();	//ダッシュ
-	Player3D_Jump();	//ジャンプ
-	Player3D_Change();	//影変身
-	Player3D_Action();	//アクション
-
+	Player3D_CheckGoal();
 
 	switch (g_Player3D.state)
 	{
 	case PLAYER_STATE_IDLE:
-		
+		Player3D_Idle();
 		break;
 	case PLAYER_STATE_MOVE:
-		
+		if (!g_Player3D.isAuto)
+		Player3D_Move();	//移動
 		break;
-	case PLAYER_STATE_FALL:
-		
+	case PLAYER_STATE_JUMP:
+		Player3D_Jump();	//ジャンプ
+		break;
+	case PLAYER_STATE_DASH:
+		Player3D_Dash();	//ダッシュ
 		break;
 	case PLAYER_STATE_ACTION:
-		
+		Player3D_Action();	//アクション
 		break;
 	default:
 		break;
 	}
-
 
 }
 
@@ -256,11 +260,14 @@ void Player3D_Move()
 	}
 
 	// アニメ切替
-	if (isMoving) {
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
-	}
-	else {
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+	if (!g_Player3D.isPushing && !g_Player3D.isAuto)
+	{
+		if (isMoving) {
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+		}
+		else {
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+		}
 	}
 
 	// カメラ基準移動
@@ -335,21 +342,29 @@ void Player3D_Move()
 		g_Player3D.Velocity.z = -g_Player3D.maxMoveSpeed;
 	}
 
+	if (IsInputTrigger(JumpKey, gPad))
+	{
+		g_Player3D.state = PLAYER_STATE_JUMP;
+	}
 	
+	// Dash開始（MOVE -> DASH遷移）
+	if (IsInputTrigger(DashKey, gPad))
+	{
+		g_Player3D.state = PLAYER_STATE_DASH;
+		// 当フレームからダッシュ速度を適用
+		g_Player3D.isDash = true;
+		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
+	}
 }
 
 void Player3D_Jump()
 {
-	if (IsInputTrigger(JumpKey, gPad))
-	{
 		if (g_Player3D.isGround)
 		{
 			g_Player3D.Velocity.y = g_Player3D.jumpPower;
 			g_Player3D.isGround = false;
-			g_Player3D.state = PLAYER_STATE_FALL; // 上昇後はFALLへ
+			g_Player3D.state = PLAYER_STATE_MOVE; // 上昇後はFALLへ
 		}
-	}
-
 }
 
 void Player3D_Change()
@@ -364,22 +379,16 @@ void Player3D_Dash()
 		// ダッシュ開始/継続
 		g_Player3D.isDash = true;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
+
+		// ダッシュ中も移動入力を反映
+		Player3D_Move();
 	}
 	else
 	{
 		// ダッシュ解除
 		g_Player3D.isDash = false;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
-
-		// 状態復帰（地上/空中で適切に戻す）
-		if (g_Player3D.isGround)
-		{
-			g_Player3D.state = Player3D_HasMoveInput() ? PLAYER_STATE_MOVE : PLAYER_STATE_IDLE;
-		}
-		else
-		{
-			g_Player3D.state = PLAYER_STATE_FALL;
-		}
+		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
 }
 
@@ -402,10 +411,6 @@ void Player3D_Action()
 	case FIELD_OBJ_1:
 		isTrigger = true;
 		break;
-	case FIELD_OBJ_2:
-		// 何かの処理
-		break;
-
 	default:
 		break;
 	}
@@ -413,7 +418,7 @@ void Player3D_Action()
 
 void Player3D_Draw(void)
 {
-	if (!g_Player3DActive) return;
+	if (!g_Player3D.Active) return;
 
 	if (debugMode)
 	{
@@ -476,7 +481,7 @@ XMFLOAT3 Player3D_GetForward()
 
 	XMMATRIX R = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 
-	XMVECTOR f = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), R);
+	XMVECTOR f = XMVector3TransformNormal(XMVectorSet(0, 0, -1, 0), R);
 	f = XMVector3Normalize(f);
 
 	XMFLOAT3 out;
@@ -499,13 +504,13 @@ void Player3D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
 
 void Player3D_SetActive(bool active)
 {
-	g_Player3DActive = active;
+	g_Player3D.Active = active;
 }
 
 //=========================================================================================================
 // mapの読み込み時の初期位置設定用
 //=========================================================================================================
-void Playe3D_setposition(XMFLOAT3 pos)
+void Player3D_setposition(XMFLOAT3 pos)
 {
 	g_Player3D.Firstposition = pos;
 
@@ -540,88 +545,141 @@ XMFLOAT3 Player3D_GetTriggerHalfSize()
 	return g_TriggerHalfSize;
 }
 
-//=========================================================================================================
-// 追加: 状態管理のためのヘルパー
-//=========================================================================================================
-static bool Player3D_HasMoveInput()
+
+void Player3D_Idle()
 {
-	if (!gPad.IsConnected())
+	if (IsInputPress(UpKey, gPad)|| IsInputPress(RightKey, gPad) || IsInputPress(DownKey, gPad) || IsInputPress(LeftKey, gPad))
 	{
-		if (Keyboard_IsKeyDown(KK_W)) return true;
-		if (Keyboard_IsKeyDown(KK_S)) return true;
-		if (Keyboard_IsKeyDown(KK_A)) return true;
-		if (Keyboard_IsKeyDown(KK_D)) return true;
-		return false;
-	}
-	else
-	{
-		float lx = gPad.GetLeftStickX();
-		float ly = gPad.GetLeftStickY();
-		const float deadzone = 0.20f;
-		return (fabsf(lx) >= deadzone) || (fabsf(ly) >= deadzone);
-	}
-}
-
-static void Player3D_HandleStateTransitions()
-{
-	// ジャンプ開始（地上で入力があればJUMPへ）
-	if (g_Player3D.isGround && IsInputPress(JumpKey, gPad))
-	{
-		g_Player3D.state = PLAYER_STATE_JUMP;
+		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
 
-	// DASH開始（IDLE/MOVE時に入力があればDASHへ）
-	if ((g_Player3D.state == PLAYER_STATE_IDLE || g_Player3D.state == PLAYER_STATE_MOVE) && IsInputPress(DashKey, gPad))
+	// Only set IDLE animation if not pushing
+	if (!g_Player3D.isPushing || !g_Player3D.isAuto)
 	{
-		g_Player3D.state = PLAYER_STATE_DASH;
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 	}
-
-	// 着地時の復帰
-	if (g_Player3D.isGround)
-	{
-		// FALL/JUMPから地上へ戻ったら入力有無でIDLE/MOVEへ
-		if (g_Player3D.state == PLAYER_STATE_FALL || g_Player3D.state == PLAYER_STATE_JUMP)
-		{
-			g_Player3D.state = Player3D_HasMoveInput() ? PLAYER_STATE_MOVE : PLAYER_STATE_IDLE;
-		}
-
-		// IDLE中に入力が来たらMOVEへ
-		if (g_Player3D.state == PLAYER_STATE_IDLE && Player3D_HasMoveInput())
-		{
-			g_Player3D.state = PLAYER_STATE_MOVE;
-		}
-	}
-	else
-	{
-		// 空中で下降中ならFALLへ（JUMP直後の上昇中は除く）
-		if (g_Player3D.Velocity.y <= 0.0f && g_Player3D.state != PLAYER_STATE_JUMP)
-		{
-			g_Player3D.state = PLAYER_STATE_FALL;
-		}
-	}
-
-	// DASH中で入力が離れたら解除（詳細は Player3D_Dash() 内でも保険）
-	if (g_Player3D.state == PLAYER_STATE_DASH && !IsInputPress(DashKey, gPad))
-	{
-		g_Player3D.isDash = false;
-		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
-
-		if (g_Player3D.isGround)
-		{
-			g_Player3D.state = Player3D_HasMoveInput() ? PLAYER_STATE_MOVE : PLAYER_STATE_IDLE;
-		}
-		else
-		{
-			g_Player3D.state = PLAYER_STATE_FALL;
-		}
-	}
-}
-
-static void Player3D_Idle()
-{
-	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 
 	// 横方向は緩やかに減速
 	g_Player3D.Velocity.x *= g_Player3D.dampingXZ;
 	g_Player3D.Velocity.z *= g_Player3D.dampingXZ;
+}
+
+void Player3D_CheckGoal()
+{
+	TRIGGER_HIT hit;
+	if (!Collision_PlayerTrigger(&hit, 0.0f)) return;
+
+	if (hit.type == FIELD_GOAL)
+	{
+		// ゴール処理 - リザルト画面へ遷移
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_RESULT);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_1)
+	{
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 1
+			SetCurrentStage(STAGE_1);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_2)
+	{
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 2
+			SetCurrentStage(STAGE_2);
+		}
+	}
+	else if (hit.type == FIELD_STAGE_3)
+	{
+		// Load Hard Stage
+		if (GetFadeState() == FADE_NONE)
+		{
+			XMFLOAT4 color(0.0f, 0.0f, 0.0f, 1.0f);
+			SetFade(60, color, FADE_OUT, SCENE_GAME);
+			// Set flag to load stage 3
+			SetCurrentStage(STAGE_3);
+		}
+	}
+}
+
+// =========================================================================================================
+// Auto-walk variables (add near the top with other statics)
+// =========================================================================================================
+static bool  g_AutoWalking = false;
+static float g_AutoWalkTargetYaw = 0.0f;     // Target yaw in degrees
+static bool  g_AutoWalkTurning = true;        // Currently turning phase
+static const float kAutoTurnSpeed = 3.0f;     // Degrees per frame for turning
+static const float kAutoWalkSpeed = 0.005f;   // Walk speed during auto-walk
+
+// =========================================================================================================
+// タイトル画面用：自動歩行開始（指定方向に向きを変えてまっすぐ歩く）
+// =========================================================================================================
+void Player3D_StartAutoWalk(float targetYawDeg)
+{
+	g_AutoWalking = true;
+	g_AutoWalkTargetYaw = targetYawDeg;
+	g_AutoWalkTurning = true;
+	g_Player3D.state = PLAYER_STATE_AUTO_WALK;
+	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+}
+
+// =========================================================================================================
+// 自動歩行中かチェック
+// =========================================================================================================
+bool Player3D_IsAutoWalking()
+{
+	return g_AutoWalking;
+}
+
+// =========================================================================================================
+// 自動歩行更新処理
+// =========================================================================================================
+void Player3D_AutoWalk()
+{
+	if (!g_AutoWalking) return;
+
+	// Phase 1: Turn towards target yaw
+	if (g_AutoWalkTurning)
+	{
+		float currentYaw = g_Player3D.Rotation.y;
+		float delta = g_AutoWalkTargetYaw - currentYaw;
+
+		// Shortest path
+		while (delta > 180.0f) delta -= 360.0f;
+		while (delta < -180.0f) delta += 360.0f;
+
+		if (fabsf(delta) < kAutoTurnSpeed)
+		{
+			// Close enough, snap and start walking
+			g_Player3D.Rotation.y = g_AutoWalkTargetYaw;
+			g_AutoWalkTurning = false;
+		}
+		else
+		{
+			// Smoothly rotate
+			float sign = (delta > 0.0f) ? 1.0f : -1.0f;
+			g_Player3D.Rotation.y += sign * kAutoTurnSpeed;
+		}
+	}
+
+	// Phase 2: Walk forward in the direction the player is facing
+	// The model faces -Z in local space (initial rotation is 180 degrees),
+	// so forward = (sin(yaw), 0, cos(yaw)) when yaw includes the 180 offset
+	float yawRad = XMConvertToRadians(g_Player3D.Rotation.y - g_Player3D.FirstRotation.y);
+	XMFLOAT3 forward = { sinf(yawRad), 0.0f, cosf(yawRad) };
+
+	g_Player3D.Velocity.x += forward.x * kAutoWalkSpeed;
+	g_Player3D.Velocity.z += forward.z * kAutoWalkSpeed;
+
+	// Keep walk animation
+	g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
 }

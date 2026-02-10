@@ -77,21 +77,6 @@ void Title_Update()
 { 
 	Title_Manager_Update();
 
-	if (GetFadeState() != FADE_NONE)
-		return;
-
-	//キー入力チェック
-	//スタートボタンが押されたらシーンを切り替え
-	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
-	{
-		//フェードアウトさせてシーンを切り替える
-		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
-		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
-	}
-
-
-	
 }
 //=========================================================================================================
 //描画処理

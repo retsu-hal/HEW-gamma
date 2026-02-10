@@ -184,12 +184,9 @@ void Title_Camera_Update()
 
 	// Fixed cinematic camera
 	CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
-	CameraObject.AtPosition = XMFLOAT3(4.0f, 2.0f, 0.0f);
+	CameraObject.AtPosition = XMFLOAT3(4.0f, 0.0f, 0.0f);
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	// IMPORTANT: override internal follow camera state
-	gCamPos = CameraObject.Position;
-	gCamTarget = CameraObject.AtPosition;
 }
 
 //=========================================================================================================

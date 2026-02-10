@@ -171,6 +171,7 @@
     <ClCompile Include="score.cpp" />
     <ClCompile Include="shader.cpp" />
     <ClCompile Include="ShadowColliderBox.cpp" />
+    <ClCompile Include="SkyDome.cpp" />
     <ClCompile Include="sprite.cpp" />
     <ClCompile Include="Seesaw.cpp" />
     <ClCompile Include="title.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="score.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="ShadowColliderBox.h" />
+    <ClInclude Include="SkyDome.h" />
     <ClInclude Include="sprite.h" />
     <ClInclude Include="Seesaw.h" />
     <ClInclude Include="title.h" />
