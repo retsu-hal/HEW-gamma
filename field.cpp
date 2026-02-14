@@ -8,8 +8,13 @@
 
 #include "debug.h"
 #include "player3D.h"
+<<<<<<< HEAD
 #include "FieldSeesaw.h"
 #include "FieldManhole.h"
+=======
+#include "Seesaw.h"
+#include "manager.h"
+>>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 
 static bool debugMode;
 //=========================================================================================================
@@ -20,201 +25,109 @@ static bool debugMode;
 //=========================================================================================================
 //構造体定義・定義
 //=========================================================================================================
-static Vertex3D Box_vdata[BOX_NUM_VERTEX]
-{
-	//==================
-	// 正面（+Z面）
-	//==================
-	//頂点０　左上
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	//頂点1　右上
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	//頂点2　左下
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
 
-	//頂点3　右下
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
+	// +Z (Front)
+	{{ 0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {0,0}},
+	{{-0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {1,0}},
+	{{ 0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {0,1}},
+	{{-0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 右面（+X面）
-	//==================
-	// 頂点4　左上
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点5　右上
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	//頂点6　左下
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
-	// 頂点7　右下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+	// -Z (Back)
+	{{-0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {1,0}},
+	{{-0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 裏面（-Z面）
-	//==================
-	// 頂点8　左上
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//頂点座標7
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点9　右上
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点10　左下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
-	// 頂点11　右下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
+	// +X (Right)
+	{{ 0.5f,  0.5f, -0.5f}, { 1,  0,  0}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f,  0.5f}, { 1,  0,  0}, {1,1,1,1}, {1,0}},
+	{{ 0.5f, -0.5f, -0.5f}, { 1,  0,  0}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f,  0.5f}, { 1,  0,  0}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 左面（-X面）
-	//==================
-	// 頂点12　左上
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点13　右上
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.0f)					    //テクスチャ座標
-	},
-	// 頂点14　左下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
-	// 頂点15　右下
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//頂点座標
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+	// -X (Left)
+	{{-0.5f,  0.5f,  0.5f}, {-1,  0,  0}, {1,1,1,1}, {0,0}},
+	{{-0.5f,  0.5f, -0.5f}, {-1,  0,  0}, {1,1,1,1}, {1,0}},
+	{{-0.5f, -0.5f,  0.5f}, {-1,  0,  0}, {1,1,1,1}, {0,1}},
+	{{-0.5f, -0.5f, -0.5f}, {-1,  0,  0}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// 天面（+Y面）
-	//==================
-	//頂点16　左上
-	{
-		XMFLOAT3(-0.5f, 0.5f, 0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(0.0f, 0.0f)					    //テクスチャ座標
-	},
-	//頂点17　右上
-	{
-		XMFLOAT3(0.5f, 0.5f, 0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//カラー
-		XMFLOAT2(1.0f, 0.0f)					    //テクスチャ座標
-	},
-	//頂点18　左下
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.25f)					    //テクスチャ座標
-	},
-	//頂点19　右下
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.25f)					    //テクスチャ座標
-	},
+	// +Y (Top)
+	{{-0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1,1,1,1}, {1,0}},
+	{{-0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1,1,1,1}, {0.0f,0.25f}},
+	{{ 0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1,1,1,1}, {1.0f,0.25f}},
 
-	//==================
-	// 底面（-Ｙ面）
-	//==================
-	//頂点20　左上
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,0.75f)					    //テクスチャ座標
-	},
-	//頂点21　右上
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,0.75f)					    //テクスチャ座標
-	},
-	//頂点22　左下
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(0.0f,1.0f)					    //テクスチャ座標
-	},
-	//頂点23　右下
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//頂点座標
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//カラー
-		XMFLOAT2(1.0f,1.0f)					    //テクスチャ座標
-	},
+	// -Y (Bottom)
+	{{-0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1,1,1,1}, {0.0f,0.75f}},
+	{{ 0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1,1,1,1}, {1.0f,0.75f}},
+	{{-0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1,1,1,1}, {1,1}},
 };
+
+//static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
+//	//座標                  Normal               色                    テクスチャ座標
+//
+//	//前面 (Z+)
+//	//頂点0 LEFT-TOP
+//	{{ 0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点1 RIGHT-TOP						  
+//	{{-0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点2 LEFT-BOTTOM						  
+//	{{ 0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点3 RIGHT-BOTTOM
+//	{{-0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (Z-)
+//	//頂点4 LEFT-TOP
+//	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点5 RIGHT-TOP		
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点6 LEFT-BOTTOM	 
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点7 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (X+)
+//	//頂点8 LEFT-TOP
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点9 RIGHT-TOP
+//	{{ 0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点10 LEFT-BOTTOM
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点11 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (X-)
+//	//頂点12 LEFT-TOP
+//	{{-0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点13 RIGHT-TOP
+//	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点14 LEFT-BOTTOM
+//	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点15 RIGHT-BOTTOM
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//前面 (Y+)
+//	//頂点16 LEFT-TOP
+//	{{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//頂点17 RIGHT-TOP
+//	{{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//頂点18 LEFT-BOTTOM
+//	{{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.25f}},
+//	//頂点19 RIGHT-BOTTOM
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,0.25f}},
+//
+//	//前面 (Y-)
+//	//頂点20 LEFT-TOP
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.75f}},
+//	//頂点21 RIGHT-TOP
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.75f}},
+//	//頂点22 LEFT-BOTTOM
+//	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//頂点23 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//};
+
 static UINT Box_idxdata[6 * 6] =
 {
 	0,  1,  2,  2,  1,  3,//-Z
@@ -234,9 +147,13 @@ static ID3D11DeviceContext* g_pContext = NULL;
 static ID3D11ShaderResourceView* g_Texture;		//テクスチャ変数
 static ID3D11Buffer* g_VertexBuffer = NULL;		// 頂点バッファ
 static ID3D11Buffer* g_IndexBuffer = NULL;		// インデックスバッファ
+// 追加: プレイヤー初期位置（Rの読み取り結果）を保持
+static XMFLOAT3 g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 MODEL* Model[FIELD_MAX] = { NULL };
 static std::vector<MAPDATA> g_MapData;
+
+static GAME_STAGE g_CurrentStage = STAGE_NONE;
 
 static void EnsureBoxCreated()
 {
@@ -262,11 +179,21 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+	if (GetScene() == SCENE_TITLE)
 	{
+<<<<<<< HEAD
 		// Error:  could not load map
 		MessageBox(nullptr, "Failed to load map file! Error", "Error", MB_OK);
+=======
+		if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+		{
+			// Error:  could not load map
+			MessageBox(nullptr, "Failed to load map file! Error", "エラー", MB_OK);
+		}
+>>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 	}
+
+	
 
 	bool hasGround = false;
 	bool hasWall = false;
@@ -275,15 +202,54 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (m.no == FIELD_WALL)   hasWall = true;
 	}
 
-	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_OBJ_3] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
+	if (!Model[FIELD_GROUND])
+	{
+		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
+		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Building_B.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
 	if (!Model[FIELD_OBJ_BOX])
 	{
-		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
+		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Wooden_Box.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
+	if (!Model[FIELD_OBJ_1])
+	{
+		Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\Building_A.fbx");
+	}
+	if (!Model[FIELD_OBJ_2])
+	{
+		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\Building_B.fbx");
+		//CreateBox();
+	}
+	if (!Model[FIELD_OBJ_3])
+	{
+		Model[FIELD_OBJ_3] = ModelLoad("asset\\model\\Building_B.fbx");
 	}
 	if (!Model[FIELD_GOAL])
 	{
 		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
+	}
+
+	if (!Model[FIELD_STAGE_1])
+	{
+		Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\test.fbx");
+	}
+	if (!Model[FIELD_STAGE_2])
+	{
+		Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\test.fbx");
+	}
+	if (!Model[FIELD_STAGE_3])
+	{
+		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
 	}
 	if (!Model[FIELD_SEESAW_1])
 	{
@@ -467,7 +433,9 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 	if (g_MapData[i].no == FIELD_EMPTY_BOX)
 		return;
-	
+
+	if (g_MapData[i].no == FIELD_OBJ_3)
+		return;
 	if (Model[g_MapData[i].no])
 	{
 		ModelDraw(Model[g_MapData[i].no]);
@@ -484,6 +452,10 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 }
 
+
+
+
+
 //=========================================================================================================
 // txtロード
 //=========================================================================================================
@@ -497,7 +469,24 @@ bool LoadMapFromFile(const char* filename)
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
-	// Detect map 1 (stage1)
+	// Detect which stage we're loading
+	if (strstr(filename, "stage_select") != nullptr)
+	{
+		g_CurrentStage = STAGE_SELECT;
+	}
+	else if (strstr(filename, "stage1") != nullptr)
+	{
+		g_CurrentStage = STAGE_1;
+	}
+	else if (strstr(filename, "stage2") != nullptr)
+	{
+		g_CurrentStage = STAGE_2;
+	}
+	else if (strstr(filename, "stage3") != nullptr)
+	{
+		g_CurrentStage = STAGE_3;
+	}
+
 	bool isMap1 = false;
 	if (strstr(filename, "stage1") != nullptr)
 	{
@@ -514,16 +503,17 @@ bool LoadMapFromFile(const char* filename)
 	Seesaw_ClearAll();
 	Manhole_ClearAll();
 
+	// 追加: 読み込み開始時に初期位置をデフォルトへ
+	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
 	std::string line;
 	int y = 0;  // height layer
 	int z = 0;  // depth
 
 	while (std::getline(file, line))
 	{
-		// Skip comments
 		if (line.empty() || line[0] == '#')
 		{
-			// Check for new layer
 			if (line.find("Layer") != std::string::npos) {
 				y++;
 				z = 0;
@@ -531,23 +521,22 @@ bool LoadMapFromFile(const char* filename)
 			continue;
 		}
 
-		// Parse each character
 		for (int x = 0; x < (int)line.length(); x++)
 		{
-
 			char c = line[x];
 			//Seesaw
 			if (c == 'S')
 			{
 				Seesaw_Create(
 					(float)(x - 2),
-					(float)(y - 1),
+					(float)(y - 2),
 					(float)z,
 					g_MapData
 				);
 				continue;
 			}
 
+<<<<<<< HEAD
 			//Manhole
 			if (c == 'M')
 			{
@@ -560,36 +549,75 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
+=======
+			// 追加: 'R' はプレイヤー初期位置マーカー
+			if (c == 'R')
+			{
+				// マップ座標系と同様のオフセットで設定
+				g_PlayerStartPos = XMFLOAT3(
+					(float)(x - 2),
+					(float)(y - 2),
+					(float)z
+				);
+				Player3D_setposition(g_PlayerStartPos);
+				Player3D_InitAt(g_PlayerStartPos, XMFLOAT3(0.0f, 180.0f, 0.0f));
+				// フィールドオブジェクトとしては追加しない
+				continue;
+			}
+>>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 
 			FIELD type;
 			bool valid = true;
 
-			switch (line[x])
+			switch (c)
 			{
 			case 'G': type = FIELD_GROUND;   break;
-			case 'W':  type = FIELD_WALL; break;
-			case 'B':  type = FIELD_OBJ_BOX;  break;
-			case 'E':  type = FIELD_EMPTY_BOX;  break;
-			case '1':  type = FIELD_GOAL;  break;
-			case 'O':  type = FIELD_OBJ_1;  break;
-			case '2':  type = FIELD_OBJ_2;  break;
-			case '.': valid = false;      break;  // Empty
-			case ' ': valid = false;      break;  // Space
-			default:  valid = false;      break;
+			case 'W': type = FIELD_WALL;     break;
+			case 'B': type = FIELD_OBJ_BOX;  break;
+			case 'E': type = FIELD_EMPTY_BOX; break;
+			case '1': type = FIELD_GOAL;     break;
+			case 'O': type = FIELD_OBJ_1;    break;
+			case '2': type = FIELD_OBJ_2;    break;
+			case '3': type = FIELD_OBJ_3;    break;
+			case '7': type = FIELD_STAGE_1;    break;
+			case '8': type = FIELD_STAGE_2;    break;
+			case '9': type = FIELD_STAGE_3;    break;
+			case 'M':type = FIELD_MANHOLE;	   break;
+			case '.': valid = false;         break;
+			case ' ': valid = false;         break;
+			default:  valid = false;         break;
 			}
 
 			if (valid)
 			{
 				MAPDATA data;
-				data.pos = XMFLOAT3(
-					(float)(x - 2),  // Center X (adjust offset as needed)
-					(float)(y - 1),
-					(float)z
-				);
-				data.no = type; 
-				data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-				data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-				g_MapData.push_back(data);
+
+				if (isMapTitle)
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 2),
+						(float)z
+					);
+
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
+				else
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 2),
+						(float)z
+					);
+
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
 			}
 		}
 		z++;
@@ -597,4 +625,19 @@ bool LoadMapFromFile(const char* filename)
 
 	file.close();
 	return true;
+}
+
+XMFLOAT3 Field_GetPlayerStartPosition()
+{
+	return g_PlayerStartPos;
+}
+
+void SetCurrentStage(GAME_STAGE stage)
+{
+	g_CurrentStage = stage;
+}
+
+GAME_STAGE GetCurrentStage()
+{
+	return g_CurrentStage;
 }

@@ -29,8 +29,25 @@
 * 十字キー 左	XINPUT_GAMEPAD_DPAD_LEFT
 * 十字キー 右	XINPUT_GAMEPAD_DPAD_RIGHT
 * 
+* ◆コントローラー入力とキーボード入力を合わせたやつの使い方
+* キーの名前はKeyBind.hを参照
+* 
+* ・IsInputTrigger( キーの名前, gPad )
+* 押したときに反応。ジャンプとかに使用。
+* 
+* IsInputPress( キーの名前, gPad )
+* 押されている時に反応。移動とかに使用。
+* 
+* IsInputUp( キーの名前, gPad )
+* 離したときに反応。あまり使用しない。
+* 
+* キーの名前だけ変えれば使えます。
+* コピー用↓
+* if(IsInput( , gPad ))
+* {
+* }
+* 
 */
-
 
 /*
  animation 利用方法

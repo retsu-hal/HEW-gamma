@@ -1,14 +1,25 @@
 //KeyBind.cpp
+<<<<<<< HEAD
 <<<<<<< HEAD:KeyBind.cpp
+=======
+<<<<<<<< HEAD:KeyBind.cpp
+>>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 
 
 #include "KeyBind.h"
 #include "Controller.h"
 
+<<<<<<< HEAD
 =======
 #include "newKeyBind.h"
 #include "Controller.h" // 必要な定義をインクルード
 >>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b:newKeyBind.cpp
+=======
+========
+#include "newKeyBind.h"
+#include "Controller.h" // 必要な定義をインクルード
+>>>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b:newKeyBind.cpp
+>>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 
 InputKey UpKey = { KK_W,			XINPUT_GAMEPAD_DPAD_UP };	//前進
 InputKey RightKey = { KK_D,			XINPUT_GAMEPAD_DPAD_RIGHT };//右移動

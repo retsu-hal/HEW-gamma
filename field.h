@@ -18,12 +18,18 @@ using namespace DirectX;
 //=========================================================================================================
 enum FIELD
 {
-    FIELD_GROUND = 0,
+    FIELD_NONE = 0,
+    FIELD_GROUND ,
     FIELD_WALL,
     FIELD_OBJ_BOX,
     FIELD_EMPTY_BOX,
     FIELD_OBJ_1,
     FIELD_OBJ_2,
+    FIELD_OBJ_3,
+    FIELD_STAGE_1,
+    FIELD_STAGE_2,
+    FIELD_STAGE_3,
+	FIELD_MANHOLE,
     FIELD_GOAL,
 
     FIELD_SEESAW_1,
@@ -32,6 +38,17 @@ enum FIELD
     FIELD_MANHOLE,
 
     FIELD_MAX,
+};
+
+enum GAME_STAGE
+{
+    STAGE_NONE = 0,
+    STAGE_SELECT,
+    STAGE_1,
+    STAGE_2,
+    STAGE_3,
+
+    STAGE_MAX,
 };
 
 class MAPDATA
@@ -73,4 +90,8 @@ std::vector<MAPDATA>& GetFieldMap();
 XMMATRIX Field_GetWorldMatrix(int i);
 void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i);
 
+// 追加: マップで見つけたプレイヤー初期位置を取得
+XMFLOAT3 Field_GetPlayerStartPosition();
 
+void SetCurrentStage(GAME_STAGE stage);
+GAME_STAGE GetCurrentStage();
