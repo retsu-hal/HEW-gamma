@@ -87,9 +87,6 @@
     <ClCompile Include="mouse.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="newKeyBind.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
     <ClCompile Include="Player2D.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -111,9 +108,6 @@
     <ClCompile Include="score.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Seesaw.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
     <ClCompile Include="shader.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -133,6 +127,15 @@
       <Filter>ソースファイル</Filter>
     </ClCompile>
     <ClCompile Include="SkyDome.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldSeesaw.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldManhole.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="newKeyBind.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -233,9 +236,6 @@
     <ClInclude Include="score.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Seesaw.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
     <ClInclude Include="shader.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
@@ -255,6 +255,12 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="SkyDome.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldManhole.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldSeesaw.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,17 +8,18 @@
 
 #include "debug.h"
 #include "player3D.h"
-#include "Seesaw.h"
+#include "FieldSeesaw.h"
+#include "FieldManhole.h"
 #include "manager.h"
 
-static bool debugMode;
+static bool debugMode = TRUE;
 //=========================================================================================================
-// ãƒã‚¯ãƒ­å®šç¾©
+// ƒ}ƒNƒ’è‹`
 //=========================================================================================================
 #define BOX_NUM_VERTEX (36)
 
 //=========================================================================================================
-//æ§‹é€ ä½“å®šç¾©ãƒ»å®šç¾©
+//\‘¢‘Ì’è‹`E’è‹`
 //=========================================================================================================
 
 static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
@@ -60,66 +61,66 @@ static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
 };
 
 //static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
-//	//åº§æ¨™                  Normal               è‰²                    ãƒ†ã‚¯ã‚¹ãƒãƒ£åº§æ¨™
+//	//À•W                  Normal               F                    ƒeƒNƒXƒ`ƒƒÀ•W
 //
-//	//å‰é¢ (Z+)
-//	//é ‚ç‚¹0 LEFT-TOP
+//	//‘O–Ê (Z+)
+//	//’¸“_0 LEFT-TOP
 //	{{ 0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
-//	//é ‚ç‚¹1 RIGHT-TOP						  
+//	//’¸“_1 RIGHT-TOP						  
 //	{{-0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
-//	//é ‚ç‚¹2 LEFT-BOTTOM						  
+//	//’¸“_2 LEFT-BOTTOM						  
 //	{{ 0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
-//	//é ‚ç‚¹3 RIGHT-BOTTOM
+//	//’¸“_3 RIGHT-BOTTOM
 //	{{-0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
 //
-//	//å‰é¢ (Z-)
-//	//é ‚ç‚¹4 LEFT-TOP
+//	//‘O–Ê (Z-)
+//	//’¸“_4 LEFT-TOP
 //	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
-//	//é ‚ç‚¹5 RIGHT-TOP		
+//	//’¸“_5 RIGHT-TOP		
 //	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
-//	//é ‚ç‚¹6 LEFT-BOTTOM	 
+//	//’¸“_6 LEFT-BOTTOM	 
 //	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
-//	//é ‚ç‚¹7 RIGHT-BOTTOM
+//	//’¸“_7 RIGHT-BOTTOM
 //	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
 //
-//	//å‰é¢ (X+)
-//	//é ‚ç‚¹8 LEFT-TOP
+//	//‘O–Ê (X+)
+//	//’¸“_8 LEFT-TOP
 //	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
-//	//é ‚ç‚¹9 RIGHT-TOP
+//	//’¸“_9 RIGHT-TOP
 //	{{ 0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
-//	//é ‚ç‚¹10 LEFT-BOTTOM
+//	//’¸“_10 LEFT-BOTTOM
 //	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
-//	//é ‚ç‚¹11 RIGHT-BOTTOM
+//	//’¸“_11 RIGHT-BOTTOM
 //	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
 //
-//	//å‰é¢ (X-)
-//	//é ‚ç‚¹12 LEFT-TOP
+//	//‘O–Ê (X-)
+//	//’¸“_12 LEFT-TOP
 //	{{-0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
-//	//é ‚ç‚¹13 RIGHT-TOP
+//	//’¸“_13 RIGHT-TOP
 //	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
-//	//é ‚ç‚¹14 LEFT-BOTTOM
+//	//’¸“_14 LEFT-BOTTOM
 //	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
-//	//é ‚ç‚¹15 RIGHT-BOTTOM
+//	//’¸“_15 RIGHT-BOTTOM
 //	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
 //
-//	//å‰é¢ (Y+)
-//	//é ‚ç‚¹16 LEFT-TOP
+//	//‘O–Ê (Y+)
+//	//’¸“_16 LEFT-TOP
 //	{{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
-//	//é ‚ç‚¹17 RIGHT-TOP
+//	//’¸“_17 RIGHT-TOP
 //	{{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
-//	//é ‚ç‚¹18 LEFT-BOTTOM
+//	//’¸“_18 LEFT-BOTTOM
 //	{{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.25f}},
-//	//é ‚ç‚¹19 RIGHT-BOTTOM
+//	//’¸“_19 RIGHT-BOTTOM
 //	{{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,0.25f}},
 //
-//	//å‰é¢ (Y-)
-//	//é ‚ç‚¹20 LEFT-TOP
+//	//‘O–Ê (Y-)
+//	//’¸“_20 LEFT-TOP
 //	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.75f}},
-//	//é ‚ç‚¹21 RIGHT-TOP
+//	//’¸“_21 RIGHT-TOP
 //	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.75f}},
-//	//é ‚ç‚¹22 LEFT-BOTTOM
+//	//’¸“_22 LEFT-BOTTOM
 //	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
-//	//é ‚ç‚¹23 RIGHT-BOTTOM
+//	//’¸“_23 RIGHT-BOTTOM
 //	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
 //};
 
@@ -135,14 +136,14 @@ static UINT Box_idxdata[6 * 6] =
 };
 
 //=========================================================================================================
-// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
+// ƒOƒ[ƒoƒ‹•Ï”
 //=========================================================================================================
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//ãƒ†ã‚¯ã‚¹ãƒãƒ£å¤‰æ•°
-static ID3D11Buffer* g_VertexBuffer = NULL;		// é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡
-static ID3D11Buffer* g_IndexBuffer = NULL;		// ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡
-// è¿½åŠ : ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼åˆæœŸä½ç½®ï¼ˆRã®èª­ã¿å–ã‚Šçµæœï¼‰ã‚’ä¿æŒ
+static ID3D11ShaderResourceView* g_Texture;		//ƒeƒNƒXƒ`ƒƒ•Ï”
+static ID3D11Buffer* g_VertexBuffer = NULL;		// ’¸“_ƒoƒbƒtƒ@
+static ID3D11Buffer* g_IndexBuffer = NULL;		// ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@
+// ’Ç‰Á: ƒvƒŒƒCƒ„[‰ŠúˆÊ’uiR‚Ì“Ç‚İæ‚èŒ‹‰Êj‚ğ•Û
 static XMFLOAT3 g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 MODEL* Model[FIELD_MAX] = { NULL };
@@ -157,7 +158,7 @@ static void EnsureBoxCreated()
 }
 
 //=========================================================================================================
-// åˆæœŸåŒ–
+// ‰Šú‰»
 //=========================================================================================================
 void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -165,8 +166,9 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_pContext = pContext;
 
 	Seesaw_Initialize();
+	Manhole_Initialize();
 
-	// ãƒ†ã‚¯ã‚¹ãƒãƒ£
+	// ƒeƒNƒXƒ`ƒƒ
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\block_field.png", WIC_FLAGS_NONE, &metadata, image);
@@ -178,7 +180,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
 		{
 			// Error:  could not load map
-			MessageBox(nullptr, "Failed to load map file! Error", "ã‚¨ãƒ©ãƒ¼", MB_OK);
+			MessageBox(nullptr, "Failed to load map file! Error", "ƒGƒ‰[", MB_OK);
 		}
 	}
 
@@ -237,6 +239,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	{
 		//Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
 	}
+
 	if (!Model[FIELD_SEESAW_1])
 	{
 		Model[FIELD_SEESAW_1] = ModelLoad("asset\\model\\Seesaw_dodai.fbx");
@@ -250,11 +253,13 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 
 //=========================================================================================================
-// çµ‚äº†
+// I—¹
 //=========================================================================================================
 void field_Finalize(void)
 {
 	Seesaw_Finalize();
+	Manhole_Finalize();
+
 	g_MapData.clear();  // Clear the vector
 
 	for (int i = 0; i < FIELD_MAX; i++)
@@ -270,7 +275,7 @@ void field_Finalize(void)
 }
 
 //=========================================================================================================
-// æ›´æ–°
+// XV
 //=========================================================================================================
 void field_Update(void)
 {
@@ -284,6 +289,7 @@ void field_Update(void)
 
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);
+	Manhole_UpdateAll(deltaTime);
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
@@ -301,7 +307,7 @@ void field_Update(void)
 }
 
 //=========================================================================================================
-// æç”»
+// •`‰æ
 //=========================================================================================================
 void field_Draw(void)
 {
@@ -350,14 +356,17 @@ void field_Draw(void)
 			g_pContext->DrawIndexed(6 * 6, 0, 0);
 		}
 	}
+
+	Seesaw_DebugDraw();
+	Manhole_DebugDraw();
 }
 
 //=========================================================================================================
-// Boxä½œæˆ
+// Boxì¬
 //=========================================================================================================
 void CreateBox()
 {
-	// é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡
+	// ’¸“_ƒoƒbƒtƒ@
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DYNAMIC;
 	bd.ByteWidth = sizeof(Vertex3D) * BOX_NUM_VERTEX;
@@ -371,13 +380,13 @@ void CreateBox()
 	CopyMemory(vertex, Box_vdata, sizeof(Vertex3D) * BOX_NUM_VERTEX);
 	g_pContext->Unmap(g_VertexBuffer, 0);
 
-	// ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡
+	// ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@
 	{
-		//é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ä½œæˆ
+		//’¸“_ƒoƒbƒtƒ@ì¬
 		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));//0ã§ã‚¯ãƒªã‚¢
+		ZeroMemory(&bd, sizeof(bd));//0‚ÅƒNƒŠƒA
 		bd.Usage = D3D11_USAGE_DYNAMIC;
-		bd.ByteWidth = sizeof(UINT) * BOX_NUM_VERTEX;//æ ¼ç´ã§ãã‚‹é ‚ç‚¹æ•°*é ‚ç‚¹ã‚µã‚¤ã‚º
+		bd.ByteWidth = sizeof(UINT) * BOX_NUM_VERTEX;//Ši”[‚Å‚«‚é’¸“_”*’¸“_ƒTƒCƒY
 		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		g_pDevice->CreateBuffer(&bd, NULL, &g_IndexBuffer);
@@ -441,7 +450,7 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 
 //=========================================================================================================
-// txtãƒ­ãƒ¼ãƒ‰
+// txtƒ[ƒh
 //=========================================================================================================
 std::vector<MAPDATA>& GetFieldMap()
 {
@@ -485,8 +494,9 @@ bool LoadMapFromFile(const char* filename)
 
 	g_MapData.clear();
 	Seesaw_ClearAll();
+	Manhole_ClearAll();
 
-	// è¿½åŠ : èª­ã¿è¾¼ã¿é–‹å§‹æ™‚ã«åˆæœŸä½ç½®ã‚’ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã¸
+	// ’Ç‰Á: “Ç‚İ‚İŠJn‚É‰ŠúˆÊ’u‚ğƒfƒtƒHƒ‹ƒg‚Ö
 	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 	std::string line;
@@ -517,11 +527,23 @@ bool LoadMapFromFile(const char* filename)
 				);
 				continue;
 			}
+			//Manhole
+			if (c == 'M')
+			{
+				Manhole_Create(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z,
+					g_MapData
+				);
+				continue;
+			}
 
-			// è¿½åŠ : 'R' ã¯ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼åˆæœŸä½ç½®ãƒãƒ¼ã‚«ãƒ¼
+
+			// ’Ç‰Á: 'R' ‚ÍƒvƒŒƒCƒ„[‰ŠúˆÊ’uƒ}[ƒJ[
 			if (c == 'R')
 			{
-				// ãƒãƒƒãƒ—åº§æ¨™ç³»ã¨åŒæ§˜ã®ã‚ªãƒ•ã‚»ãƒƒãƒˆã§è¨­å®š
+				// ƒ}ƒbƒvÀ•WŒn‚Æ“¯—l‚ÌƒIƒtƒZƒbƒg‚Åİ’è
 				g_PlayerStartPos = XMFLOAT3(
 					(float)(x - 2),
 					(float)(y - 2),
@@ -529,7 +551,7 @@ bool LoadMapFromFile(const char* filename)
 				);
 				Player3D_setposition(g_PlayerStartPos);
 				Player3D_InitAt(g_PlayerStartPos, XMFLOAT3(0.0f, 180.0f, 0.0f));
-				// ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã¨ã—ã¦ã¯è¿½åŠ ã—ãªã„
+				// ƒtƒB[ƒ‹ƒhƒIƒuƒWƒFƒNƒg‚Æ‚µ‚Ä‚Í’Ç‰Á‚µ‚È‚¢
 				continue;
 			}
 
@@ -549,7 +571,6 @@ bool LoadMapFromFile(const char* filename)
 			case '7': type = FIELD_STAGE_1;    break;
 			case '8': type = FIELD_STAGE_2;    break;
 			case '9': type = FIELD_STAGE_3;    break;
-			case 'M':type = FIELD_MANHOLE;	   break;
 			case '.': valid = false;         break;
 			case ' ': valid = false;         break;
 			default:  valid = false;         break;

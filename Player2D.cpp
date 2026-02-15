@@ -26,7 +26,7 @@ static  ID3D11Buffer* g_VertexBuffer = NULL;
 static ID3D11ShaderResourceView* g_Texture;		//蜒･蜒句・蜒蜆肴寇謔?
 
 static float g_StopTime = 0.0f;
-static bool debugMode;
+static bool debugMode = TRUE;
 
 
 static bool g_IsJumping = false;
@@ -243,15 +243,29 @@ void Player2D_Gravity()
 
 void Player2D_Respawn()
 {
-	// 譽雁｣灘Β蜒・Δ蜒・
+	static int s_FallFrameCount = 0;
+	const int FALL_FRAME_THRESHOLD = 30;
+
 	if (g_Player2D.Position.y < -10.0f)
 	{
-		Player2D_Reset();
-		return;
+		s_FallFrameCount++;
+
+		if (s_FallFrameCount >= FALL_FRAME_THRESHOLD)
+		{
+			Player2D_Reset();
+			s_FallFrameCount = 0;
+			return;
+		}
 	}
+	else
+	{
+		s_FallFrameCount = 0;
+	}
+
 	if (IsInputTrigger(ResetKey, gPad))
 	{
 		Player2D_Reset();
+		s_FallFrameCount = 0;
 	}
 }
 
@@ -313,6 +327,20 @@ void Player2D_Move()
 		ImGui::End();
 	}
 }
+
+
+static bool g_IsJumping = false;
+static bool g_JumpKeyReleased = true;
+static float g_JumpHoldTime = 0.0f;
+static float g_CoyoteTime = 0.0f;
+static float g_JumpBufferTime = 0.0f;
+
+static const float JUMP_INITIAL_VELOCITY = 0.18f;
+static const float JUMP_HOLD_BONUS = 0.008f;
+static const float JUMP_HOLD_MAX_TIME = 12.0f;
+static const float COYOTE_TIME_MAX = 6.0f;
+static const float JUMP_BUFFER_MAX = 8.0f;
+static const float JUMP_CUT_MULTIPLIER = 0.5f;
 
 void Player2D_Jump()
 {
@@ -394,6 +422,12 @@ void Player2D_Reset()
 	g_Player2D.state = g_Player2D.FirstState;
 	g_StopTime = g_Player2D.FirstStopTime;
 	g_Player2D.Quaternion = g_Player2D.FirstQuaternion;
+
+	g_IsJumping = false;
+	g_JumpKeyReleased = true;
+	g_JumpHoldTime = 0.0f;
+	g_CoyoteTime = 0.0f;
+	g_JumpBufferTime = 0.0f;
 }
 
 PLAYER* GetPlayer2D()

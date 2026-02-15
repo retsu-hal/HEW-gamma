@@ -145,6 +145,8 @@
     <ClCompile Include="effect.cpp" />
     <ClCompile Include="fade.cpp" />
     <ClCompile Include="field.cpp" />
+    <ClCompile Include="FieldManhole.cpp" />
+    <ClCompile Include="FieldSeesaw.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_win32.cpp" />
@@ -173,7 +175,6 @@
     <ClCompile Include="ShadowColliderBox.cpp" />
     <ClCompile Include="SkyDome.cpp" />
     <ClCompile Include="sprite.cpp" />
-    <ClCompile Include="Seesaw.cpp" />
     <ClCompile Include="title.cpp" />
     <ClCompile Include="title_manager.cpp" />
     <ClCompile Include="Trail.cpp" />
@@ -191,6 +192,8 @@
     <ClInclude Include="effect.h" />
     <ClInclude Include="fade.h" />
     <ClInclude Include="field.h" />
+    <ClInclude Include="FieldManhole.h" />
+    <ClInclude Include="FieldSeesaw.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h" />
@@ -216,7 +219,6 @@
     <ClInclude Include="SkyBall.h" />
     <ClInclude Include="SkyDome.h" />
     <ClInclude Include="sprite.h" />
-    <ClInclude Include="Seesaw.h" />
     <ClInclude Include="title.h" />
     <ClInclude Include="title_manager.h" />
     <ClInclude Include="Trail.h" />

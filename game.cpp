@@ -24,7 +24,7 @@
 #include	"ShadowColliderBox.h"
 
 #include	 <map>
-#include "Seesaw.h"
+
 
 static bool debugMode;
 
@@ -386,7 +386,8 @@ void Game_Draw()
 	Shader_SetLight(g_BallLight.Light);
 	
 	Collision_DebugDraw();
-	Seesaw_DebugDraw();
+
+	
 
 	for (const auto& mapData : GetFieldMap())
 	{

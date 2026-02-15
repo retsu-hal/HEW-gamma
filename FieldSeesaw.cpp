@@ -1,5 +1,5 @@
-//Seesaw.cpp
-#include "Seesaw.h"
+//FieldSeesaw.cpp
+#include "FieldSeesaw.h"
 #include "player3D.h"
 #include "Collision.h"
 #include <cmath>
