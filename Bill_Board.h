@@ -6,14 +6,6 @@ using namespace DirectX;
 
 void InitializeBillBoard();
 void FinalizeBillBoard();
-
 void DrawBillBoard(XMFLOAT3 pos, XMFLOAT2 size, XMFLOAT4 col, int bno, int wc, int hc);
-//ID3D11ShaderResourceView* GetBillBoardTexture();
+ID3D11ShaderResourceView* GetBillBoardTexture();
 
-// 頂点構造体
-struct Vertex_BillBoard
-{
-	XMFLOAT3 position; // 頂点座標  //XMFLOAT3へ変更
-	XMFLOAT4 color;		//頂点カラー（R,G,B,A）
-	XMFLOAT2 texCoord;	//テクスチャ座標
-};

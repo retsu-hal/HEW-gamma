@@ -13,15 +13,15 @@ GGGGGGGGGGGGGGGGGG
 EEEEEEEEEEEEEEEEEE
 G................G
 G................G
-G................G
+G............2...G
 G................G 
-G.R..............G
+G................G
 GGGGGGGGGGGGGGGGGG
 
 
 # Layer Y=2
 EEEEEEEEEEEEEEEEEE
-G................G
+GS...............G
 G................G
 G................G
 G................G 

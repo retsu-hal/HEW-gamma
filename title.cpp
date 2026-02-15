@@ -34,7 +34,7 @@ void Title_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Title_Manager_Initialize(pDevice, pContext);
 
 
-	g_BgmID = LoadAudio("asset\\Audio\\title.wav");	//サウンドロード
+	g_BgmID = LoadAudio("asset\\Audio\\title_1.wav");	//サウンドロード
 	SetAudioVolume(g_BgmID, 0.05f);
 	PlayAudio(g_BgmID, true);	//再生開始（ループあり）
 
@@ -77,6 +77,21 @@ void Title_Update()
 { 
 	Title_Manager_Update();
 
+	if (GetFadeState() != FADE_NONE)
+		return;
+
+	//キー入力チェック
+	//スタートボタンが押されたらシーンを切り替え
+	//フェード処理中はキーを受け付けない
+	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+	{
+		//フェードアウトさせてシーンを切り替える
+		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);
+		SetFade(40.0f, color, FADE_OUT, SCENE_GAME);
+	}
+
+
+	
 }
 //=========================================================================================================
 //描画処理

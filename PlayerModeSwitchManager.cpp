@@ -12,7 +12,7 @@
 #include "MathUtil.h"
 using namespace mu;
 
-static bool debugMode;
+static bool debugMode = TRUE;
 
 static const float kSwitchMaxDist = 2.0f;
 static const float kPlayer2DThickness = 0.05f;

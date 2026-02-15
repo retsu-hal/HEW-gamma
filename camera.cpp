@@ -5,19 +5,13 @@
 #include "player3D.h"
 #include "debug.h"
 #include "Player2D.h"
-#include <iostream>
-
-#if defined (_DEBUG)
-static bool debugMode = true;
-#else 
-static bool debugMode = false;
-#endif
 
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
+static bool debugMode = TRUE;
 
 
 //マウス操作用変数
@@ -96,8 +90,8 @@ void Player3DCamera_Update()
 
 	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
 	{
-		const float sensYaw = 1.0f;
-		const float sensPitch = 1.0f;
+		const float sensYaw = 0.25f;
+		const float sensPitch = 0.25f;
 		gYawDeg += ms.x * sensYaw;
 		gPitchDeg -= ms.y * sensPitch;
 
@@ -184,9 +178,12 @@ void Title_Camera_Update()
 
 	// Fixed cinematic camera
 	CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
-	CameraObject.AtPosition = XMFLOAT3(4.0f, 0.0f, 0.0f);
+	CameraObject.AtPosition = XMFLOAT3(4.0f, 2.0f, 0.0f);
 	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
+	// IMPORTANT: override internal follow camera state
+	gCamPos = CameraObject.Position;
+	gCamTarget = CameraObject.AtPosition;
 }
 
 //=========================================================================================================
@@ -194,7 +191,6 @@ void Title_Camera_Update()
 //=========================================================================================================
 void Camera_Draw()
 {
-
 	if (debugMode)
 	{
 		ImGui::Begin("Debug - han");

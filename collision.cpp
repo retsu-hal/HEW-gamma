@@ -11,7 +11,7 @@
 using namespace DirectX;
 using namespace mu;
 
-static bool debugMode;
+static bool debugMode = TRUE;
 
 static std::vector<const ShadowPrism*> g_ShadowPrisms;
 static ShadowDebugOptions g_ShadowDebugOpts;
@@ -281,7 +281,6 @@ static bool Field_IsTrigger(FIELD t)
 	case FIELD_GOAL:
 	case FIELD_OBJ_1:
 	case FIELD_OBJ_2:
-	case FIELD_OBJ_3:
 		return true;
 	default:
 		return false;
@@ -289,24 +288,6 @@ static bool Field_IsTrigger(FIELD t)
 }
 // �t�B�[���h���g���K�[���ǂ������擾
 //For debug only
-<<<<<<< HEAD
-=======
-// フィールドがトリガーかどうかを取得
-static bool Field_IsTrigger(FIELD t)
-{
-	switch (t)
-	{
-	case FIELD_GOAL:
-	case FIELD_OBJ_1:
-	case FIELD_STAGE_1:
-	case FIELD_STAGE_2:
-	case FIELD_STAGE_3:
-		return true;
-	default:
-		return false;
-	}
-}
->>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 
 // OBB vs OBB ���Z�iYaw��]�̂ݑΉ��j
 static bool OBB_Intersect_Yaw(

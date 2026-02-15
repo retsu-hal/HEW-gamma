@@ -5,7 +5,7 @@
 #include "collision.h"
 #include "player3D.h"
 #include "keyboard.h"
-#include "newKeyBind.h"
+#include "KeyBind.h"
 #include "Input.h"
 #include "Bill_Board.h"
 
@@ -26,10 +26,6 @@ static PUSH_TARGET g_CurrentTarget;
 static bool g_ShowBillBoard = false;
 static XMFLOAT3 g_BillBoardPosition = { 0.0f, 0.0f, 0.0f };
 
-static ID3D11Device* g_pDevice = nullptr;
-static ID3D11DeviceContext* g_pContext = nullptr;
-static ID3D11ShaderResourceView* g_BillBoardTexture = nullptr;
-
 // Get field half size
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
@@ -46,7 +42,6 @@ static bool Field_IsPushable(FIELD t)
     switch (t)
     {
     case FIELD_OBJ_2:
-    case FIELD_OBJ_3:
         return true;
     default:
         return false;
@@ -256,22 +251,15 @@ static void ApplyPushMovement(int fieldIndex, const XMFLOAT3& pushDir)
 
 void PlayerPushManager_Init()
 {
-    g_pDevice = Direct3D_GetDevice();
 
     g_PushState = PUSH_STATE_NONE;
     g_CurrentTarget.fieldIndex = -1;
     g_CurrentTarget.pushDirection = { 0, 0, 0 };
 
-    TexMetadata metadata;
-    ScratchImage image;
-    LoadFromWICFile(L"asset\\texture\\KeyPush.png", WIC_FLAGS_NONE, &metadata, image);
-    CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_BillBoardTexture);
-
 }
 
 void PlayerPushManager_Finalize()
 {
-    SAFE_RELEASE(g_BillBoardTexture);
     g_PushState = PUSH_STATE_NONE;
     g_CurrentTarget.fieldIndex = -1;
 }
@@ -336,9 +324,7 @@ void PlayerPushManager_Update()
                 g_ShowBillBoard = false;  // Hide billboard while pushing
 
                 // Set player animation to push
-                PLAYER* p = GetPlayer3D();
-                p->isPushing = true;
-                p->CurrentAnimIndex = PLAYER_ANIM_PUSH;
+                p3->CurrentAnimIndex = PLAYER_ANIM_PUSH;
             }
         }
     }
@@ -354,8 +340,7 @@ void PlayerPushManager_Update()
             g_CurrentTarget.fieldIndex = -1;
 
             // Reset player animation
-            PLAYER* p = GetPlayer3D();
-            p->isPushing = false;
+            p3->CurrentAnimIndex = PLAYER_ANIM_IDLE;
             break;
         }
 
@@ -377,9 +362,7 @@ void PlayerPushManager_Update()
         ApplyPushMovement(g_CurrentTarget.fieldIndex, g_CurrentTarget.pushDirection);
 
         // Keep push animation
-        PLAYER* p = GetPlayer3D();
-        p->isPushing = true;
-        p->CurrentAnimIndex = PLAYER_ANIM_PUSH;
+        p3->CurrentAnimIndex = PLAYER_ANIM_PUSH;
     }
     break;
     }
@@ -389,13 +372,11 @@ void PlayerPushManager_Draw()
 {
     if (g_ShowBillBoard)
     {
-        g_pContext = Direct3D_GetDeviceContext();
-
         Shader_Begin();
+        SetBlendState(BLENDSTATE_ALFA);
+        SetDepthTest(TRUE);
 
-        g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
-
-        XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
+        XMFLOAT2 size = { 0.5f, 0.5f };  // Billboard size
         XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);

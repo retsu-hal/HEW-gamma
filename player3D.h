@@ -6,7 +6,7 @@
 #include "direct3d.h"
 #include "model.h"
 #include "PlayerStatus.h"
-#include "newKeyBind.h"
+#include "KeyBind.h"
 
 //=========================================================================================================
 // マクロ定義
@@ -31,15 +31,14 @@ void Player3D_Draw(void);
 
 XMFLOAT3 GetPlayer3DPosition();
 
-void Player3D_Idle();
 void Player3D_Gravity();
 void Player3D_Move();
 void Player3D_Jump();
 void Player3D_Dash();
 void Player3D_Change();
 void Player3D_Action();
+void Player3D_Reset();
 void Player3D_Respawn();
-void Player3D_CheckGoal();
 
 PLAYER* GetPlayer3D();
 
@@ -49,8 +48,3 @@ XMFLOAT3 Player3D_GetTriggerHalfSize();
 XMFLOAT3 Player3D_GetForward();
 void     Player3D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot);
 void     Player3D_SetActive(bool active);
-void	 Player3D_setposition(XMFLOAT3 pos);
-
-void Player3D_StartAutoWalk(float targetYawDeg);  // タイトル画面用自動歩行開始
-void Player3D_AutoWalk();                         // タイトル画面用自動歩行更新
-bool Player3D_IsAutoWalking();                    // 自動歩行中かチェック

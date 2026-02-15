@@ -151,8 +151,3 @@ void	SetScene(SCENE scene) //ƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
 	}
 
 }
-
-int		GetScene(void)
-{
-	return g_Scene;
-}

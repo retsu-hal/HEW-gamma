@@ -18,13 +18,6 @@ struct AUDIO
 
 	int						Length{};
 	int						PlayLength{};
-
-	// フェード用パラメータ
-	bool					IsFading{};
-	bool					IsFadeIn{};
-	float					CurrentVolume{};
-	float					TargetVolume{};
-	float					FadeSpeed{};
 };
 
 //=========================================================================================================
@@ -61,57 +54,9 @@ void UninitAudio()
 }
 
 //=========================================================================================================
-// 更新処理
-//=========================================================================================================
-void UpdateAudio()
-{
-	for (int i = 0; i < AUDIO_MAX; i++)
-	{
-		if (g_Audio[i].IsFading && g_Audio[i].SourceVoice)
-		{
-			if (g_Audio[i].IsFadeIn)
-			{
-				// フェードイン処理
-				g_Audio[i].CurrentVolume += g_Audio[i].FadeSpeed;
-
-				if (g_Audio[i].CurrentVolume >= g_Audio[i].TargetVolume)
-				{
-					g_Audio[i].CurrentVolume = g_Audio[i].TargetVolume;
-					g_Audio[i].IsFading = false;
-				}
-			}
-			else
-			{
-				// フェードアウト処理
-				g_Audio[i].CurrentVolume -= g_Audio[i].FadeSpeed;
-
-				// 停止フラグ（TargetVolume < 0）の場合は0まで下げて停止
-				bool shouldStop = (g_Audio[i].TargetVolume < 0.0f);
-				float actualTarget = shouldStop ? 0.0f : g_Audio[i].TargetVolume;
-
-				if (g_Audio[i].CurrentVolume <= actualTarget)
-				{
-					g_Audio[i].CurrentVolume = actualTarget;
-					g_Audio[i].IsFading = false;
-
-					// 停止フラグが立っている場合のみ停止
-					if (shouldStop)
-					{
-						g_Audio[i].SourceVoice->Stop();
-					}
-				}
-			}
-
-			// ボリューム適用
-			g_Audio[i].SourceVoice->SetVolume(g_Audio[i].CurrentVolume);
-		}
-	}
-}
-
-//=========================================================================================================
 // 音楽読み込み
 //=========================================================================================================
-int LoadAudio(const char* FileName)
+int LoadAudio(const char *FileName)
 {
 	int index = -1;
 
@@ -188,12 +133,6 @@ int LoadAudio(const char* FileName)
 	g_Xaudio->CreateSourceVoice(&g_Audio[index].SourceVoice, &wfx);
 	assert(g_Audio[index].SourceVoice);
 
-	// フェードパラメータ初期化
-	g_Audio[index].IsFading = false;
-	g_Audio[index].IsFadeIn = false;
-	g_Audio[index].CurrentVolume = 1.0f;
-	g_Audio[index].TargetVolume = 1.0f;
-	g_Audio[index].FadeSpeed = 0.0f;
 
 	return index;
 }
@@ -208,7 +147,6 @@ void UnloadAudio(int Index)
 
 	delete[] g_Audio[Index].SoundData;
 	g_Audio[Index].SoundData = nullptr;
-	g_Audio[Index].SourceVoice = nullptr;
 }
 
 
@@ -261,61 +199,8 @@ void SetAudioVolume(int Index, float Volume)
 	if (g_Audio[Index].SourceVoice)
 	{
 		g_Audio[Index].SourceVoice->SetVolume(Volume);
-		g_Audio[Index].CurrentVolume = Volume;
 	}
 }
 
-//=========================================================================================================
-// フェードイン開始
-//=========================================================================================================
-void FadeInAudio(int Index, float Duration, float TargetVolume)
-{
-	if (g_Audio[Index].SourceVoice)
-	{
-		g_Audio[Index].IsFading = true;
-		g_Audio[Index].IsFadeIn = true;
-		g_Audio[Index].CurrentVolume = 0.0f;
-		g_Audio[Index].TargetVolume = TargetVolume;
-		g_Audio[Index].FadeSpeed = TargetVolume / (Duration * 60.0f); // 60FPS想定
 
-		// 初期ボリュームを0に設定
-		g_Audio[Index].SourceVoice->SetVolume(0.0f);
-	}
-}
 
-//=========================================================================================================
-// フェードアウト開始
-//=========================================================================================================
-void FadeOutAudio(int Index, float Duration)
-{
-	if (g_Audio[Index].SourceVoice)
-	{
-		g_Audio[Index].IsFading = true;
-		g_Audio[Index].IsFadeIn = false;
-		g_Audio[Index].TargetVolume = 0.0f;
-		g_Audio[Index].FadeSpeed = g_Audio[Index].CurrentVolume / (Duration * 60.0f); // 60FPS想定
-	}
-}
-
-//=========================================================================================================
-// フェードアウト＆停止（フェードアウト完了後に再生を停止する）
-//=========================================================================================================
-void FadeOutAndStopAudio(int Index, float Duration)
-{
-	if (g_Audio[Index].SourceVoice)
-	{
-		g_Audio[Index].IsFading = true;
-		g_Audio[Index].IsFadeIn = false;
-		g_Audio[Index].TargetVolume = -1.0f; // 負の値で停止フラグとして使用
-		g_Audio[Index].FadeSpeed = g_Audio[Index].CurrentVolume / (Duration * 60.0f); // 60FPS想定
-	}
-}
-
-//=========================================================================================================
-// フェードイン再生（再生とフェードインを同時実行）
-//=========================================================================================================
-void PlayAudioWithFadeIn(int Index, bool Loop, float Duration, float TargetVolume)
-{
-	PlayAudio(Index, Loop);
-	FadeInAudio(Index, Duration, TargetVolume);
-}

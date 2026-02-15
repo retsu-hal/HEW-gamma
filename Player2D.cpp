@@ -15,47 +15,48 @@ using namespace mu;
 //=========================================================================================================
 // 僨僶僢僌�?
 //=========================================================================================================
+#include "debug.h"
 
 //=========================================================================================================
-// 僌�E乕僶儖曄�?
+// 僌儘乕僶儖曄�?
 //=========================================================================================================
 PLAYER g_Player2D;
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
 static  ID3D11Buffer* g_VertexBuffer = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//僥僋�E僠儍曄�?
+static ID3D11ShaderResourceView* g_Texture;		//僥僋僗僠儍曄�?
 
 static float g_StopTime = 0.0f;
-static bool debugMode;
+static bool debugMode = TRUE;
 
 
 static Vertex3D Player2DVertex[4] = {
 	{//捀�? LEFT-TOP
-		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(0.0f,0.0f)					//僥僋�E僠儍嵗�E
+		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(0.0f,0.0f)					//僥僋僗僠儍嵗�?
 	},
 
 	{//捀�? RIGHT-TOP
-		XMFLOAT3(1.0f, 1.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(1.0f,0.0f)					//僥僋�E僠儍嵗�E
+		XMFLOAT3(1.0f, 1.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(1.0f,0.0f)					//僥僋僗僠儍嵗�?
 	},
 
 	{//捀�? LEFT-BOTTOM
-		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(0.0f,1.0f)					//僥僋�E僠儍嵗�E
+		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(0.0f,1.0f)					//僥僋僗僠儍嵗�?
 	},
 
 	{//捀�? RIGHT-BOTTOM
-		XMFLOAT3(1.0f, 0.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(1.0f,1.0f)					//僥僋�E僠儍嵗�E
+		XMFLOAT3(1.0f, 0.0f, 0.0f),		//嵗昗
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朄慄
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僇儔�?
+		XMFLOAT2(1.0f,1.0f)					//僥僋僗僠儍嵗�?
 	},
 };
 
@@ -73,11 +74,11 @@ static bool g_Player2DActive = false;
 //=========================================================================================================
 void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// 僨僶僀僗�E僨僶僀僗僐儞僥僉�E僩偺曐��
+	// 僨僶僀僗偲僨僶僀僗僐儞僥僉僗僩偺曐懚
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// 僥僋�E僠�?
+	// 僥僋僗僠�?
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\player2d.png", WIC_FLAGS_NONE, &metadata, image);
@@ -86,9 +87,9 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	//捀揰僶僢僼傽偺惗惉
 	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));//0偱僋�E傾
+	ZeroMemory(&bd, sizeof(bd));//0偱僋儕傾
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(Vertex3D) * 4;//奿擺偱偒�E捀揰悢*捀揰僒僀�?
+	bd.ByteWidth = sizeof(Vertex3D) * 4;//奿擺偱偒傞捀揰悢*捀揰僒僀�?
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
@@ -101,7 +102,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 }
 
 //=========================================================================================================
-// 廔椁E��棁E
+// 廔椆張棟
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
@@ -114,31 +115,28 @@ void Player2D_Finalize(void)
 //=========================================================================================================
 void Player2D_Update()
 {
-	if (!g_Player2D.Active) return;
+	if (!g_Player2DActive) return;
 
-	
+	Player2D_Respawn();	//儕僗億乕�?
 
-	Player2D_Gravity();	//廳椡張棁E
+	Player2D_Gravity();	//廳椡張棟
 
-	if (g_Player2D.Position.y < -10.0f)
-	{
-		Player2D_Respawn();	
-	}
+	// 僾儗僀儎乕憖嶌
+	Player2D_Move();	//堏摦
+	Player2D_Jump();	//僕儍儞僾
+	Player2D_Change();	//塭曄�?
 
-	Player2D_Move();
+
 	switch (g_Player2D.state)
 	{
 	case PLAYER_STATE_IDLE:
-
+		//Idle傾僯儊乕僔儑�?
 		break;
 	case PLAYER_STATE_MOVE:
-		
+		//Move傾僯儊乕僔儑�?
 		break;
 	case PLAYER_STATE_FALL:
-
-		break;
-	case PLAYER_STATE_JUMP:
-		Player2D_Jump();
+		//Fall傾僯儊乕僔儑�?
 		break;
 
 
@@ -148,7 +146,7 @@ void Player2D_Update()
 }
 
 //=========================================================================================================
-// 僎僢僞乁E
+// 僎僢僞乕
 //=========================================================================================================
 XMFLOAT3 GetPlayer2DPosition()
 {
@@ -163,7 +161,7 @@ XMFLOAT3 GetPlayer2DPosition()
 
 //=========================================================================================================
 // ����
-// �I��E
+// �I��
 //=========================================================================================================
 void Player2D_Gravity()
 {
@@ -183,14 +181,14 @@ void Player2D_Gravity()
 	}
 	else
 	{
-		// 愙抧拞偼壓曽岦偺懍搙傪儕�E僢僩乮忋曽岦偼嫋壜�?
+		// 愙抧拞偼壓曽岦偺懍搙傪儕僙僢僩乮忋曽岦偼嫋壜�?
 		if (g_Player2D.Velocity.y < 0.0f)
 		{
 			g_Player2D.Velocity.y = 0.0f;
 		}
 	}
 
-	// X-Z暯柺偺杸嶤偵傛�E尭懁E
+	// X-Z暯柺偺杸嶤偵傛傞尭懍
 	g_Player2D.Velocity.x *= 0.925f;
 	g_Player2D.Velocity.z *= 0.925f;
 
@@ -230,13 +228,9 @@ void Player2D_Gravity()
 
 void Player2D_Respawn()
 {
-<<<<<<< HEAD
 	static int s_FallFrameCount = 0;
 	const int FALL_FRAME_THRESHOLD = 30; 
 
-=======
-	// 棊壓僠僁E��僁E
->>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 	if (g_Player2D.Position.y < -10.0f)
 	{
 		s_FallFrameCount++;
@@ -275,21 +269,21 @@ void Player2D_Move()
 	if (fabsf(inputDir.x) > 0.0001f)
 	{
 		// 僾儗僀儎乕偺Y夞揮妏搙傪庢摼乮暻偺岦偒傪寛掕乯
-		// Rotation.y 偼暻偺朁E�E曽岦傪岦偁E�E偁E�E
+		// Rotation.y 偼暻偺朄慄曽岦傪岦偄偰偄�?
 		float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
 
-		// 暻偵増�E偨乽塁E��岦乿儀僋僩儖傪寁嶼
-		// 朁E�E曽岦:  (sin(yaw), 0, cos(yaw))
-		// 塁E���? 朁E�E�?Y幉廁E�E偵 -90搙夞�E= (cos(yaw), 0, -sin(yaw))
+		// 暻偵増偭偨乽塃曽岦乿儀僋僩儖傪寁嶼
+		// 朄慄曽岦:  (sin(yaw), 0, cos(yaw))
+		// 塃曽�? 朄慄�?Y幉廃傝偵 -90搙夞�?= (cos(yaw), 0, -sin(yaw))
 		// 傑偨偼扨弮偵:  �?= (cos(yaw), 0, -sin(yaw))
 		float rightX = cosf(yawRad);
 		float rightZ = -sinf(yawRad);
 
-		// 擖椡曽岦乮嵍塁E��傪儚乕�E僪嵗�E偵曁E��
+		// 擖椡曽岦乮嵍塃乯傪儚乕儖僪嵗昗偵曄姺
 		float worldX = inputDir.x * rightX;
 		float worldZ = inputDir.x * rightZ;
 
-		// 懍搙偵壛嶼乮X幉�EZ幉丄Y幉偼廳椡偱惂屼乯
+		// 懍搙偵壛嶼乮X幉偲Z幉丄Y幉偼廳椡偱惂屼乯
 		g_Player2D.Velocity.x += worldX * g_Player2D.moveSpeed;
 		g_Player2D.Velocity.z += worldZ * g_Player2D.moveSpeed;
 	}
@@ -404,6 +398,18 @@ void Player2D_Jump()
 
 }
 
+void Player2D_Change()
+{
+	if (IsInputTrigger(ChangeKey, gPad))
+	{
+		// ��3D�ˉ���
+		// 
+		// 3D����饯���`��2D�ץ쥤��`�����ˤ���դ�������
+		// ��
+		// 2D�ץ쥤��`����������
+		//
+	}
+}
 
 void Player2D_ResetJumpState()
 {
@@ -439,7 +445,7 @@ XMFLOAT3 Player2D_GetSolidHalfSize()
 }
 
 //=========================================================================================================
-// �軭�I��E
+// �軭�I��
 //=========================================================================================================
 void Player2D_Draw(void)
 {

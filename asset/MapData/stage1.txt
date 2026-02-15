@@ -1,21 +1,19 @@
 # Stage 1Map
-# B = Box, W = Wall, G = Ground,. = Empty, L=Light , M=Manhole , S=seesaw, O=wall , 2=Box(shadow)
-# R = Spawn(ReSpawn),
+# B = Box, T = Tree, G = Goal,. = Empty
+
 # Layer Y=0 (Ground)
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
-GGGGGGGGGGGGGGGGGG
 ..................
-..................
-..................
-..................
-..................
-..................
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG 
 GGGGGGGGGGGGGGGGGG
@@ -25,11 +23,10 @@ GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
 GGGGGGGGGGGGGGGGGG
-.................
+..................
 
 # Layer Y=1 (Second floor)
 EEEEEEEEEEEEEEEEEE
-<<<<<<< HEAD
 W................W
 W................W
 W................W
@@ -50,82 +47,53 @@ W................W
 W................W
 W................W 
 W.1..............W
-=======
-O................W
-O................W
-O................W
-O................W
-O................W 
-O................W
-O................W
-O................W 
-O................W
-O................W
-O................W
-O................W 
-O................W 
-O................W
-O................W
-O................W 
-O................W
-O................W 
-O................W
-O..1..2.B..S..3..W
-O................W
-O.......R........W 
-O................W
->>>>>>> 255a680b94571921e9e9ac341e73b55f4b8da72b
 EEEEEEEEEEEEEEEEEE
 
 
 # Layer Y=2 (Second floor)
 EEEEEEEEEEEEEEEEEE
-O................B
-O................B
-O................B
-O................B
-O................B 
-O................B
-O................B
-O................B 
-O................B
-O................B
-O................B
-O................B 
-O................B 
-O................B
-O................B
-O................B 
-O................B
-O................B 
-O................B
-O................B
-O................B 
-O................B 
-O................B
+B................B
+B................B
+B................B
+B................B
+B........O.......B 
+B.............2..B
+B................B
+B................B
+B................B 
+B................B 
+B................B
+B................B
+B................B 
+B................B
+B................B 
+B................B
+B................B
+B................B 
+B................B 
+B................B
 EEEEEEEEEEEEEEEEEE
 
 # Layer Y=3 (Second floor)
 EEEEEEEEEEEEEEEEEE
-O................B
-O................B
-O................B
-O................B
-O................B 
-O................B
-O................B
-O................B
-O................B 
-O................B 
-O................B
-O................B
-O................B 
-O................B
-O................B 
-O................B
-O................B
-O................B 
-O................B 
-O................B 
-O................B
+B................B
+B................B
+B................B
+B................B
+B................B 
+B................B
+B................B
+B................B
+B................B 
+B................B 
+B................B
+B................B
+B................B 
+B................B
+B................B 
+B................B
+B................B
+B................B 
+B................B 
+B................B
 EEEEEEEEEEEEEEEEEE
