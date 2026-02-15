@@ -216,12 +216,32 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	if (!Model[FIELD_OBJ_2])
 	{
-		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\Building_B.fbx");
+		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\pole.fbx");
 		//CreateBox();
 	}
 	if (!Model[FIELD_OBJ_3])
 	{
-		Model[FIELD_OBJ_3] = ModelLoad("asset\\model\\Building_B.fbx");
+		Model[FIELD_OBJ_3] = ModelLoad("asset\\model\\ball.fbx");
+	}
+	if (!Model[FIELD_BENCH])
+	{
+		Model[FIELD_BENCH] = ModelLoad("asset\\model\\bench.fbx");
+	}
+	if (!Model[FIELD_DUSTBOX])
+	{
+		//Model[FIELD_DUSTBOX] = ModelLoad("asset\\model\\Dustbox.fbx");
+	}
+	if (!Model[FIELD_FOUNTAIN])
+	{
+		Model[FIELD_FOUNTAIN] = ModelLoad("asset\\model\\fountain.fbx");
+	}
+	if (!Model[FIELD_POLE])
+	{
+		Model[FIELD_POLE] = ModelLoad("asset\\model\\pole.fbx");
+	}
+	if (!Model[FIELD_FENCE])
+	{
+		//Model[FIELD_FENCE] = ModelLoad("asset\\model\\fence.fbx");
 	}
 	if (!Model[FIELD_GOAL])
 	{
@@ -299,6 +319,42 @@ void field_Update(void)
 		{
 			//g_MapData[i].colliderHalf = XMFLOAT3(0.37f, 0.2f, 2.7f);
 			//g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
+		}
+
+		else if (g_MapData[i].no == FIELD_OBJ_2)
+		{
+			g_MapData[i].scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
+			g_MapData[i].rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+
+		else if (g_MapData[i].no == FIELD_BENCH)
+		{
+			g_MapData[i].scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
+			g_MapData[i].rotate = XMFLOAT3(90.0f, 0.0f, 90.0f);
+		}
+
+		else if (g_MapData[i].no == FIELD_DUSTBOX)
+		{
+			g_MapData[i].scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+			g_MapData[i].rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+
+		else if (g_MapData[i].no == FIELD_FOUNTAIN)
+		{
+			g_MapData[i].scale = XMFLOAT3(0.005f, 0.005f, 0.005f);
+			g_MapData[i].rotate = XMFLOAT3(90.0f, 0.0f, 90.0f);
+		}
+
+		else if (g_MapData[i].no == FIELD_POLE)
+		{
+			g_MapData[i].scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
+			g_MapData[i].rotate = XMFLOAT3(90.0f, 0.0f, 90.0f);
+		}
+
+		else if (g_MapData[i].no == FIELD_FENCE)
+		{
+			g_MapData[i].scale = XMFLOAT3(0.01f, 0.01f, 0.01f);
+			g_MapData[i].rotate = XMFLOAT3(90.0f, 0.0f, 90.0f);
 		}
 	}
 }
@@ -549,6 +605,11 @@ bool LoadMapFromFile(const char* filename)
 			case 'O': type = FIELD_OBJ_1;    break;
 			case '2': type = FIELD_OBJ_2;    break;
 			case '3': type = FIELD_OBJ_3;    break;
+			case 'C': type = FIELD_BENCH;    break;
+			case 'D': type = FIELD_DUSTBOX;    break;
+			case 'F': type = FIELD_FOUNTAIN;    break;
+			case 'P': type = FIELD_POLE;    break;
+			case 'H': type = FIELD_FENCE;    break;
 			case '7': type = FIELD_STAGE_1;    break;
 			case '8': type = FIELD_STAGE_2;    break;
 			case '9': type = FIELD_STAGE_3;    break;
