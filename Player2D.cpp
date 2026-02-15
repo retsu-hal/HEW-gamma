@@ -1,4 +1,4 @@
-//Player2D.cpp
+﻿//Player2D.cpp
 #include "Player2D.h"
 #include "PlayerStatus.h"
 #include "Camera.h"
@@ -7,59 +7,72 @@
 #include "sprite.h"
 
 //=========================================================================================================
-// 僨僶僢僌�?
+// 蜒ｨ蜒ｶ蜒｢蜒梧｢?
 #include "debug.h"
 #include "MathUtil.h"
 using namespace mu;
 
 //=========================================================================================================
-// 僨僶僢僌�?
+// 蜒ｨ蜒ｶ蜒｢蜒梧｢?
 //=========================================================================================================
 
 //=========================================================================================================
-// 僌�E乕僶儖曄�?
+// 蜒悟・荵募Ω蜆匁寇謔?
 //=========================================================================================================
 PLAYER g_Player2D;
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
 static  ID3D11Buffer* g_VertexBuffer = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//僥僋�E僠儍曄�?
+static ID3D11ShaderResourceView* g_Texture;		//蜒･蜒句・蜒蜆肴寇謔?
 
 static float g_StopTime = 0.0f;
 static bool debugMode = TRUE;
 
 
+static bool g_IsJumping = false;
+static bool g_JumpKeyReleased = true;
+static float g_JumpHoldTime = 0.0f;
+static float g_CoyoteTime = 0.0f;
+static float g_JumpBufferTime = 0.0f;
+
+static const float JUMP_INITIAL_VELOCITY = 0.18f;
+static const float JUMP_HOLD_BONUS = 0.008f;
+static const float JUMP_HOLD_MAX_TIME = 12.0f;
+static const float COYOTE_TIME_MAX = 6.0f;
+static const float JUMP_BUFFER_MAX = 8.0f;
+static const float JUMP_CUT_MULTIPLIER = 0.5f;
+
 static Vertex3D Player2DVertex[4] = {
-	{//捀�? LEFT-TOP
-		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(0.0f,0.0f)					//僥僋�E僠儍嵗�E
+	{//謐謠? LEFT-TOP
+		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//蠏玲・
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//譛・・
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//蜒・・荵?
+		XMFLOAT2(0.0f,0.0f)					//蜒･蜒句・蜒蜆榊ｵ玲・
 	},
 
-	{//捀�? RIGHT-TOP
-		XMFLOAT3(1.0f, 1.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(1.0f,0.0f)					//僥僋�E僠儍嵗�E
+	{//謐謠? RIGHT-TOP
+		XMFLOAT3(1.0f, 1.0f, 0.0f),		//蠏玲・
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//譛・・
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//蜒・・荵?
+		XMFLOAT2(1.0f,0.0f)					//蜒･蜒句・蜒蜆榊ｵ玲・
 	},
 
-	{//捀�? LEFT-BOTTOM
-		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(0.0f,1.0f)					//僥僋�E僠儍嵗�E
+	{//謐謠? LEFT-BOTTOM
+		XMFLOAT3(-1.0f, 0.0f, 0.0f),		//蠏玲・
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//譛・・
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//蜒・・荵?
+		XMFLOAT2(0.0f,1.0f)					//蜒･蜒句・蜒蜆榊ｵ玲・
 	},
 
-	{//捀�? RIGHT-BOTTOM
-		XMFLOAT3(1.0f, 0.0f, 0.0f),		//嵗�E
-		XMFLOAT3(0.0f, 1.0f, 0.0f),			//朁E�E
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//僁E�E�?
-		XMFLOAT2(1.0f,1.0f)					//僥僋�E僠儍嵗�E
+	{//謐謠? RIGHT-BOTTOM
+		XMFLOAT3(1.0f, 0.0f, 0.0f),		//蠏玲・
+		XMFLOAT3(0.0f, 1.0f, 0.0f),			//譛・・
+		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//蜒・・荵?
+		XMFLOAT2(1.0f,1.0f)					//蜒･蜒句・蜒蜆榊ｵ玲・
 	},
 };
 
-//僾儗僀儎乕摉偨傝敾掕僒僀�?
+//蜒ｾ蜆怜ム蜆惹ｹ墓痩蛛ｨ蛯晄弊謗募ヲ蜒蜒?
 static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 	PLAYER2D_SOLID_HALF_X,
 	PLAYER2D_SOLID_HALF_Y,
@@ -69,26 +82,26 @@ static XMFLOAT3 g_SolidHalfSize_2d = XMFLOAT3(
 static bool g_Player2DActive = false;
 
 //=========================================================================================================
-// 弶婜壔張�?
+// 蠑ｶ蟀懷｣泌ｼｵ譽?
 //=========================================================================================================
 void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
-	// 僨僶僀僗�E僨僶僀僗僐儞僥僉�E僩偺曐��
+	// 蜒ｨ蜒ｶ蜒蜒怜・蜒ｨ蜒ｶ蜒蜒怜ヰ蜆槫Η蜒牙・蜒ｩ蛛ｺ譖先∵
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
-	// 僥僋�E僠�?
+	// 蜒･蜒句・蜒蜆?
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\player2d.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	//捀揰僶僢僼傽偺惗惉
+	//謐謠ｰ蜒ｶ蜒｢蜒ｼ蛯ｽ蛛ｺ諠玲ラ
 	D3D11_BUFFER_DESC bd;
-	ZeroMemory(&bd, sizeof(bd));//0偱僋�E傾
+	ZeroMemory(&bd, sizeof(bd));//0蛛ｱ蜒句・蛯ｾ
 	bd.Usage = D3D11_USAGE_DYNAMIC;
-	bd.ByteWidth = sizeof(Vertex3D) * 4;//奿擺偱偒�E捀揰悢*捀揰僒僀�?
+	bd.ByteWidth = sizeof(Vertex3D) * 4;//螂ｿ謫ｺ蛛ｱ蛛貞・謐謠ｰ謔｢*謐謠ｰ蜒貞ム蜒?
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
@@ -101,7 +114,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 }
 
 //=========================================================================================================
-// 廔椁E��棁E
+// 蟒疲､・ｼｵ譽・
 //=========================================================================================================
 void Player2D_Finalize(void)
 {
@@ -110,7 +123,7 @@ void Player2D_Finalize(void)
 }
 
 //=========================================================================================================
-// 峏怴張�?
+// 蟲乗ｴ蠑ｵ譽?
 //=========================================================================================================
 void Player2D_Update()
 {
@@ -118,7 +131,7 @@ void Player2D_Update()
 
 	
 
-	Player2D_Gravity();	//廳椡張棁E
+	Player2D_Gravity();	//蟒ｳ讀｡蠑ｵ譽・
 
 	if (g_Player2D.Position.y < -10.0f)
 	{
@@ -148,7 +161,7 @@ void Player2D_Update()
 }
 
 //=========================================================================================================
-// 僎僢僞乁E
+// 蜒主Δ蜒樔ｹ・
 //=========================================================================================================
 XMFLOAT3 GetPlayer2DPosition()
 {
@@ -157,13 +170,13 @@ XMFLOAT3 GetPlayer2DPosition()
 
 
 //=========================================================================================================
-// �Z�b�^�[
+// セッター
 //=========================================================================================================
 
 
 //=========================================================================================================
-// ����
-// �I��E
+// 処理
+// Иﾀ・
 //=========================================================================================================
 void Player2D_Gravity()
 {
@@ -183,14 +196,14 @@ void Player2D_Gravity()
 	}
 	else
 	{
-		// 愙抧拞偼壓曽岦偺懍搙傪儕�E僢僩乮忋曽岦偼嫋壜�?
+		// 諢呎刊諡槫⊂螢捺嵜蟯ｦ蛛ｺ諛肴杉蛯ｪ蜆募・蜒｢蜒ｩ荵ｮ蠢区嵜蟯ｦ蛛ｼ雖句｣應ｹ?
 		if (g_Player2D.Velocity.y < 0.0f)
 		{
 			g_Player2D.Velocity.y = 0.0f;
 		}
 	}
 
-	// X-Z暯柺偺杸嶤偵傛�E尭懁E
+	// X-Z證ｯ譟ｺ蛛ｺ譚ｸ蠍､蛛ｵ蛯帛・蟆ｭ諛・
 	g_Player2D.Velocity.x *= 0.925f;
 	g_Player2D.Velocity.z *= 0.925f;
 
@@ -270,27 +283,27 @@ void Player2D_Move()
 
 	if (fabsf(inputDir.x) > 0.0001f)
 	{
-		// 僾儗僀儎乕偺Y夞揮妏搙傪庢摼乮暻偺岦偒傪寛掕乯
-		// Rotation.y 偼暻偺朁E�E曽岦傪岦偁E�E偁E�E
+		// 蜒ｾ蜆怜ム蜆惹ｹ募⊆Y螟樊尚螯乗杉蛯ｪ蠎｢鞫ｼ荵ｮ證ｻ蛛ｺ蟯ｦ蛛貞が蟇帶歯荵ｯ
+		// Rotation.y 蛛ｼ證ｻ蛛ｺ譛・・譖ｽ蟯ｦ蛯ｪ蟯ｦ蛛・・蛛・・
 		float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
 
-		// 暻偵増�E偨乽塁E��岦乿儀僋僩儖傪寁嶼
-		// 朁E�E曽岦:  (sin(yaw), 0, cos(yaw))
-		// 塁E���? 朁E�E�?Y幉廁E�E偵 -90搙夞�E= (cos(yaw), 0, -sin(yaw))
-		// 傑偨偼扨弮偵:  �?= (cos(yaw), 0, -sin(yaw))
+		// 證ｻ蛛ｵ蠅怜・蛛ｨ荵ｽ蝪・嵜蟯ｦ荵ｿ蜆蜒句Λ蜆門が蟇∝ｶｼ
+		// 譛・・譖ｽ蟯ｦ:  (sin(yaw), 0, cos(yaw))
+		// 蝪・嵜蟯? 譛・・蛯?Y蟷牙ｻ・・蛛ｵ -90謳吝､樊・= (cos(yaw), 0, -sin(yaw))
+		// 蛯大→蛛ｼ謇ｨ蠑ｮ蛛ｵ:  蝪?= (cos(yaw), 0, -sin(yaw))
 		float rightX = cosf(yawRad);
 		float rightZ = -sinf(yawRad);
 
-		// 擖椡曽岦乮嵍塁E��傪儚乕�E僪嵗�E偵曁E��
+		// 謫匁､｡譖ｽ蟯ｦ荵ｮ蠏榊｡・ｹｯ蛯ｪ蜆壻ｹ募・蜒ｪ蠏玲・蛛ｵ譖・ｧｺ
 		float worldX = inputDir.x * rightX;
 		float worldZ = inputDir.x * rightZ;
 
-		// 懍搙偵壛嶼乮X幉�EZ幉丄Y幉偼廳椡偱惂屼乯
+		// 諛肴杉蛛ｵ螢帛ｶｼ荵ｮX蟷牙・Z蟷我ｸШ蟷牙⊂蟒ｳ讀｡蛛ｱ諠ょｱｼ荵ｯ
 		g_Player2D.Velocity.x += worldX * g_Player2D.moveSpeed;
 		g_Player2D.Velocity.z += worldZ * g_Player2D.moveSpeed;
 	}
 
-	// 懍搙惂尷乮X-Z暯柺�?
+	// 諛肴杉諠ょｰｷ荵ｮX-Z證ｯ譟ｺ荵?
 	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
 		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
 	float maxSpeed = g_Player2D.maxMoveSpeed;
@@ -428,7 +441,7 @@ XMFLOAT3 Player2D_GetSolidHalfSize()
 }
 
 //=========================================================================================================
-// �軭�I��E
+// ﾃ霆ｭИﾀ・
 //=========================================================================================================
 void Player2D_Draw(void)
 {
@@ -461,7 +474,7 @@ void Player2D_Draw(void)
 	XMMATRIX projection = GetProjectionMatrix();
 	XMMATRIX wvp = world * view * projection;
 
-	// ��Q���Ф�픵㥷���`���إ��å�
+	// 我轍ﾐﾐﾁﾐ､鳩罕ｷ･ｧｩ`･ﾀ､ﾘ･ｻ･ﾃ･ﾈ
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 	g_pContext->PSSetShaderResources(0, 1, &g_Texture);

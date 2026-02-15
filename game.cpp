@@ -146,13 +146,13 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	TexMetadata metadata;
 	ScratchImage image;
-	LoadFromWICFile(L"asset\\texture\\easy.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\UI\\easy.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Goal_1_Texture);
 
-	LoadFromWICFile(L"asset\\texture\\mid.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\UI\\mid.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Goal_2_Texture);
 
-	LoadFromWICFile(L"asset\\texture\\hard.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\texture\\UI\\hard.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Goal_3_Texture);
 }
 
