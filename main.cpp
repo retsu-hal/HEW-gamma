@@ -17,6 +17,7 @@
 #include "Manager.h"
 #include "Audio.h"	
 #include "Mouse.h"
+#include <shellapi.h>
 
 #include "debug.h"
 
@@ -34,8 +35,8 @@ char	g_DebugStr[2048];	//FPS表示文字列
 //=================================
 #define		CLASS_NAME	"DX21 Window"
 #define		WINDOW_CAPTION	"ポリゴン描画"
-#define		SCREEN_WIDTH	(1280)
-#define		SCREEN_HEIGHT	(720)
+#define		SCREEN_WIDTH	(1980)
+#define		SCREEN_HEIGHT	(1080)
 
 //===================================
 //プロトタイプ宣言
@@ -64,6 +65,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	HRESULT hr = CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 
+	// プライマリモニターの解像度を取得
+	int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 	//ウィンドウクラスの登録（ウィンドウの仕様的な物を決めてWindowsへセットする）
 	WNDCLASS	wc;	//構造体を準備
@@ -78,7 +82,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	//クライアント領域のサイズを表す矩形 (左からleft, top, right, bottom)
 	RECT window_rect = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 	//ウィンドウのスタイル（ウィンドウ枠と最大化ボタンを削除）
-	DWORD window_style = WS_OVERLAPPEDWINDOW;
+	//DWORD window_style = WS_OVERLAPPEDWINDOW;
+
+	// フルスクリーン用のウィンドウスタイル（枠なし、タイトルバーなし）
+	DWORD window_style = WS_POPUP | WS_VISIBLE;
+
 	//DWORD window_style = WS_OVERLAPPEDWINDOW ^ (WS_THICKFRAME | WS_MAXIMIZEBOX);
 	//指定したクライアント領域を確保するために新たな矩形座標を計算
 	AdjustWindowRect(&window_rect, window_style, FALSE);
@@ -87,22 +95,48 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	int window_height = window_rect.bottom - window_rect.top;
 
 	//ウィンドウの作成
-	HWND	hWnd = CreateWindow(
+	/*HWND	hWnd = CreateWindow(
 		CLASS_NAME,
 		WINDOW_CAPTION,
 		window_style,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
-		window_width,
-		window_height,
+		0,
+		0,
+		NULL,
+		NULL,
+		hInstance,
+		NULL
+	);*/
+
+	// ウィンドウの作成（画面全体をカバー）
+	HWND hWnd = CreateWindow(
+		CLASS_NAME,
+		WINDOW_CAPTION,
+		window_style,
+		0,                  // X位置: 画面左端
+		0,                  // Y位置: 画面上端
+		screenWidth,        // 幅: モニター全体
+		screenHeight,       // 高さ: モニター全体
 		NULL,
 		NULL,
 		hInstance,
 		NULL
 	);
 
+	// ウィンドウを最前面に表示
+	SetWindowPos(hWnd, HWND_TOP, 0, 0, window_width, window_height, SWP_SHOWWINDOW);
+	// タスクバーを隠す
+	APPBARDATA abd = {};
+	abd.cbSize = sizeof(APPBARDATA);
+	abd.hWnd = FindWindowA("Shell_TrayWnd", NULL); // FindWindow → FindWindowA に変更し、引数を "Shell_TrayWnd" に
+	if (abd.hWnd)
+	{
+		ShowWindow(abd.hWnd, SW_HIDE);
+	}
+
 	//作成したウィンドウを表示する
-	ShowWindow(hWnd, nCmdShow);//引数に従って表示、または非表示
+	ShowWindow(hWnd, SW_MAXIMIZE);//引数に従って表示、または非表示
 	//ウィンドウ内部の更新要求
 	UpdateWindow(hWnd);
 
@@ -222,6 +256,14 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	} while (msg.message != WM_QUIT);
 
 	Manager_Finalize();
+	
+	// タスクバーを再表示
+	abd.cbSize = sizeof(APPBARDATA);
+	abd.hWnd = FindWindowA("Shell_TrayWnd", NULL);
+	if (abd.hWnd)
+	{
+		ShowWindow(abd.hWnd, SW_SHOW);
+	}
 
 	Mouse_Finalize();
 	UninitAudio();		//サウンドの終了

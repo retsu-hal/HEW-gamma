@@ -264,7 +264,7 @@ void PlayerPushManager_Init()
 
     TexMetadata metadata;
     ScratchImage image;
-    LoadFromWICFile(L"asset\\texture\\KeyPush.png", WIC_FLAGS_NONE, &metadata, image);
+    LoadFromWICFile(L"asset\\texture\\UI\\F.png", WIC_FLAGS_NONE, &metadata, image);
     CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_BillBoardTexture);
 
 }

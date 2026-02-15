@@ -195,8 +195,9 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	if (!Model[FIELD_GROUND])
 	{
-		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
-		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Building_B.fbx");
+		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka.fbx");
+		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\Building_B.fbx");
+		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\test.fbx");
 	}
 	if (!Model[FIELD_WALL])
 	{
@@ -225,20 +226,20 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	if (!Model[FIELD_GOAL])
 	{
-		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
+		//Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
 	}
 
 	if (!Model[FIELD_STAGE_1])
 	{
-		Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\test.fbx");
+		//Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\test.fbx");
 	}
 	if (!Model[FIELD_STAGE_2])
 	{
-		Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\test.fbx");
+		// Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\test.fbx");
 	}
 	if (!Model[FIELD_STAGE_3])
 	{
-		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
+		//Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
 	}
 	if (!Model[FIELD_SEESAW_1])
 	{

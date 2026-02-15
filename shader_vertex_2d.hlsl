@@ -90,7 +90,7 @@ VS_OUTPUT main(VS_INPUT vs_in)
     
     if (totalWeight > 0.0f)
     {
-        vs_in.color = float4(1, 0, 0, 1);
+        //vs_in.color = float4(1, 0, 0, 1);
         float4x4 bone0 = Bones[vs_in.boneIndex.x];
         float4x4 bone1 = Bones[vs_in.boneIndex.y];
         float4x4 bone2 = Bones[vs_in.boneIndex.z];
