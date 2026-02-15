@@ -126,14 +126,14 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	// ウィンドウを最前面に表示
 	SetWindowPos(hWnd, HWND_TOP, 0, 0, window_width, window_height, SWP_SHOWWINDOW);
-	// タスクバーを隠す
-	APPBARDATA abd = {};
-	abd.cbSize = sizeof(APPBARDATA);
-	abd.hWnd = FindWindowA("Shell_TrayWnd", NULL); // FindWindow → FindWindowA に変更し、引数を "Shell_TrayWnd" に
-	if (abd.hWnd)
-	{
-		ShowWindow(abd.hWnd, SW_HIDE);
-	}
+	//// タスクバーを隠す
+	//APPBARDATA abd = {};
+	//abd.cbSize = sizeof(APPBARDATA);
+	//abd.hWnd = FindWindowA("Shell_TrayWnd", NULL); // FindWindow → FindWindowA に変更し、引数を "Shell_TrayWnd" に
+	//if (abd.hWnd)
+	//{
+	//	ShowWindow(abd.hWnd, SW_HIDE);
+	//}
 
 	//作成したウィンドウを表示する
 	ShowWindow(hWnd, SW_MAXIMIZE);//引数に従って表示、または非表示
@@ -258,12 +258,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	Manager_Finalize();
 	
 	// タスクバーを再表示
-	abd.cbSize = sizeof(APPBARDATA);
+	/*abd.cbSize = sizeof(APPBARDATA);
 	abd.hWnd = FindWindowA("Shell_TrayWnd", NULL);
 	if (abd.hWnd)
 	{
 		ShowWindow(abd.hWnd, SW_SHOW);
-	}
+	}*/
 
 	Mouse_Finalize();
 	UninitAudio();		//サウンドの終了

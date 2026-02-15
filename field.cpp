@@ -201,15 +201,11 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	if (!Model[FIELD_WALL])
 	{
-		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe.fbx");
 	}
 	if (!Model[FIELD_OBJ_BOX])
 	{
 		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Wooden_Box.fbx");
-	}
-	if (!Model[FIELD_WALL])
-	{
-		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
 	}
 	if (!Model[FIELD_OBJ_1])
 	{
