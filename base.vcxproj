@@ -213,6 +213,7 @@
     <ClInclude Include="score.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="ShadowColliderBox.h" />
+    <ClInclude Include="SkyBall.h" />
     <ClInclude Include="SkyDome.h" />
     <ClInclude Include="sprite.h" />
     <ClInclude Include="Seesaw.h" />
