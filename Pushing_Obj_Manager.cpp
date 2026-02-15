@@ -46,6 +46,7 @@ static bool Field_IsPushable(FIELD t)
     switch (t)
     {
     case FIELD_OBJ_2:
+        return false;
     case FIELD_OBJ_3:
         return true;
     default:
