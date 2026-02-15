@@ -10,6 +10,7 @@ using namespace mu;
 
 
 #include "debug.h"
+#include "camera.h"
 static bool debugMode;
 
 static const float kSwitchMaxDist = 2.0f;
@@ -376,6 +377,8 @@ static bool TrySwitch2DTo3D()
 
     Player2D_SetActive(false);
     Player2D_Uninit();
+
+    Camera_Reset2DState();
 
     g_Mode = MODE_3D;
     return true;

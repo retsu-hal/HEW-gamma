@@ -288,15 +288,15 @@ void Game_Update()
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		Player3D_Update();
-		//Player3DCamera_Update();
+		Player3DCamera_Update();
 
 	}
 	else
 	{
 		Player2D_Update();
-		//Player2DCamera_Update();
+		Player2DCamera_Update();
 	}
-	Player3DCamera_Update();
+	//Player3DCamera_Update();
 
 }
 

@@ -36,6 +36,15 @@ static const float kPitchMax = 75.0f;
 static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//カメラ注視点オフセット
 static float gFollowLerp = 0.15f;//カメラ追従の速さ
 
+
+static const float kCam2D_Distance = 8.0f;
+static const float kCam2D_HeightOffset = 1.5f;
+static const float kCam2D_LookAtYOfs = 1.0f;
+static const float kCam2D_FollowLerp = 0.12f;
+
+static bool  g_Cam2D_Initialized = false;
+static float g_Cam2D_YawDeg = 0.0f;
+
 static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
 {// 3Dベクトルの線形補間
 	return {
@@ -136,24 +145,36 @@ void Player3DCamera_Update()
 
 void Player2DCamera_Update()
 {
-	XMFLOAT3 pos = g_PlayerPosOld;
-	PLAYER* player2D = GetPlayer2D();
+	PLAYER* p2 = GetPlayer2D();
+	if (!p2) return;
 
-	pos.x = g_PlayerPosOld.x - pos.x;
-	pos.y = g_PlayerPosOld.y - pos.y;
-	pos.z = g_PlayerPosOld.z - pos.z;
+	if (!g_Cam2D_Initialized)
+	{
+		g_Cam2D_YawDeg = p2->Rotation.y;
+		g_Cam2D_Initialized = true;
+	}
 
-	CameraObject.Position.x += pos.x;
-	CameraObject.Position.y += pos.y;
-	CameraObject.Position.z += pos.z;
+	XMFLOAT3 targetAt = {
+		p2->Position.x,
+		p2->Position.y + kCam2D_LookAtYOfs,
+		p2->Position.z
+	};
+
+	float yawRad = XMConvertToRadians(g_Cam2D_YawDeg);
+
+	float fwdX = sinf(yawRad);
+	float fwdZ = cosf(yawRad);
+
+	XMFLOAT3 targetPos = {
+		p2->Position.x - fwdX * kCam2D_Distance,
+		p2->Position.y + kCam2D_HeightOffset,
+		p2->Position.z - fwdZ * kCam2D_Distance
+	};
 
 
-	CameraObject.AtPosition.x = g_PlayerPosOld.x;
-	CameraObject.AtPosition.y = g_PlayerPosOld.y;
-	CameraObject.AtPosition.z = g_PlayerPosOld.z;
-
-	CameraObject.Position.x += CameraObject.AtPosition.x;
-	CameraObject.Position.z += CameraObject.AtPosition.z;
+	CameraObject.AtPosition = Lerp3(CameraObject.AtPosition, targetAt, kCam2D_FollowLerp);
+	CameraObject.Position = Lerp3(CameraObject.Position, targetPos, kCam2D_FollowLerp);
+	CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
 
 }
 
@@ -305,215 +326,8 @@ XMFLOAT3 GetCameraPosition()
 	return CameraObject.Position;
 }
 
-//=========================================================================================================
-// マウス処理
-//=========================================================================================================
-
-void cameraMouse()
+void Camera_Reset2DState()
 {
-		Mouse_GetState(&ms);
-
-		const float sensitivityYaw = 0.5f;
-		const float sensitivityPitch = 0.5f;
-		const float moveSpeedBase = 0.1f;
-
-		
-		static bool relativeMode = true;
-		bool suppressDelta = false;
-		{
-			if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-				relativeMode = !relativeMode;
-				Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-					: MOUSE_POSITION_MODE_ABSOLUTE);
-				suppressDelta = true;
-			}
-		}
-
-	   
-		if (Keyboard_IsKeyDown(KK_Q)) {
-			CameraObject.Fov += 0.5f;
-			if (CameraObject.Fov > 160.0f) CameraObject.Fov = 160.0f;
-		}
-		if (Keyboard_IsKeyDown(KK_E)) {
-			CameraObject.Fov -= 0.5f;
-			if (CameraObject.Fov < 5.0f) CameraObject.Fov = 5.0f;
-		}
-
-		XMFLOAT3 playerDelta = g_PlayerPosOld;
-		g_PlayerPosOld = GetPlayer3DPosition();
-		playerDelta.x = g_PlayerPosOld.x - playerDelta.x;
-		playerDelta.y = g_PlayerPosOld.y - playerDelta.y;
-		playerDelta.z = g_PlayerPosOld.z - playerDelta.z;
-
-		XMFLOAT3 pos = CameraObject.Position;
-		XMFLOAT3 at = CameraObject.AtPosition;
-
-
-		if (!gCamAnglesInit) {
-			float rx = pos.x - at.x;
-			float ry = pos.y - at.y;
-			float rz = pos.z - at.z;
-			float r = sqrtf(rx * rx + ry * ry + rz * rz);
-			if (r < 1e-6f) r = 1e-6f;
-
-			gYawDeg = XMConvertToDegrees(atan2f(rz, rx));
-			gPitchDeg = XMConvertToDegrees(asinf(ry / r));
-			XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
-			XMVECTOR lo = XMVectorReplicate(kPitchMin);
-			XMVECTOR hi = XMVectorReplicate(kPitchMax);
-			v = XMVectorClamp(v, lo, hi);
-			gPitchDeg = XMVectorGetX(v);
-
-			gCamAnglesInit = true;
-		}
-
-
-		if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE && !suppressDelta) {
-			gYawDeg -= ms.x * sensitivityYaw;
-			gPitchDeg += ms.y * sensitivityPitch;
-			XMVECTOR v = XMVectorSet(gPitchDeg, 0, 0, 0);
-			XMVECTOR lo = XMVectorReplicate(kPitchMin);
-			XMVECTOR hi = XMVectorReplicate(kPitchMax);
-			v = XMVectorClamp(v, lo, hi);
-			gPitchDeg = XMVectorGetX(v);
-		}
-
-
-		float relX = pos.x - at.x;
-		float relY = pos.y - at.y;
-		float relZ = pos.z - at.z;
-		float radius = sqrtf(relX * relX + relY * relY + relZ * relZ);
-		if (radius < 1e-6f) radius = 1e-6f;
-
-		float yawRad = XMConvertToRadians(gYawDeg);
-		float pitchRad = XMConvertToRadians(gPitchDeg);
-
-		float cp = cosf(pitchRad);
-		float sp = sinf(pitchRad);
-		float cy = cosf(yawRad);
-		float sy = sinf(yawRad);
-
-		float rx = radius * cp * cy;
-		float ry = radius * sp;
-		float rz = radius * cp * sy;
-
-		pos.x = at.x + rx;
-		pos.y = at.y + ry;
-		pos.z = at.z + rz;
-
-
-		XMFLOAT3 fwd = { at.x - pos.x, at.y - pos.y, at.z - pos.z };
-		float flen = sqrtf(fwd.x * fwd.x + fwd.z * fwd.z);
-		if (flen > 1e-6f) {
-			fwd.x /= flen;
-			fwd.y /= flen;
-			fwd.z /= flen;
-		}
-		else {
-			fwd = { 0.0f, 0.0f, 1.0f };
-		}
-		XMFLOAT3 right = { fwd.z, 0.0f, -fwd.x };
-		const XMFLOAT3 up = { 0.0f, 1.0f, 0.0f };
-
-
-		pos.x += playerDelta.x;
-		pos.y += playerDelta.y;
-		pos.z += playerDelta.z;
-		at.x += playerDelta.x;
-		at.y += playerDelta.y;
-		at.z += playerDelta.z;
-
-		CameraObject.Position = pos;
-		CameraObject.AtPosition = at;
-	}
-
-void cameraKeyb()
-{
-
-	XMFLOAT3 pos = g_PlayerPosOld;
-	g_PlayerPosOld = GetPlayer3DPosition();
-
-
-	pos.x = g_PlayerPosOld.x - pos.x;
-	pos.y = g_PlayerPosOld.y - pos.y;
-	pos.z = g_PlayerPosOld.z - pos.z;
-
-	CameraObject.Position.x += pos.x;
-	CameraObject.Position.y += pos.y;
-	CameraObject.Position.z += pos.z;
-
-
-	CameraObject.AtPosition.x = g_PlayerPosOld.x;
-	CameraObject.AtPosition.y = g_PlayerPosOld.y;
-	CameraObject.AtPosition.z = g_PlayerPosOld.z;
-
-
-	float Rotation = 0.0f;
-
-
-	XMFLOAT2 vec;
-	vec.x = CameraObject.Position.x - CameraObject.AtPosition.x;
-	vec.y = CameraObject.Position.z - CameraObject.AtPosition.z;
-
-	float co = cosf(XMConvertToRadians(Rotation));
-	float si = sinf(XMConvertToRadians(Rotation));
-	CameraObject.Position.x = (vec.x * co - vec.y * si);
-	CameraObject.Position.z = (vec.x * si + vec.y * co);
-	CameraObject.Position.x += CameraObject.AtPosition.x;
-	CameraObject.Position.z += CameraObject.AtPosition.z;
-
-}
-
-void cameraMouse_1()
-{
-	Mouse_State ms{};
-	Mouse_GetState(&ms);
-
-	static bool relativeMode = true;
-	bool suppressDelta = false;
-	{
-		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-			relativeMode = !relativeMode;
-			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}
-	}
-
-	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
-	{
-		const float sensYaw = 0.25f;
-		const float sensPitch = 0.25f;
-		gYawDeg -= ms.x * sensYaw;
-		gPitchDeg += ms.y * sensPitch;
-
-		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
-		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
-	}
-
-	XMFLOAT3 playerPos = GetPlayer3DPosition();
-	XMFLOAT3 desiredTarget = {
-		playerPos.x + gTargetOffset.x,
-		playerPos.y + gTargetOffset.y,
-		playerPos.z + gTargetOffset.z
-	};
-
-	float yaw = XMConvertToRadians(gYawDeg);
-	float pitch = XMConvertToRadians(gPitchDeg);
-
-	float cp = cosf(pitch), sp = sinf(pitch);
-	float cy = cosf(yaw), sy = sinf(yaw);
-
-	XMFLOAT3 back = { sy * cp, sp, cy * cp };
-	XMFLOAT3 desiredPos = {
-		desiredTarget.x - back.x * gDistance,
-		desiredTarget.y - back.y * gDistance,
-		desiredTarget.z - back.z * gDistance
-	};
-
-	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-	gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
-
-	CameraObject.AtPosition = gCamTarget;
-	CameraObject.Position = gCamPos;
-	CameraObject.UpVector = { 0, 1, 0 };
+	g_Cam2D_Initialized = false;
+	g_Cam2D_YawDeg = 0.0f;
 }
