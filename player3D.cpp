@@ -153,7 +153,7 @@ void Player3D_Update()
 //=========================================================================================================
 void Player3D_Gravity()
 {
-	// 水平加速度・速度制御（このブロックは挙動次第で整理可能）
+	//// 水平加速度・速度制御（このブロックは挙動次第で整理可能）
 	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed) g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
 	else g_Player3D.Velocity.x += g_Player3D.Acceleration.x;
 
@@ -508,14 +508,17 @@ void Player3D_SetActive(bool active)
 //=========================================================================================================
 void Player3D_setposition(XMFLOAT3 pos)
 {
-	g_Player3D.Firstposition = pos;
+	//g_Player3D.Firstposition = pos;
 
-	if (PLAYER* p = GetPlayer3D())
-	{
-		g_Player3D.Firstposition = p->Position;
-		// もし player3D.cpp 内に Firstposition 変数が既にある場合はそちらにも代入してください。
-		// 例: Firstposition = p->Position;
-	}
+	//if (PLAYER* p = GetPlayer3D())
+	//{
+	//	g_Player3D.Firstposition = p->Position;
+	//	// もし player3D.cpp 内に Firstposition 変数が既にある場合はそちらにも代入してください。
+	//	// 例: Firstposition = p->Position;
+	//}
+
+	g_Player3D.Firstposition = pos;
+	g_Player3D.Position = pos;
 }
 
 //=========================================================================================================

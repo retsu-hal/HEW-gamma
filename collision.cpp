@@ -28,9 +28,21 @@ struct ExtraDebugBox
 
 static std::vector<ExtraDebugBox> g_ExtraBoxes;
 
+static int    s_LastStandingPrismIndex = -1;
+static XMFLOAT3 s_LastShadowTopPos = { 0, 0, 0 };
+static int    s_GraceFrames = 0;
+
 //=========================================================================================================
 // ?{?[????t?B?[???h?????????
 //=========================================================================================================
+
+void Collision_ResetShadowContactState()
+{
+	s_LastStandingPrismIndex = -1;
+	s_LastShadowTopPos = { 0, 0, 0 };
+	s_GraceFrames = 0;
+}
+
 
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms)
 {
@@ -1140,9 +1152,6 @@ bool Player2DShadow_TopContact()
 	bool hitAny = false;
 	const int maxIterations = 4;
 
-	static int s_LastStandingPrismIndex = -1;
-	static XMFLOAT3 s_LastShadowTopPos = { 0, 0, 0 };
-
 	int currentStandingPrism = -1;
 	float bestContactDist = FLT_MAX;
 
@@ -1255,7 +1264,6 @@ bool Player2DShadow_TopContact()
 		if (!hitThisIter) break;
 	}
 
-	static int s_GraceFrames = 0;
 	const int GRACE_FRAME_COUNT = 5;
 
 	if (s_LastStandingPrismIndex >= 0 && !hitAny)

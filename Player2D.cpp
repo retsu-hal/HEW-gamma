@@ -29,19 +29,6 @@ static float g_StopTime = 0.0f;
 static bool debugMode = TRUE;
 
 
-static bool g_IsJumping = false;
-static bool g_JumpKeyReleased = true;
-static float g_JumpHoldTime = 0.0f;
-static float g_CoyoteTime = 0.0f;
-static float g_JumpBufferTime = 0.0f;
-
-static const float JUMP_INITIAL_VELOCITY = 0.18f;
-static const float JUMP_HOLD_BONUS = 0.008f;
-static const float JUMP_HOLD_MAX_TIME = 12.0f;
-static const float COYOTE_TIME_MAX = 6.0f;
-static const float JUMP_BUFFER_MAX = 8.0f;
-static const float JUMP_CUT_MULTIPLIER = 0.5f;
-
 static Vertex3D Player2DVertex[4] = {
 	{//謐謠? LEFT-TOP
 		XMFLOAT3(-1.0f, 1.0f, 0.0f),		//蠏玲・
