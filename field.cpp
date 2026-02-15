@@ -10,211 +10,120 @@
 #include "player3D.h"
 #include "FieldSeesaw.h"
 #include "FieldManhole.h"
+#include "manager.h"
 
-static bool debugMode;
+static bool debugMode = TRUE;
 //=========================================================================================================
-// „Éû„ÇØ„É≠ÂÆöÁæ©
+// É}ÉNÉçíËã`
 //=========================================================================================================
 #define BOX_NUM_VERTEX (36)
 
 //=========================================================================================================
-//ÊßãÈÄ†‰ΩìÂÆöÁæ©„ÉªÂÆöÁæ©
+//ç\ë¢ëÃíËã`ÅEíËã`
 //=========================================================================================================
-static Vertex3D Box_vdata[BOX_NUM_VERTEX]
-{
-	//==================
-	// Ê≠£Èù¢Ôºà+ZÈù¢Ôºâ
-	//==================
-	//È†ÇÁÇπÔºê„ÄÄÂ∑¶‰∏ä
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ1„ÄÄÂè≥‰∏ä
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ2„ÄÄÂ∑¶‰∏ã
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
 
-	//È†ÇÁÇπ3„ÄÄÂè≥‰∏ã
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
+static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
+	// +Z (Front)
+	{{ 0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {0,0}},
+	{{-0.5f,  0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {1,0}},
+	{{ 0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {0,1}},
+	{{-0.5f, -0.5f,  0.5f}, { 0,  0,  1}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// Âè≥Èù¢Ôºà+XÈù¢Ôºâ
-	//==================
-	// È†ÇÁÇπ4„ÄÄÂ∑¶‰∏ä
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ5„ÄÄÂè≥‰∏ä
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ6„ÄÄÂ∑¶‰∏ã
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ7„ÄÄÂè≥‰∏ã
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
+	// -Z (Back)
+	{{-0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {1,0}},
+	{{-0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f, -0.5f}, { 0,  0, -1}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// Ë£èÈù¢Ôºà-ZÈù¢Ôºâ
-	//==================
-	// È†ÇÁÇπ8„ÄÄÂ∑¶‰∏ä
-	{
-		XMFLOAT3(0.5f,0.5f,0.5f),				//È†ÇÁÇπÂ∫ßÊ®ô7
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ9„ÄÄÂè≥‰∏ä
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ10„ÄÄÂ∑¶‰∏ã
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ11„ÄÄÂè≥‰∏ã
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
+	// +X (Right)
+	{{ 0.5f,  0.5f, -0.5f}, { 1,  0,  0}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f,  0.5f}, { 1,  0,  0}, {1,1,1,1}, {1,0}},
+	{{ 0.5f, -0.5f, -0.5f}, { 1,  0,  0}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f,  0.5f}, { 1,  0,  0}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// Â∑¶Èù¢Ôºà-XÈù¢Ôºâ
-	//==================
-	// È†ÇÁÇπ12„ÄÄÂ∑¶‰∏ä
-	{
-		XMFLOAT3(-0.5f,0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ13„ÄÄÂè≥‰∏ä
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ14„ÄÄÂ∑¶‰∏ã
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	// È†ÇÁÇπ15„ÄÄÂè≥‰∏ã
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.5f,0.5f,0.5f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
+	// -X (Left)
+	{{-0.5f,  0.5f,  0.5f}, {-1,  0,  0}, {1,1,1,1}, {0,0}},
+	{{-0.5f,  0.5f, -0.5f}, {-1,  0,  0}, {1,1,1,1}, {1,0}},
+	{{-0.5f, -0.5f,  0.5f}, {-1,  0,  0}, {1,1,1,1}, {0,1}},
+	{{-0.5f, -0.5f, -0.5f}, {-1,  0,  0}, {1,1,1,1}, {1,1}},
 
-	//==================
-	// Â§©Èù¢Ôºà+YÈù¢Ôºâ
-	//==================
-	//È†ÇÁÇπ16„ÄÄÂ∑¶‰∏ä
-	{
-		XMFLOAT3(-0.5f, 0.5f, 0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f, 0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ17„ÄÄÂè≥‰∏ä
-	{
-		XMFLOAT3(0.5f, 0.5f, 0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f, 0.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ18„ÄÄÂ∑¶‰∏ã
-	{
-		XMFLOAT3(-0.5f,0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,0.25f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ19„ÄÄÂè≥‰∏ã
-	{
-		XMFLOAT3(0.5f,0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,0.25f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
+	// +Y (Top)
+	{{-0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1,1,1,1}, {0,0}},
+	{{ 0.5f,  0.5f,  0.5f}, { 0,  1,  0}, {1,1,1,1}, {1,0}},
+	{{-0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1,1,1,1}, {0.0f,0.25f}},
+	{{ 0.5f,  0.5f, -0.5f}, { 0,  1,  0}, {1,1,1,1}, {1.0f,0.25f}},
 
-	//==================
-	// Â∫ïÈù¢Ôºà-ÔºπÈù¢Ôºâ
-	//==================
-	//È†ÇÁÇπ20„ÄÄÂ∑¶‰∏ä
-	{
-		XMFLOAT3(-0.5f,-0.5f,-0.5f),		//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,0.75f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ21„ÄÄÂè≥‰∏ä
-	{
-		XMFLOAT3(0.5f,-0.5f,-0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,0.75f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ22„ÄÄÂ∑¶‰∏ã
-	{
-		XMFLOAT3(-0.5f,-0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(0.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
-	//È†ÇÁÇπ23„ÄÄÂè≥‰∏ã
-	{
-		XMFLOAT3(0.5f,-0.5f,0.5f),			//È†ÇÁÇπÂ∫ßÊ®ô
-		XMFLOAT3(0.0f,1.0f,0.0f),
-		XMFLOAT4(1.0f,1.0f,1.0f,1.0f),	//„Ç´„É©„Éº
-		XMFLOAT2(1.0f,1.0f)					    //„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â∫ßÊ®ô
-	},
+	// -Y (Bottom)
+	{{-0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1,1,1,1}, {0.0f,0.75f}},
+	{{ 0.5f, -0.5f, -0.5f}, { 0, -1,  0}, {1,1,1,1}, {1.0f,0.75f}},
+	{{-0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1,1,1,1}, {0,1}},
+	{{ 0.5f, -0.5f,  0.5f}, { 0, -1,  0}, {1,1,1,1}, {1,1}},
 };
+
+//static Vertex3D Box_vdata[BOX_NUM_VERTEX] = {
+//	//ç¿ïW                  Normal               êF                    ÉeÉNÉXÉ`ÉÉç¿ïW
+//
+//	//ëOñ  (Z+)
+//	//í∏ì_0 LEFT-TOP
+//	{{ 0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//í∏ì_1 RIGHT-TOP						  
+//	{{-0.5f,  0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//í∏ì_2 LEFT-BOTTOM						  
+//	{{ 0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//í∏ì_3 RIGHT-BOTTOM
+//	{{-0.5f, -0.5f, 0.5f},{ 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//ëOñ  (Z-)
+//	//í∏ì_4 LEFT-TOP
+//	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//í∏ì_5 RIGHT-TOP		
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//í∏ì_6 LEFT-BOTTOM	 
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f},{1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//í∏ì_7 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//ëOñ  (X+)
+//	//í∏ì_8 LEFT-TOP
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//í∏ì_9 RIGHT-TOP
+//	{{ 0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//í∏ì_10 LEFT-BOTTOM
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//í∏ì_11 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//ëOñ  (X-)
+//	//í∏ì_12 LEFT-TOP
+//	{{-0.5f,  0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//í∏ì_13 RIGHT-TOP
+//	{{-0.5f,  0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//í∏ì_14 LEFT-BOTTOM
+//	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//í∏ì_15 RIGHT-BOTTOM
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//
+//	//ëOñ  (Y+)
+//	//í∏ì_16 LEFT-TOP
+//	{{-0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.0f}},
+//	//í∏ì_17 RIGHT-TOP
+//	{{ 0.5f,  0.5f,  0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.0f}},
+//	//í∏ì_18 LEFT-BOTTOM
+//	{{-0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.25f}},
+//	//í∏ì_19 RIGHT-BOTTOM
+//	{{ 0.5f,  0.5f, -0.5f}, { 0.0f,  1.0f, 0.0f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,0.25f}},
+//
+//	//ëOñ  (Y-)
+//	//í∏ì_20 LEFT-TOP
+//	{{-0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,0.75f}},
+//	//í∏ì_21 RIGHT-TOP
+//	{{ 0.5f, -0.5f, -0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{1.0f,0.75f}},
+//	//í∏ì_22 LEFT-BOTTOM
+//	{{-0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f} ,{0.0f,1.0f}},
+//	//í∏ì_23 RIGHT-BOTTOM
+//	{{ 0.5f, -0.5f,  0.5f}, { 0.5f,  0.5f, 0.5f}, {1.0f,1.0f,1.0f,1.0f}, {1.0f,1.0f}},
+//};
+
 static UINT Box_idxdata[6 * 6] =
 {
 	0,  1,  2,  2,  1,  3,//-Z
@@ -227,16 +136,20 @@ static UINT Box_idxdata[6 * 6] =
 };
 
 //=========================================================================================================
-// „Ç∞„É≠„Éº„Éê„É´Â§âÊï∞
+// ÉOÉçÅ[ÉoÉãïœêî
 //=========================================================================================================
 static ID3D11Device* g_pDevice = NULL;
 static ID3D11DeviceContext* g_pContext = NULL;
-static ID3D11ShaderResourceView* g_Texture;		//„ÉÜ„ÇØ„Çπ„ÉÅ„É£Â§âÊï∞
-static ID3D11Buffer* g_VertexBuffer = NULL;		// È†ÇÁÇπ„Éê„ÉÉ„Éï„Ç°
-static ID3D11Buffer* g_IndexBuffer = NULL;		// „Ç§„É≥„Éá„ÉÉ„ÇØ„Çπ„Éê„ÉÉ„Éï„Ç°
+static ID3D11ShaderResourceView* g_Texture;		//ÉeÉNÉXÉ`ÉÉïœêî
+static ID3D11Buffer* g_VertexBuffer = NULL;		// í∏ì_ÉoÉbÉtÉ@
+static ID3D11Buffer* g_IndexBuffer = NULL;		// ÉCÉìÉfÉbÉNÉXÉoÉbÉtÉ@
+// í«â¡: ÉvÉåÉCÉÑÅ[èâä˙à íuÅiRÇÃì«Ç›éÊÇËåãâ ÅjÇï€éù
+static XMFLOAT3 g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
 MODEL* Model[FIELD_MAX] = { NULL };
 static std::vector<MAPDATA> g_MapData;
+
+static GAME_STAGE g_CurrentStage = STAGE_NONE;
 
 static void EnsureBoxCreated()
 {
@@ -245,7 +158,7 @@ static void EnsureBoxCreated()
 }
 
 //=========================================================================================================
-// ÂàùÊúüÂåñ
+// èâä˙âª
 //=========================================================================================================
 void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
@@ -255,18 +168,23 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Seesaw_Initialize();
 	Manhole_Initialize();
 
-	// „ÉÜ„ÇØ„Çπ„ÉÅ„É£
+	// ÉeÉNÉXÉ`ÉÉ
 	TexMetadata metadata;
 	ScratchImage image;
 	LoadFromWICFile(L"asset\\Texture\\block_field.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
-	if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+	if (GetScene() == SCENE_TITLE)
 	{
-		// Error:  could not load map
-		MessageBox(nullptr, "Failed to load map file! Error", "Error", MB_OK);
+		if (!LoadMapFromFile("asset\\MapData\\stage_title.txt"))
+		{
+			// Error:  could not load map
+			MessageBox(nullptr, "Failed to load map file! Error", "ÉGÉâÅ[", MB_OK);
+		}
 	}
+
+	
 
 	bool hasGround = false;
 	bool hasWall = false;
@@ -275,16 +193,56 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (m.no == FIELD_WALL)   hasWall = true;
 	}
 
-	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_OBJ_3] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
+	if (!Model[FIELD_GROUND])
+	{
+		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka_Hibi_1_1_1.fbx");
+		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Building_B.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
 	if (!Model[FIELD_OBJ_BOX])
 	{
-		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\tree.fbx");
+		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Wooden_Box.fbx");
+	}
+	if (!Model[FIELD_WALL])
+	{
+		Model[FIELD_WALL] = ModelLoad("asset\\model\\Kabe_1_1_1+a.fbx");
+	}
+	if (!Model[FIELD_OBJ_1])
+	{
+		Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\Building_A.fbx");
+	}
+	if (!Model[FIELD_OBJ_2])
+	{
+		Model[FIELD_OBJ_2] = ModelLoad("asset\\model\\Building_B.fbx");
+		//CreateBox();
+	}
+	if (!Model[FIELD_OBJ_3])
+	{
+		Model[FIELD_OBJ_3] = ModelLoad("asset\\model\\Building_B.fbx");
 	}
 	if (!Model[FIELD_GOAL])
 	{
 		Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
 	}
+
+	if (!Model[FIELD_STAGE_1])
+	{
+		Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\test.fbx");
+	}
+	if (!Model[FIELD_STAGE_2])
+	{
+		Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\test.fbx");
+	}
+	if (!Model[FIELD_STAGE_3])
+	{
+		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
+	}
+
 	if (!Model[FIELD_SEESAW_1])
 	{
 		Model[FIELD_SEESAW_1] = ModelLoad("asset\\model\\Seesaw_dodai.fbx");
@@ -298,12 +256,13 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 
 //=========================================================================================================
-// ÁµÇ‰∫Ü
+// èIóπ
 //=========================================================================================================
 void field_Finalize(void)
 {
 	Seesaw_Finalize();
 	Manhole_Finalize();
+
 	g_MapData.clear();  // Clear the vector
 
 	for (int i = 0; i < FIELD_MAX; i++)
@@ -319,7 +278,7 @@ void field_Finalize(void)
 }
 
 //=========================================================================================================
-// Êõ¥Êñ∞
+// çXêV
 //=========================================================================================================
 void field_Update(void)
 {
@@ -351,7 +310,7 @@ void field_Update(void)
 }
 
 //=========================================================================================================
-// ÊèèÁîª
+// ï`âÊ
 //=========================================================================================================
 void field_Draw(void)
 {
@@ -400,14 +359,17 @@ void field_Draw(void)
 			g_pContext->DrawIndexed(6 * 6, 0, 0);
 		}
 	}
+
+	Seesaw_DebugDraw();
+	Manhole_DebugDraw();
 }
 
 //=========================================================================================================
-// Box‰ΩúÊàê
+// BoxçÏê¨
 //=========================================================================================================
 void CreateBox()
 {
-	// È†ÇÁÇπ„Éê„ÉÉ„Éï„Ç°
+	// í∏ì_ÉoÉbÉtÉ@
 	D3D11_BUFFER_DESC bd = {};
 	bd.Usage = D3D11_USAGE_DYNAMIC;
 	bd.ByteWidth = sizeof(Vertex3D) * BOX_NUM_VERTEX;
@@ -421,13 +383,13 @@ void CreateBox()
 	CopyMemory(vertex, Box_vdata, sizeof(Vertex3D) * BOX_NUM_VERTEX);
 	g_pContext->Unmap(g_VertexBuffer, 0);
 
-	// „Ç§„É≥„Éá„ÉÉ„ÇØ„Çπ„Éê„ÉÉ„Éï„Ç°
+	// ÉCÉìÉfÉbÉNÉXÉoÉbÉtÉ@
 	{
-		//È†ÇÁÇπ„Éê„ÉÉ„Éï„Ç°‰ΩúÊàê
+		//í∏ì_ÉoÉbÉtÉ@çÏê¨
 		D3D11_BUFFER_DESC bd;
-		ZeroMemory(&bd, sizeof(bd));//0„Åß„ÇØ„É™„Ç¢
+		ZeroMemory(&bd, sizeof(bd));//0Ç≈ÉNÉäÉA
 		bd.Usage = D3D11_USAGE_DYNAMIC;
-		bd.ByteWidth = sizeof(UINT) * BOX_NUM_VERTEX;//Ê†ºÁ¥ç„Åß„Åç„ÇãÈ†ÇÁÇπÊï∞*È†ÇÁÇπ„Çµ„Ç§„Ç∫
+		bd.ByteWidth = sizeof(UINT) * BOX_NUM_VERTEX;//äiî[Ç≈Ç´ÇÈí∏ì_êî*í∏ì_ÉTÉCÉY
 		bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
 		bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 		g_pDevice->CreateBuffer(&bd, NULL, &g_IndexBuffer);
@@ -467,7 +429,9 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 	if (g_MapData[i].no == FIELD_EMPTY_BOX)
 		return;
-	
+
+	if (g_MapData[i].no == FIELD_OBJ_3)
+		return;
 	if (Model[g_MapData[i].no])
 	{
 		ModelDraw(Model[g_MapData[i].no]);
@@ -484,8 +448,12 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 }
 
+
+
+
+
 //=========================================================================================================
-// txt„É≠„Éº„Éâ
+// txtÉçÅ[Éh
 //=========================================================================================================
 std::vector<MAPDATA>& GetFieldMap()
 {
@@ -497,7 +465,24 @@ bool LoadMapFromFile(const char* filename)
 	std::ifstream file(filename);
 	if (!file.is_open()) return false;
 
-	// Detect map 1 (stage1)
+	// Detect which stage we're loading
+	if (strstr(filename, "stage_select") != nullptr)
+	{
+		g_CurrentStage = STAGE_SELECT;
+	}
+	else if (strstr(filename, "stage1") != nullptr)
+	{
+		g_CurrentStage = STAGE_1;
+	}
+	else if (strstr(filename, "stage2") != nullptr)
+	{
+		g_CurrentStage = STAGE_2;
+	}
+	else if (strstr(filename, "stage3") != nullptr)
+	{
+		g_CurrentStage = STAGE_3;
+	}
+
 	bool isMap1 = false;
 	if (strstr(filename, "stage1") != nullptr)
 	{
@@ -514,16 +499,17 @@ bool LoadMapFromFile(const char* filename)
 	Seesaw_ClearAll();
 	Manhole_ClearAll();
 
+	// í«â¡: ì«Ç›çûÇ›äJénéûÇ…èâä˙à íuÇÉfÉtÉHÉãÉgÇ÷
+	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
 	std::string line;
 	int y = 0;  // height layer
 	int z = 0;  // depth
 
 	while (std::getline(file, line))
 	{
-		// Skip comments
 		if (line.empty() || line[0] == '#')
 		{
-			// Check for new layer
 			if (line.find("Layer") != std::string::npos) {
 				y++;
 				z = 0;
@@ -531,23 +517,19 @@ bool LoadMapFromFile(const char* filename)
 			continue;
 		}
 
-		// Parse each character
 		for (int x = 0; x < (int)line.length(); x++)
 		{
-
 			char c = line[x];
-			//Seesaw
 			if (c == 'S')
 			{
 				Seesaw_Create(
 					(float)(x - 2),
-					(float)(y - 1),
+					(float)(y - 2),
 					(float)z,
 					g_MapData
 				);
 				continue;
 			}
-
 			//Manhole
 			if (c == 'M')
 			{
@@ -561,35 +543,72 @@ bool LoadMapFromFile(const char* filename)
 			}
 
 
+			// í«â¡: 'R' ÇÕÉvÉåÉCÉÑÅ[èâä˙à íuÉ}Å[ÉJÅ[
+			if (c == 'R')
+			{
+				// É}ÉbÉvç¿ïWånÇ∆ìØólÇÃÉIÉtÉZÉbÉgÇ≈ê›íË
+				g_PlayerStartPos = XMFLOAT3(
+					(float)(x - 2),
+					(float)(y - 2),
+					(float)z
+				);
+				Player3D_setposition(g_PlayerStartPos);
+				Player3D_InitAt(g_PlayerStartPos, XMFLOAT3(0.0f, 180.0f, 0.0f));
+				// ÉtÉBÅ[ÉãÉhÉIÉuÉWÉFÉNÉgÇ∆ÇµÇƒÇÕí«â¡ÇµÇ»Ç¢
+				continue;
+			}
+
 			FIELD type;
 			bool valid = true;
 
-			switch (line[x])
+			switch (c)
 			{
 			case 'G': type = FIELD_GROUND;   break;
-			case 'W':  type = FIELD_WALL; break;
-			case 'B':  type = FIELD_OBJ_BOX;  break;
-			case 'E':  type = FIELD_EMPTY_BOX;  break;
-			case '1':  type = FIELD_GOAL;  break;
-			case 'O':  type = FIELD_OBJ_1;  break;
-			case '2':  type = FIELD_OBJ_2;  break;
-			case '.': valid = false;      break;  // Empty
-			case ' ': valid = false;      break;  // Space
-			default:  valid = false;      break;
+			case 'W': type = FIELD_WALL;     break;
+			case 'B': type = FIELD_OBJ_BOX;  break;
+			case 'E': type = FIELD_EMPTY_BOX; break;
+			case '1': type = FIELD_GOAL;     break;
+			case 'O': type = FIELD_OBJ_1;    break;
+			case '2': type = FIELD_OBJ_2;    break;
+			case '3': type = FIELD_OBJ_3;    break;
+			case '7': type = FIELD_STAGE_1;    break;
+			case '8': type = FIELD_STAGE_2;    break;
+			case '9': type = FIELD_STAGE_3;    break;
+			case '.': valid = false;         break;
+			case ' ': valid = false;         break;
+			default:  valid = false;         break;
 			}
 
 			if (valid)
 			{
 				MAPDATA data;
-				data.pos = XMFLOAT3(
-					(float)(x - 2),  // Center X (adjust offset as needed)
-					(float)(y - 1),
-					(float)z
-				);
-				data.no = type; 
-				data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
-				data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-				g_MapData.push_back(data);
+
+				if (isMapTitle)
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 2),
+						(float)z
+					);
+
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
+				else
+				{
+					data.pos = XMFLOAT3(
+						(float)(x - 2),
+						(float)(y - 2),
+						(float)z
+					);
+
+					data.no = type;
+					data.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+					g_MapData.push_back(data);
+				}
 			}
 		}
 		z++;
@@ -597,4 +616,19 @@ bool LoadMapFromFile(const char* filename)
 
 	file.close();
 	return true;
+}
+
+XMFLOAT3 Field_GetPlayerStartPosition()
+{
+	return g_PlayerStartPos;
+}
+
+void SetCurrentStage(GAME_STAGE stage)
+{
+	g_CurrentStage = stage;
+}
+
+GAME_STAGE GetCurrentStage()
+{
+	return g_CurrentStage;
 }

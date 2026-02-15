@@ -54,6 +54,15 @@ float SampleShadowPCF(
 
 float4 main(PS_INPUT ps_in) : SV_TARGET
 {
+    // ========== ALPHA DISCARD ==========
+    // Sample texture early so we can discard transparent pixels
+    float4 texCol = g_Texture.Sample(g_SamplerState, ps_in.texcoord);
+    texCol *= ps_in.color;
+    if (texCol.a < 0.1f)
+    {
+        discard;
+    }
+
     // ========== SHADOW PASS MODE ==========
     // When rendering to shadow cubemap, output linear depth as color
     if (ShadowPassMode > 0.5f)
@@ -70,10 +79,8 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
 
     // ========== NORMAL RENDERING PASS ==========
     
-    // Base color (texture * vertex color)
-    // ベースカラー（テクスチャ × 頂点カラー）
-    float4 col = g_Texture.Sample(g_SamplerState, ps_in.texcoord);
-    col *= ps_in.color;
+    // Base color already sampled above
+    float4 col = texCol;
 
     if (!Light.Enable)
     {
@@ -129,23 +136,6 @@ float4 main(PS_INPUT ps_in) : SV_TARGET
         float farPlane = ShadowRadius;
         float myDepth = (distToLight - nearPlane) / (farPlane - nearPlane);
 
-        // Single sample (no PCF) to avoid banding artifacts
-        //float storedDepth = g_ShadowCubemap.Sample(g_ShadowSampler, direction).r;
-        
-        // Slope-scaled bias based on distance
-        //float bias = 0.02f + (distToLight * 0.01f);
-        //float NdotL = saturate(dot(normalize(ps_in.normal), normalize(-Light.Dir.xyz)));
-        //float bias = max(0.005f * (1.0f - NdotL), 0.001f);
-        
-        // Simple shadow test
-        //if (myDepth > storedDepth + bias)
-        //{
-        //    shadowFactor = 0.15f; // In shadow
-        //}
-        //else
-        //{
-        //    shadowFactor = 1.0f; // Lit
-        //}
         shadowFactor = SampleShadowPCF(
                         direction,
                         myDepth,
@@ -180,9 +170,8 @@ float SampleShadowPCF(
     };
 
     // ================= ADAPTIVE RADIUS =================
-    //TUNE THESE THREE VALUES
-    float minRadius = 0.008f; // near = sharp
-    float maxRadius = 0.04f; // far = soft
+    float minRadius = 0.008f;
+    float maxRadius = 0.04f;
 
     float dist01 = saturate(dist / ShadowRadius);
     float sampleRadius = lerp(minRadius, maxRadius, dist01 * dist01);

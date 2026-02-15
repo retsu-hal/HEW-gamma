@@ -39,9 +39,9 @@ struct ShadowBuildConfig
     int edgeSamples = 4;       
     float maxCastDist = 100.0f;
     float samePlaneDot = 0.95f;
-    float thickness = 1.0f;   
+    float thickness = 0.15f;   
     float mergeEpsilon = 0.01f;
-    float rebuildThreshold = 0.05f;
+    float rebuildThreshold = 0.01f;
 };
 
 // ============================================================

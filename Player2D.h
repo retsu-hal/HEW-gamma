@@ -6,7 +6,7 @@
 #include "direct3d.h"
 #include "model.h"
 #include "PlayerStatus.h"
-#include "KeyBind.h"
+#include "newKeyBind.h"
 
 //=========================================================================================================
 // É}ÉNÉçíËã`
@@ -29,11 +29,10 @@ XMFLOAT3 GetPlayer2DPosition();
 void Player2D_Gravity();
 void Player2D_Move();
 void Player2D_Jump();
-void Player2D_Change();
+
 
 void Player2D_Reset();
 void Player2D_Respawn();
-void Player2D_ResetJumpState();
 
 PLAYER* GetPlayer2D();
 

@@ -1,10 +1,11 @@
 //PlayerStatus.h
 #pragma once
 
+#include "Keyboard.h"
+#include "controller.h"
+#include "Input.h"
 #include "model.h"
 #include "direct3d.h"
-#include "controller.h"
-#include "KeyBind.h"
 
 // コントローラー
 extern Controller gPad;
@@ -23,9 +24,11 @@ enum PLAYER_STATE
 	PLAYER_STATE_IDLE = 0,		//何もしない
 	PLAYER_STATE_MOVE,			//移動中
 	PLAYER_STATE_FALL,			//落下中
-	PLAYER_STATE_UP,			//上昇中
+	PLAYER_STATE_JUMP,			//上昇中
+	PLAYER_STATE_DASH,			//ダッシュ中
+	PLAYER_STATE_RESPAWN,		//変身中
 	PLAYER_STATE_ACTION,		//アクション中(3D限定)
-
+	PLAYER_STATE_AUTO_WALK,		// タイトル画面の自動歩行
 
 	PLAYER_STATE_MAX,
 };
@@ -56,16 +59,18 @@ public:
 	XMVECTOR Quaternion;		//クォータニオン回転
 
 	// プレイヤーステータス
-	float moveSpeed = 0.01f;			//移動速度
-	float maxMoveSpeed = 2.0f;			//最大移動速度
+	float moveSpeed = 0.009f;			//移動速度
+	float maxMoveSpeed = 0.5f;			//最大移動速度
 	float maxFallSpeed = -0.5f;			//最大落下速度
 	float dampingXZ = 0.925f;			//摩擦係数
 	float gravityPower = -1.0f;			//重力加速度（もしかしたら使う予定）
 	float jumpPower = 0.175f;			//ジャンプ力
-	float dashMoveSpeed = 1.5f;			//ダッシュ移動速度倍率	
+	float dashMoveSpeed = 2.0f;			//ダッシュ移動速度倍率	
 	bool isGround = false;				//接地判定
 	bool isDash = false;				//ダッシュ判定
-
+	bool isPushing = false;
+	bool isAuto = false;
+	bool Active = true;
 	float FirstMaxMoveSpeed = maxMoveSpeed;
 
 	// プレイヤー変身フラグ
@@ -77,4 +82,9 @@ public:
 	//  false:3D状態
 };
 
+struct InputKey
+{
+	Keyboard_Keys keyboard; // KK_*
+	WORD          gamepad;  // XINPUT_GAMEPAD_*
+};
 
