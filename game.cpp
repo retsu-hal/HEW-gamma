@@ -28,7 +28,7 @@
 
 static bool debugMode;
 
-static	int	g_BgmID = NULL;
+//static	int	g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
 static XMFLOAT3 LightPos;
 
@@ -46,7 +46,6 @@ static ID3D11ShaderResourceView* g_Goal_1_Texture = nullptr;
 static ID3D11ShaderResourceView* g_Goal_2_Texture = nullptr;
 static ID3D11ShaderResourceView* g_Goal_3_Texture = nullptr;
 
-static std::map<int, ShadowPrism> g_ShadowPrisms;
 static ShadowBuildConfig g_ShadowConfig;
 
 static std::vector<const ShadowPrism*> g_ActiveShadowPrisms;
@@ -154,12 +153,15 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	LoadFromWICFile(L"asset\\texture\\UI\\hard.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Goal_3_Texture);
+
+	Collision_ResetShadowContactState();
 }
 
 
 void Game_Finalize()
 {
-	
+	Collision_ResetShadowContactState();
+
 	SAFE_RELEASE(g_Goal_1_Texture);
 	SAFE_RELEASE(g_Goal_2_Texture);
 	SAFE_RELEASE(g_Goal_3_Texture);
@@ -286,15 +288,15 @@ void Game_Update()
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		Player3D_Update();
-		//Player3DCamera_Update();
+		Player3DCamera_Update();
 
 	}
 	else
 	{
 		Player2D_Update();
-		//Player2DCamera_Update();
+		Player2DCamera_Update();
 	}
-	Player3DCamera_Update();
+	//Player3DCamera_Update();
 
 }
 

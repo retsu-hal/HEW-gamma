@@ -16,6 +16,29 @@
 #define PLAYER2D_SOLID_HALF_Y (1.0f)
 #define PLAYER2D_SOLID_HALF_Z (0.07f)
 
+
+enum PLAYER2D_ANIM
+{
+    PLAYER2D_ANIM_IDLE = 0, 
+    PLAYER2D_ANIM_WALK,     
+    PLAYER2D_ANIM_JUMP,     
+    PLAYER2D_ANIM_FALL,     
+
+    PLAYER2D_ANIM_MAX
+};
+
+struct Player2DAnimDef
+{
+    const wchar_t* texturePath;
+    int cols;                  
+    int rows;                  
+    int startFrame;            
+    int frameCount;            
+    float frameSpeed;          
+    bool loop;                 
+};
+
+
 //=========================================================================================================
 // プロトタイプ宣言
 //=========================================================================================================
@@ -42,3 +65,7 @@ XMFLOAT3 Player2D_GetSolidHalfSize();
 void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot);
 void Player2D_Uninit();
 void Player2D_SetActive(bool active);
+
+
+void Player2D_SetAnim(PLAYER2D_ANIM anim);
+PLAYER2D_ANIM Player2D_GetAnim();

@@ -315,7 +315,7 @@ void field_Update(void)
 	{
 		if (g_MapData[i].no == FIELD_OBJ_1)
 		{
-			g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 10.0f);
+			//g_MapData[i].scale = XMFLOAT3(1.0f, 4.0f, 10.0f);
 			//g_MapData[i].rotate = XMFLOAT3(0.0f, 20.0f, 0.0f);
 		}
 		else if (g_MapData[i].no == FIELD_SEESAW_2)

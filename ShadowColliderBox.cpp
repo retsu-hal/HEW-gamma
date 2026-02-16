@@ -7,11 +7,22 @@ using namespace DirectX;
 
 static ShadowManager g_ShadowManager;
 
+static bool Field_IsReceiver(FIELD t)
+{
+    switch (t)
+    {
+    case FIELD_OBJ_1:
+        return true;
+    default:
+        return false;
+    }
+}
+
+
 ShadowManager* GetShadowManager()
 {
     return &g_ShadowManager;
 }
-
 
 // フィールドの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
@@ -148,7 +159,7 @@ static bool RaycastToReceivers(
         const auto& m = receivers[i];
         if (skip == &m) continue;
 
-        if (m.no != FIELD_OBJ_1) continue;
+        if (!Field_IsReceiver(m.no)) continue;
 
         float t;
         XMFLOAT3 n;
@@ -171,6 +182,96 @@ static bool RaycastToReceivers(
     if (outHit) *outHit = best;
     return found;
 }
+
+static bool RaycastToReceiversDirectional(
+    const XMFLOAT3& lightPos,
+    const XMFLOAT3& samplePoint,
+    float maxDist,
+    const std::vector<MAPDATA>& receivers,
+    const MAPDATA* skipCaster,
+    RayHit* outHit)
+{
+
+    XMFLOAT3 dir = Normalize(samplePoint - lightPos);
+    float distToSample = Length(samplePoint - lightPos);
+
+    bool found = false;
+    float bestT = maxDist;
+    RayHit best{};
+
+    for (size_t i = 0; i < receivers.size(); ++i)
+    {
+        const auto& m = receivers[i];
+        if (skipCaster == &m) continue;
+
+        if (!Field_IsReceiver(m.no)) continue;
+
+        float t;
+        XMFLOAT3 n;
+        if (RaycastOBB_FullRotation(lightPos, dir, m.pos, Field_GetHalfSize(m),
+            m.rotate, maxDist, &t, &n))
+        {
+            if (t < distToSample) continue;
+
+            if (!found || t < bestT)
+            {
+                found = true;
+                bestT = t;
+                best.hit = true;
+                best.t = t;
+                best.point = lightPos + dir * t;
+                best.normal = n;
+                best.mapIndex = i;
+            }
+        }
+    }
+
+    if (outHit) *outHit = best;
+    return found;
+}
+
+
+static bool IsCasterBetweenLightAndWall(
+    const XMFLOAT3& lightPos,
+    const MAPDATA& caster,
+    const std::vector<MAPDATA>& map)
+{
+    XMFLOAT3 casterCenter = Field_GetColliderCenter(caster);
+    XMFLOAT3 toCenter = casterCenter - lightPos;
+    float distToCaster = Length(toCenter);
+
+    if (distToCaster < 1e-4f) return false;
+
+    XMFLOAT3 dir = Normalize(toCenter);
+
+    bool foundWall = false;
+    float nearestWallT = FLT_MAX;
+
+    for (size_t i = 0; i < map.size(); ++i)
+    {
+        const auto& m = map[i];
+        if (&m == &caster) continue;
+
+        if (!Field_IsReceiver(m.no)) continue;
+
+        float t;
+        XMFLOAT3 n;
+        if (RaycastOBB_FullRotation(lightPos, dir, m.pos, Field_GetHalfSize(m),
+            m.rotate, 200.0f, &t, &n))
+        {
+            if (t < nearestWallT)
+            {
+                nearestWallT = t;
+                foundWall = true;
+            }
+        }
+    }
+
+    if (!foundWall) return false;
+
+    return (distToCaster < nearestWallT);
+}
+
 
 // OBBのサンプルポイントを取得
 static void GetOBBSamplePoints_FullRotation(
@@ -325,6 +426,7 @@ void Shadow_Clear(ShadowPrism& prism)
     prism.baseWorld.clear();
     prism.topWorld.clear();
     prism.isValid = false;
+    prism.lightDir = { 0, 0, 0 };
 }
 
 bool Shadow_NeedsRebuild(
@@ -356,7 +458,14 @@ bool Shadow_Build(
 {
     Shadow_Clear(out);
 
+    if (!IsCasterBetweenLightAndWall(lightPos, caster, receivers))
+    {
+        return false;
+    }
+
     XMFLOAT3 casterCenter = Field_GetColliderCenter(caster);
+
+    XMFLOAT3 lightDir = Normalize(casterCenter - lightPos);
 
     std::vector<XMFLOAT3> samples;
     GetOBBSamplePoints_FullRotation(casterCenter, Field_GetHalfSize(caster),
@@ -368,9 +477,9 @@ bool Shadow_Build(
 
     for (const auto& sample : samples)
     {
-        XMFLOAT3 dir = Normalize(sample - lightPos);
         RayHit hit;
-        if (RaycastToReceivers(lightPos, dir, config.maxCastDist, receivers, &caster, &hit))
+        if (RaycastToReceiversDirectional(lightPos, sample, config.maxCastDist,
+            receivers, &caster, &hit))
         {
             hits.push_back({ hit.point, hit.normal });
         }
@@ -410,7 +519,8 @@ bool Shadow_Build(
     out.v = v;
     out.thickness = config.thickness;
 
-    XMFLOAT3 extrude = planeN * config.thickness;
+    out.lightDir = lightDir;
+    XMFLOAT3 extrude = lightDir * (-config.thickness);
 
     for (int idx : hullIdx)
     {
@@ -468,6 +578,7 @@ static bool Field_IsShadows(FIELD t)
     case FIELD_OBJ_2:
     case FIELD_SEESAW_1:
     case FIELD_SEESAW_2:
+	case FIELD_MANHOLE:
         return true;
     default:
         return false;

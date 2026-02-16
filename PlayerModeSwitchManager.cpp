@@ -1,17 +1,16 @@
 //PlayerModeSwitchManager.cpp
 #include "PlayerModeSwitchManager.h"
-
 #include <cfloat>
 #include "field.h"
 #include "player3D.h"
 #include "Player2D.h"
 #include "keyboard.h"
-
-
-#include "debug.h"
 #include "MathUtil.h"
 using namespace mu;
 
+
+#include "debug.h"
+#include "camera.h"
 static bool debugMode;
 
 static const float kSwitchMaxDist = 2.0f;
@@ -21,20 +20,21 @@ static const float kTo3DFrontOffset = -1.0f;
 static const float kGroundSearchUp = 3.0f;
 static const float kGroundSearchDown = 10.0f;
 
-static PLAYER_MODE g_Mode = MODE_3D; 
+static PLAYER_MODE g_Mode = MODE_3D;
 
 static const auto TABKey = KK_TAB;
 
-// 僼傿乕儖僪偺敿暘偺僒僀僘傪庢摼
+// フィールドの半分のサイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
     return XMFLOAT3{
-    BOX_RADIUS * m.scale.x,
-    BOX_RADIUS * m.scale.y,
-    BOX_RADIUS * m.scale.z
+        BOX_RADIUS * m.scale.x,
+        BOX_RADIUS * m.scale.y,
+        BOX_RADIUS * m.scale.z
     };
 }
-// 僼傿乕儖僪偑暻偐偳偆偐傪庢摼
+
+// フィールドが壁かどうかを取得
 static bool Field_IsWall(FIELD t)
 {
     switch (t)
@@ -46,7 +46,7 @@ static bool Field_IsWall(FIELD t)
     }
 }
 
-// 儗僀偲AABB偺摉偨傝敾掕乮柺忣曬晅偒乯
+// レイとAABBの当たり判定（面情報付き）
 static bool RaycastAABB_Face(
     const XMFLOAT3& rayO,
     const XMFLOAT3& rayD_in,
@@ -101,7 +101,7 @@ static bool RaycastAABB_Face(
     return true;
 }
 
-// 儗僀偲OBB偺摉偨傝敾掕乮柺忣曬晅偒乯
+// レイとOBBの当たり判定（面情報付き）
 static bool RaycastOBB_Face(
     const XMFLOAT3& rayO,
     const XMFLOAT3& rayD_in,
@@ -151,23 +151,7 @@ static bool RaycastOBB_Face(
 }
 
 
-// 巜掕柺偵2D僾儗僀儎乕偑廂傑傞偐偳偆偐
-static bool CanFitOnFace(BOX_FACE face, const XMFLOAT3& fieldHalf, const XMFLOAT3& p2Half)
-{
-    switch (face)
-    {
-    case FACE_POS_X: case FACE_NEG_X:
-        return (p2Half.y <= fieldHalf.y) && (p2Half.z <= fieldHalf.z);
-    case FACE_POS_Z: case FACE_NEG_Z:
-        return (p2Half.y <= fieldHalf.y) && (p2Half.x <= fieldHalf.x);
-    case FACE_POS_Y: case FACE_NEG_Y:
-        return (p2Half.x <= fieldHalf.x) && (p2Half.z <= fieldHalf.z);
-    default:
-        return false;
-    }
-}
-
-// 柺偵懳墳偡傞Yaw妏搙傪庢摼
+// 面に対応するYaw角度を取得
 static float FaceYawDeg(BOX_FACE face)
 {
     switch (face)
@@ -180,19 +164,19 @@ static float FaceYawDeg(BOX_FACE face)
     }
 }
 
-// 巜掕柺偵懳偡傞2D夞揮傪寁嶼
+// 指定面に対する2D回転を計算
 static XMFLOAT3 Calc2DRotationFromFace(const MAPDATA& box, BOX_FACE face)
 {
     float yawDeg = box.rotate.y + FaceYawDeg(face) + 180.0f;
     return { 0.0f, yawDeg, 0.0f };
 }
 
-// 巜掕柺忋偺2D埵抲傪寁嶼
-static XMFLOAT3 Calc2DPositionOnFace_OBB(
+
+// ===== 新しい関数：命中面の表面位置を計算（Y は 3D プレイヤーの高さを使用） =====
+static XMFLOAT3 Calc2DPositionOnWallSurface(
     const MAPDATA& box,
     BOX_FACE face,
-    const XMFLOAT3& p3Pos,
-    const XMFLOAT3& p2Half)
+    const XMFLOAT3& p3Pos)
 {
     const XMFLOAT3 half = Field_GetHalfSize(box);
 
@@ -205,39 +189,41 @@ static XMFLOAT3 Calc2DPositionOnFace_OBB(
     XMVECTOR C = XMLoadFloat3(&box.pos);
     XMVECTOR P = XMLoadFloat3(&p3Pos);
 
+    // 3Dプレイヤーの位置をローカル座標に変換
     XMVECTOR PlocV = XMVector3TransformNormal(P - C, invR);
     XMFLOAT3 local;
     XMStoreFloat3(&local, PlocV);
 
-	// 柺偵廂傑傞傛偆偵僋儔儞僾
-    float minX = -half.x + p2Half.x;
-    float maxX = half.x - p2Half.x;
-    float minY = -half.y + p2Half.y;
-    float maxY = half.y - p2Half.y;
-    float minZ = -half.z + p2Half.z;
-    float maxZ = half.z - p2Half.z;
+    // 命中面に貼り付ける（面の法線方向だけオフセット）
+    // X, Y, Z はクランプせず、3Dプレイヤーの位置をそのまま使う
+    float offset = kPlayer2DThickness + kWallOffset;
 
-	// 僋儔儞僾
-    local.x = Clamp(local.x, minX, maxX);
-    local.y = Clamp(local.y, minY, maxY);
-    local.z = Clamp(local.z, minZ, maxZ);
+    switch (face)
+    {
+    case FACE_POS_X: local.x = half.x + offset; break;
+    case FACE_NEG_X: local.x = -half.x - offset; break;
+    case FACE_POS_Z: local.z = half.z + offset; break;
+    case FACE_NEG_Z: local.z = -half.z - offset; break;
+    case FACE_POS_Y: local.y = half.y + offset; break;
+    case FACE_NEG_Y: local.y = -half.y - offset; break;
+    default: break;
+    }
 
-	// 柺偵崌傢偣偰埵抲挷惍
-    if (face == FACE_POS_X) local.x = half.x + (kPlayer2DThickness + kWallOffset);
-    if (face == FACE_NEG_X) local.x = -half.x - (kPlayer2DThickness + kWallOffset);
-    if (face == FACE_POS_Z) local.z = half.z + (kPlayer2DThickness + kWallOffset);
-    if (face == FACE_NEG_Z) local.z = -half.z - (kPlayer2DThickness + kWallOffset);
-    if (face == FACE_POS_Y) local.y = half.y + (kPlayer2DThickness + kWallOffset);
-    if (face == FACE_NEG_Y) local.y = -half.y - (kPlayer2DThickness + kWallOffset);
-
+    // ローカル座標をワールド座標に戻す
     XMVECTOR L = XMLoadFloat3(&local);
     XMVECTOR Pw = XMVector3TransformNormal(L, R) + C;
 
     XMFLOAT3 out;
     XMStoreFloat3(&out, Pw);
+
+    // ===== 核心修正：Y座標は3Dプレイヤーの高さをそのまま使う =====
+    out.y = p3Pos.y;
+
     return out;
 }
-// 巜掕XZ埵抲偺抧柺偺僩僢僾Y嵗昗傪庢摼
+
+
+// 指定XZ位置の地面のトップY座標を取得
 static bool FindGroundTopY_OnXZ(float x, float z, float startY, float maxDown, float* outTopY)
 {
     std::vector<MAPDATA>& map = GetFieldMap();
@@ -266,8 +252,9 @@ static bool FindGroundTopY_OnXZ(float x, float z, float startY, float maxDown, f
     return found;
 }
 
+
 //---------------------------------------------------------------------------------------------------------
-// 僾儗僀儎乕儌乕僪愗傝懼偊娗棟
+// レイキャストで前方の壁を検出（最も近い OBJ_1 を返す）
 static bool GetSwitchTargetFromPlayer3D(SWITCH_TARGET* outT)
 {
     PLAYER* p3 = GetPlayer3D();
@@ -286,8 +273,6 @@ static bool GetSwitchTargetFromPlayer3D(SWITCH_TARGET* outT)
     {
         const MAPDATA& m = map[i];
         if (!Field_IsWall(map[i].no)) continue;
-
-        XMFLOAT3 half = Field_GetHalfSize(m);
 
         BOX_FACE face;
         XMFLOAT3 normal;
@@ -310,23 +295,50 @@ static bool GetSwitchTargetFromPlayer3D(SWITCH_TARGET* outT)
     return true;
 }
 
-// 3D仺2D曄恎帋峴
+
+// ===== 修正後：3D→2D 切り替え =====
+// CanFitOnFace を削除、射線命中だけで切り替え可能
 static bool TrySwitch3DTo2D()
 {
     SWITCH_TARGET tgt;
-    if (!GetSwitchTargetFromPlayer3D(&tgt)) return false;
+    if (!GetSwitchTargetFromPlayer3D(&tgt))
+    {
+        if (debugMode)
+        {
+            ImGui::Begin("Debug - han");
+            if (ImGui::TreeNode("SwitchFail"))
+            {
+                ImGui::Text("No wall found in front");
+                ImGui::TreePop();
+            }
+            ImGui::End();
+        }
+        return false;
+    }
 
     std::vector<MAPDATA>& map = GetFieldMap();
     const MAPDATA& box = map[tgt.fieldIndex];
-    XMFLOAT3 boxHalf = Field_GetHalfSize(box);
-
-    XMFLOAT3 p2Half = Player2D_GetSolidHalfSize();
-    if (!CanFitOnFace(tgt.face, boxHalf, p2Half))
-        return false;
 
     PLAYER* p3 = GetPlayer3D();
-    XMFLOAT3 p2Pos = Calc2DPositionOnFace_OBB(box, tgt.face, p3->Position, p2Half);
+
+    // 命中した面の表面に2Dプレイヤーを配置（Yは3Dプレイヤーの高さ）
+    XMFLOAT3 p2Pos = Calc2DPositionOnWallSurface(box, tgt.face, p3->Position);
     XMFLOAT3 p2Rot = Calc2DRotationFromFace(box, tgt.face);
+
+    if (debugMode)
+    {
+        ImGui::Begin("Debug - han");
+        if (ImGui::TreeNode("SwitchOK"))
+        {
+            ImGui::Text("Hit fieldIndex: %d", tgt.fieldIndex);
+            ImGui::Text("Hit face: %d", tgt.face);
+            ImGui::Text("3D pos: (%.2f, %.2f, %.2f)", p3->Position.x, p3->Position.y, p3->Position.z);
+            ImGui::Text("2D pos: (%.2f, %.2f, %.2f)", p2Pos.x, p2Pos.y, p2Pos.z);
+            ImGui::Text("2D rot: (%.2f, %.2f, %.2f)", p2Rot.x, p2Rot.y, p2Rot.z);
+            ImGui::TreePop();
+        }
+        ImGui::End();
+    }
 
     Player2D_InitAt(p2Pos, p2Rot);
     Player2D_SetActive(true);
@@ -336,7 +348,8 @@ static bool TrySwitch3DTo2D()
     return true;
 }
 
-// 2D仺3D曄恎帋峴
+
+// 2D→3D 切り替え（変更なし）
 static bool TrySwitch2DTo3D()
 {
     PLAYER* p2 = GetPlayer2D();
@@ -365,10 +378,11 @@ static bool TrySwitch2DTo3D()
     Player2D_SetActive(false);
     Player2D_Uninit();
 
+    Camera_Reset2DState();
+
     g_Mode = MODE_3D;
     return true;
 }
-
 
 
 void PlayerModeSwitchManager_Init()
@@ -393,7 +407,6 @@ void PlayerModeSwitchManager_Update()
         }
         ImGui::End();
     }
-
 
     if (!Keyboard_IsKeyDownTrigger(TABKey)) return;
 

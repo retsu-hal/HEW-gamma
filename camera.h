@@ -42,6 +42,4 @@ XMMATRIX GetProjectionMatrix();
 XMFLOAT3 GetCameraAtPosition();
 XMFLOAT3 GetCameraPosition();
 
-void cameraMouse();
-void cameraKeyb();
-void cameraMouse_1();
+void Camera_Reset2DState();
