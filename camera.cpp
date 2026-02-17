@@ -7,38 +7,28 @@
 #include "Player2D.h"
 #include <iostream>
 
-#include "field.h"
-#include "MathUtil.h"
-using namespace mu;
-
-#if defined (_DEBUG)
-static bool debugMode = true;
-#else 
-static bool debugMode = false;
-#endif
-
 //=========================================================================================================
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
 
 
-//ƒ}ƒEƒX‘€ì—p•Ï”
+//ãƒã‚¦ã‚¹æ“ä½œç”¨å¤‰æ•°
 Mouse_State ms{};
-float cSize = 1.0f;//ƒJƒƒ‰‚ÌŠ´“x’²®—p
+float cSize = 1.0f;//ã‚«ãƒ¡ãƒ©ã®æ„Ÿåº¦èª¿æ•´ç”¨
 
-//ƒJƒƒ‰‘€ì—p•Ï”
-static bool   gCamAnglesInit = false;//ƒJƒƒ‰Šp“x‰Šú‰»ƒtƒ‰ƒO
-static XMFLOAT3 gCamTarget = { 0, 0, 0 };//ƒJƒƒ‰’‹“_
-static XMFLOAT3 gCamPos = { 0, 0, 0 };//ƒJƒƒ‰ˆÊ’u
-static float gYawDeg = 180.0f;//ƒJƒƒ‰‚Ì…•½‰ñ“]Šp“x
-static float gPitchDeg = 15.0f;//ƒJƒƒ‰‚Ìã‰º‰ñ“]Šp“x
-static float gDistance = 8.0f;//ƒJƒƒ‰‚Æ’‹“_‚Ì‹——£
-static const float kPitchMin = -75.0f;//ƒJƒƒ‰‚Ìã‰ºŒÀ“xŠp“x
+//ã‚«ãƒ¡ãƒ©æ“ä½œç”¨å¤‰æ•°
+static bool   gCamAnglesInit = false;//ã‚«ãƒ¡ãƒ©è§’åº¦åˆæœŸåŒ–ãƒ•ãƒ©ã‚°
+static XMFLOAT3 gCamTarget = { 0, 0, 0 };//ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹
+static XMFLOAT3 gCamPos = { 0, 0, 0 };//ã‚«ãƒ¡ãƒ©ä½ç½®
+static float gYawDeg = 180.0f;//ã‚«ãƒ¡ãƒ©ã®æ°´å¹³å›è»¢è§’åº¦
+static float gPitchDeg = 15.0f;//ã‚«ãƒ¡ãƒ©ã®ä¸Šä¸‹å›è»¢è§’åº¦
+static float gDistance = 8.0f;//ã‚«ãƒ¡ãƒ©ã¨æ³¨è¦–ç‚¹ã®è·é›¢
+static const float kPitchMin = -75.0f;//ã‚«ãƒ¡ãƒ©ã®ä¸Šä¸‹é™åº¦è§’åº¦
 static const float kPitchMax = 75.0f;
-static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//ƒJƒƒ‰’‹“_ƒIƒtƒZƒbƒg
-static float gFollowLerp = 0.15f;//ƒJƒƒ‰’Ç]‚Ì‘¬‚³
+static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹ã‚ªãƒ•ã‚»ãƒƒãƒˆ
+static float gFollowLerp = 0.15f;//ã‚«ãƒ¡ãƒ©è¿½å¾“ã®é€Ÿã•
 
 
 static const float kCam2D_Distance = 8.0f;
@@ -50,12 +40,12 @@ static bool  g_Cam2D_Initialized = false;
 static float g_Cam2D_YawDeg = 0.0f;
 
 static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
-{// 3DƒxƒNƒgƒ‹‚ÌüŒ`•âŠÔ
-	return {
-		a.x + (b.x - a.x) * t,
-		a.y + (b.y - a.y) * t,
-		a.z + (b.z - a.z) * t
-	};
+{// 3Dãƒ™ã‚¯ãƒˆãƒ«ã®ç·šå½¢è£œé–“
+    return {
+        a.x + (b.x - a.x) * t,
+        a.y + (b.y - a.y) * t,
+        a.z + (b.z - a.z) * t
+    };
 }
 
 // Ray vs AABB intersection
@@ -154,287 +144,276 @@ static bool RaycastOBB(
 }
 
 //=========================================================================================================
-// ‰Šú‰»
+// åˆæœŸåŒ–
 //=========================================================================================================
 void Camera_Initialize()
 {
-	CameraObject.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
-	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+    CameraObject.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+    CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-	CameraObject.Fov = 45.0f;
-	float width = (float)Direct3D_GetBackBufferWidth();
-	float height = (float)Direct3D_GetBackBufferHeight();
-	CameraObject.Aspect = width / height;
-	CameraObject.NearClip = 0.5f;
-	CameraObject.FarClip = 1000.0f;
+    CameraObject.Fov = 45.0f;
+    float width = (float)Direct3D_GetBackBufferWidth();
+    float height = (float)Direct3D_GetBackBufferHeight();
+    CameraObject.Aspect = width / height;
+    CameraObject.NearClip = 0.5f;
+    CameraObject.FarClip = 1000.0f;
 
-	g_PlayerPosOld = GetPlayer3DPosition();
-	
-	Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+    g_PlayerPosOld = GetPlayer3DPosition();
+    
+    Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 }
 
 
 //=========================================================================================================
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 //=========================================================================================================
 void Camera_Finalize()
 {
-	return;
+    return;
 }
 
 
 //=========================================================================================================
-// XVˆ—
+// æ›´æ–°å‡¦ç†
 //=========================================================================================================
 void Player3DCamera_Update()
 {
-	Mouse_State ms{};
-	Mouse_GetState(&ms);
+    Mouse_State ms{};
+    Mouse_GetState(&ms);
 
-	static bool relativeMode = true;
-	bool suppressDelta = false;
-	{
-		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-			relativeMode = !relativeMode;
-			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}
-	}
+    static bool relativeMode = true;
+    bool suppressDelta = false;
+    {
+        if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+            relativeMode = !relativeMode;
+            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+                : MOUSE_POSITION_MODE_ABSOLUTE);
+        }
+    }
 
-	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
-	{
-		const float sensYaw = 1.0f;
-		const float sensPitch = 1.0f;
-		gYawDeg += ms.x * sensYaw;
-		gPitchDeg -= ms.y * sensPitch;
+    if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
+    {
+        const float sensYaw = 1.0f;
+        const float sensPitch = 1.0f;
+        gYawDeg += ms.x * sensYaw;
+        gPitchDeg -= ms.y * sensPitch;
 
-		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
-		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
-	}
+        if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+        if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+    }
 
-	// Mouse wheel zoom control
-	const float zoomSpeed = 0.06f;      // How much to zoom per wheel tick
-	const float minDistance = 2.5f;    // Minimum camera distance
-	const float maxDistance = 12.0f;   // Maximum camera distance
+    XMFLOAT3 playerPos = GetPlayer3DPosition();
+    XMFLOAT3 desiredTarget = {
+        playerPos.x + gTargetOffset.x,
+        playerPos.y + gTargetOffset.y,
+        playerPos.z + gTargetOffset.z
+    };
 
-	gDistance -= ms.scrollWheelValue * zoomSpeed;
-	if (gDistance < minDistance) gDistance = minDistance;
-	if (gDistance > maxDistance) gDistance = maxDistance;
+    float yaw = XMConvertToRadians(gYawDeg);
+    float pitch = XMConvertToRadians(gPitchDeg);
 
-	XMFLOAT3 playerPos = GetPlayer3DPosition();
-	XMFLOAT3 desiredTarget = {
-		playerPos.x + gTargetOffset.x,
-		playerPos.y + gTargetOffset.y,
-		playerPos.z + gTargetOffset.z
-	};
+    float cp = cosf(pitch), sp = sinf(pitch);
+    float cy = cosf(yaw), sy = sinf(yaw);
 
-	float yaw = XMConvertToRadians(gYawDeg);
-	float pitch = XMConvertToRadians(gPitchDeg);
+    XMFLOAT3 back = { sy * cp, sp, cy * cp };
+    XMFLOAT3 desiredPos = {
+        desiredTarget.x - back.x * gDistance,
+        desiredTarget.y - back.y * gDistance,
+        desiredTarget.z - back.z * gDistance
+    };
 
-	float cp = cosf(pitch), sp = sinf(pitch);
-	float cy = cosf(yaw), sy = sinf(yaw);
+    gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+    gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
 
-	XMFLOAT3 back = { sy * cp, sp, cy * cp };
-	XMFLOAT3 desiredPos = {
-		desiredTarget.x - back.x * gDistance,
-		desiredTarget.y - back.y * gDistance,
-		desiredTarget.z - back.z * gDistance
-	};
-
-	XMFLOAT3 finalPos;
-	Camera_CheckCollision(desiredTarget, desiredPos, finalPos);
-
-	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-	gCamPos = Lerp3(gCamPos, finalPos, gFollowLerp);
-
-	CameraObject.AtPosition = gCamTarget;
-	CameraObject.Position = gCamPos;
-	CameraObject.UpVector = { 0, 1, 0 };
+    CameraObject.AtPosition = gCamTarget;
+    CameraObject.Position = gCamPos;
+    CameraObject.UpVector = { 0, 1, 0 };
 
 }
 
 void Player2DCamera_Update()
 {
-	PLAYER* p2 = GetPlayer2D();
-	if (!p2) return;
+    PLAYER* p2 = GetPlayer2D();
+    if (!p2) return;
 
-	if (!g_Cam2D_Initialized)
-	{
-		g_Cam2D_YawDeg = p2->Rotation.y;
-		g_Cam2D_Initialized = true;
-	}
+    if (!g_Cam2D_Initialized)
+    {
+        g_Cam2D_YawDeg = p2->Rotation.y;
+        g_Cam2D_Initialized = true;
+    }
 
-	XMFLOAT3 targetAt = {
-		p2->Position.x,
-		p2->Position.y + kCam2D_LookAtYOfs,
-		p2->Position.z
-	};
+    XMFLOAT3 targetAt = {
+        p2->Position.x,
+        p2->Position.y + kCam2D_LookAtYOfs,
+        p2->Position.z
+    };
 
-	float yawRad = XMConvertToRadians(g_Cam2D_YawDeg);
+    float yawRad = XMConvertToRadians(g_Cam2D_YawDeg);
 
-	float fwdX = sinf(yawRad);
-	float fwdZ = cosf(yawRad);
+    float fwdX = sinf(yawRad);
+    float fwdZ = cosf(yawRad);
 
-	XMFLOAT3 targetPos = {
-		p2->Position.x - fwdX * kCam2D_Distance,
-		p2->Position.y + kCam2D_HeightOffset,
-		p2->Position.z - fwdZ * kCam2D_Distance
-	};
+    XMFLOAT3 targetPos = {
+        p2->Position.x - fwdX * kCam2D_Distance,
+        p2->Position.y + kCam2D_HeightOffset,
+        p2->Position.z - fwdZ * kCam2D_Distance
+    };
 
 
-	CameraObject.AtPosition = Lerp3(CameraObject.AtPosition, targetAt, kCam2D_FollowLerp);
-	CameraObject.Position = Lerp3(CameraObject.Position, targetPos, kCam2D_FollowLerp);
-	CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
+    CameraObject.AtPosition = Lerp3(CameraObject.AtPosition, targetAt, kCam2D_FollowLerp);
+    CameraObject.Position = Lerp3(CameraObject.Position, targetPos, kCam2D_FollowLerp);
+    CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
 
 }
 
 void Title_Camera_Update()
 {
-	static bool relativeMode = true;
-	if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-			relativeMode = !relativeMode;
-			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}
+    static bool relativeMode = true;
+    if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+            relativeMode = !relativeMode;
+            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+                : MOUSE_POSITION_MODE_ABSOLUTE);
+        }
 
-	//XMFLOAT3 playerPos = GetPlayer3DPosition();
+    //XMFLOAT3 playerPos = GetPlayer3DPosition();
 
-	//// Follow only X
-	//CameraObject.Position.x = playerPos.x;
+    //// Follow only X
+    //CameraObject.Position.x = playerPos.x;
 
-	//// Much lower height (closer to ground)
-	//CameraObject.Position.y = 3.0f;
+    //// Much lower height (closer to ground)
+    //CameraObject.Position.y = 3.0f;
 
-	//// Closer depth (near the map)
-	//CameraObject.Position.z = playerPos.z - 6.0f;
+    //// Closer depth (near the map)
+    //CameraObject.Position.z = playerPos.z - 6.0f;
 
-	//// Look at player (slightly up for nicer framing)
-	//CameraObject.AtPosition.x = playerPos.x;
-	//CameraObject.AtPosition.y = playerPos.y + 2.0f;
-	//CameraObject.AtPosition.z = playerPos.z;
+    //// Look at player (slightly up for nicer framing)
+    //CameraObject.AtPosition.x = playerPos.x;
+    //CameraObject.AtPosition.y = playerPos.y + 2.0f;
+    //CameraObject.AtPosition.z = playerPos.z;
 
-	// Fixed cinematic camera
-	CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
-	CameraObject.AtPosition = XMFLOAT3(4.0f, 0.0f, 0.0f);
-	CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+    // Fixed cinematic camera
+    CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
+    CameraObject.AtPosition = XMFLOAT3(4.0f, 0.0f, 0.0f);
+    CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
 }
 
 //=========================================================================================================
-// •`‰æˆ—
+// æç”»å‡¦ç†
 //=========================================================================================================
 void Camera_Draw()
 {
 
-	if (debugMode)
-	{
-		ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("camera.cpp"))
-		{
-			ImGui::Text("PosX: %.2f", CameraObject.Position.x);
-			ImGui::Text("PosY: %.2f", CameraObject.Position.y);
-			ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
-			ImGui::TreePop();
-		}
-		ImGui::End();
-	}
+    DEBUG_IMGUI_BEGIN({
+        ImGui::Begin("Debug - han");
+                if (ImGui::TreeNode("camera.cpp"))
+                {
+                    ImGui::Text("PosX: %.2f", CameraObject.Position.x);
+                    ImGui::Text("PosY: %.2f", CameraObject.Position.y);
+                    ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
+                    ImGui::TreePop();
+                }
+                ImGui::End();
 
-	float w = (float)Direct3D_GetBackBufferWidth();
-	float h = (float)Direct3D_GetBackBufferHeight();
-	if (h > 1e-6f) CameraObject.Aspect = w / h;
-
-	CameraObject.Projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(CameraObject.Fov),CameraObject.Aspect,CameraObject.NearClip,CameraObject.FarClip);
+        });
 
 
-	XMVECTOR vPos = XMVectorSet(CameraObject.Position.x,CameraObject.Position.y,CameraObject.Position.z,0.0f);
-	XMVECTOR vAt = XMVectorSet(CameraObject.AtPosition.x, CameraObject.AtPosition.y, CameraObject.AtPosition.z, 0.0f);
-	XMVECTOR vUp = XMVectorSet(CameraObject.UpVector.x, CameraObject.UpVector.y, CameraObject.UpVector.z, 0.0f);
-	CameraObject.View = XMMatrixLookAtLH(vPos, vAt, vUp);
+    float w = (float)Direct3D_GetBackBufferWidth();
+    float h = (float)Direct3D_GetBackBufferHeight();
+    if (h > 1e-6f) CameraObject.Aspect = w / h;
 
-	return;
+    CameraObject.Projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(CameraObject.Fov),CameraObject.Aspect,CameraObject.NearClip,CameraObject.FarClip);
+
+
+    XMVECTOR vPos = XMVectorSet(CameraObject.Position.x,CameraObject.Position.y,CameraObject.Position.z,0.0f);
+    XMVECTOR vAt = XMVectorSet(CameraObject.AtPosition.x, CameraObject.AtPosition.y, CameraObject.AtPosition.z, 0.0f);
+    XMVECTOR vUp = XMVectorSet(CameraObject.UpVector.x, CameraObject.UpVector.y, CameraObject.UpVector.z, 0.0f);
+    CameraObject.View = XMMatrixLookAtLH(vPos, vAt, vUp);
+
+    return;
 }
 
 //=========================================================================================================
-// ‹–ìŠp
+// è¦–é‡è§’
 //=========================================================================================================
 void SetCameraFov(float fov)
 {
-	CameraObject.Fov = fov;
+    CameraObject.Fov = fov;
 }
 
 
 //=========================================================================================================
-// ƒAƒXƒyƒNƒg”ä
+// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
 //=========================================================================================================
 void SetCameraAspect(float asp)
 {
-	CameraObject.Aspect = asp;
+    CameraObject.Aspect = asp;
 }
 
 //=========================================================================================================
-// ƒNƒŠƒbƒv‹——£
+// ã‚¯ãƒªãƒƒãƒ—è·é›¢
 //=========================================================================================================
 void SetCameraClip(float n, float f)
 {
-	CameraObject.NearClip = n;
-	CameraObject.FarClip = f;
+    CameraObject.NearClip = n;
+    CameraObject.FarClip = f;
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ˆÊ’u
+// ã‚«ãƒ¡ãƒ©ä½ç½®
 //=========================================================================================================
 void SetCameraPosition(XMFLOAT3 pos)
 {
-	CameraObject.Position = pos;
+    CameraObject.Position = pos;
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰’‹“_
+// ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹
 //=========================================================================================================
 void SetCameraAtPosition(XMFLOAT3 atpos )
 {
-	CameraObject.AtPosition = atpos;
+    CameraObject.AtPosition = atpos;
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ã•ûŒüƒxƒNƒgƒ‹
+// ã‚«ãƒ¡ãƒ©ä¸Šæ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 //=========================================================================================================
 void SetCameraUpVector(XMFLOAT3 up)
 {
-	CameraObject.UpVector = up;
+    CameraObject.UpVector = up;
 }
 
 //=========================================================================================================
-// ƒrƒ…[s—ñæ“¾
+// ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—å–å¾—
 //=========================================================================================================
 XMMATRIX GetViewMatrix()
 {
-	return CameraObject.View;
+    return CameraObject.View;
 }
 
 //=========================================================================================================
-// ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñæ“¾
+// ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—å–å¾—
 //=========================================================================================================
 XMMATRIX GetProjectionMatrix()
 {
-	return CameraObject.Projection;
+    return CameraObject.Projection;
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰’‹“_æ“¾
+// ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹å–å¾—
 //=========================================================================================================
 XMFLOAT3 GetCameraAtPosition()
 {
-	return CameraObject.AtPosition;
+    return CameraObject.AtPosition;
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ˆÊ’uæ“¾
+// ã‚«ãƒ¡ãƒ©ä½ç½®å–å¾—
 //=========================================================================================================
 XMFLOAT3 GetCameraPosition()
 {
-	return CameraObject.Position;
+    return CameraObject.Position;
 }
 
 void Camera_Reset2DState()

@@ -12,7 +12,7 @@
 #include "FieldManhole.h"
 #include "manager.h"
 
-static bool debugMode = TRUE;
+
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
@@ -299,13 +299,15 @@ void field_Finalize(void)
 //=========================================================================================================
 void field_Update(void)
 {
-	ImGui::Begin("Debug - han");
-	if (ImGui::TreeNode("Filed.cpp"))
-	{
-		
-		ImGui::TreePop();
-	}
-	ImGui::End();
+	DEBUG_IMGUI_BEGIN({
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("Filed.cpp"))
+		{
+
+			ImGui::TreePop();
+		}
+		ImGui::End();
+		});
 
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);
@@ -572,9 +574,12 @@ bool LoadMapFromFile(const char* filename)
 
 		for (int x = 0; x < (int)line.length(); x++)
 		{
-			char c = line[x];
+			char c = line[x];// 文字を読み取る
+
+			// 追加: 'S' はシーソー
 			if (c == 'S')
 			{
+				// マップ座標系と同様のオフセットで設定
 				Seesaw_Create(
 					(float)(x - 2),
 					(float)(y - 2),
@@ -583,9 +588,11 @@ bool LoadMapFromFile(const char* filename)
 				);
 				continue;
 			}
-			//Manhole
+
+			// 追加: 'M' はマンホール
 			if (c == 'M')
 			{
+				// マップ座標系と同様のオフセットで設定
 				Manhole_Create(
 					(float)(x - 2),
 					(float)(y - 1),

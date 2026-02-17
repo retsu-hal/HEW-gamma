@@ -8,8 +8,14 @@
 #include "fade.h"
 #include "Input.h"
 
-#include "debug.h"
 #include <string>
+
+#include "debug.h"
+#ifdef _DEBUG
+bool g_DebugMode = true;
+#else
+bool g_DebugMode = false;
+#endif
 
 //=========================================================================================================
 // グローバル変数
@@ -52,6 +58,14 @@ void	Manager_Finalize()
 void	Manager_Update()
 {
 
+#ifdef _DEBUG
+	if (Keyboard_IsKeyDownTrigger(KK_F1))
+	{
+		g_DebugMode = !g_DebugMode;
+	}
+#endif // _DEBUG
+
+
 	gPad.Update();
 	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
 	{
@@ -73,9 +87,11 @@ void	Manager_Update()
 			break;
 	}
 
-	ImGui::Begin("Debug - han");
-	ImGui::Text("SCENE: %s", sceneText.c_str());
-	ImGui::End();
+	DEBUG_IMGUI_BEGIN({
+		ImGui::Begin("Debug - han");
+		ImGui::Text("SCENE: %s", sceneText.c_str());
+		ImGui::End();
+		});
 
 
 	Fade_Update();
