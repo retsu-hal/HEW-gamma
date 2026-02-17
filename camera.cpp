@@ -7,6 +7,9 @@
 #include "Player2D.h"
 #include <iostream>
 
+#include "field.h"
+#include "MathUtil.h"
+using namespace mu;
 //=========================================================================================================
 // グローバル変数
 //=========================================================================================================
@@ -203,6 +206,15 @@ void Player3DCamera_Update()
         if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
     }
 
+	// Mouse wheel zoom control
+	const float zoomSpeed = 0.06f;      // How much to zoom per wheel tick
+	const float minDistance = 2.5f;    // Minimum camera distance
+	const float maxDistance = 12.0f;   // Maximum camera distance
+
+	gDistance -= ms.scrollWheelValue * zoomSpeed;
+	if (gDistance < minDistance) gDistance = minDistance;
+	if (gDistance > maxDistance) gDistance = maxDistance;
+
     XMFLOAT3 playerPos = GetPlayer3DPosition();
     XMFLOAT3 desiredTarget = {
         playerPos.x + gTargetOffset.x,
@@ -223,8 +235,11 @@ void Player3DCamera_Update()
         desiredTarget.z - back.z * gDistance
     };
 
+	XMFLOAT3 finalPos;
+	Camera_CheckCollision(desiredTarget, desiredPos, finalPos);
+
     gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-    gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
+	gCamPos = Lerp3(gCamPos, finalPos, gFollowLerp);
 
     CameraObject.AtPosition = gCamTarget;
     CameraObject.Position = gCamPos;
@@ -501,8 +516,8 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 
 	for (size_t i = 0; i < map.size(); i++)
 	{
-		if (map[i].pos.y < targetPos.y )
-			continue;
+		//if (map[i].pos.y < targetPos.y )
+		//	continue;
 		if (!CameraShouldCollide(map[i].no))
 			continue;
 
