@@ -43,3 +43,5 @@ XMFLOAT3 GetCameraAtPosition();
 XMFLOAT3 GetCameraPosition();
 
 void Camera_Reset2DState();
+
+void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3& outCamPos);
