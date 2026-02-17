@@ -309,9 +309,8 @@ void Title_Camera_Update()
 
     // Fixed cinematic camera
     CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
-    CameraObject.AtPosition = XMFLOAT3(4.0f, 0.0f, 0.0f);
+    CameraObject.AtPosition = XMFLOAT3(4.0f, 1.0f, 0.0f);
     CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
-
 }
 
 //=========================================================================================================
@@ -486,7 +485,7 @@ static void DrawRayDebug(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col = IM_CO
 
 void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3& outCamPos)
 {
-	DrawRayDebug(targetPos, desiredCamPos, IM_COL32(255, 0, 0, 255));
+	//DrawRayDebug(targetPos, desiredCamPos, IM_COL32(255, 0, 0, 255));
 	outCamPos = desiredCamPos;
 
 	// Calculate ray from target to desired camera position
