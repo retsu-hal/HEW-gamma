@@ -12,7 +12,7 @@
 using namespace DirectX;
 using namespace mu;
 
-static bool debugMode = TRUE;
+
 
 
 static std::vector<const ShadowPrism*> g_ShadowPrisms;

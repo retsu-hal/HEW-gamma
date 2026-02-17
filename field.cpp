@@ -12,7 +12,7 @@
 #include "FieldManhole.h"
 #include "manager.h"
 
-static bool debugMode = TRUE;
+
 //=========================================================================================================
 // É}ÉNÉçíËã`
 //=========================================================================================================
@@ -299,13 +299,15 @@ void field_Finalize(void)
 //=========================================================================================================
 void field_Update(void)
 {
-	ImGui::Begin("Debug - han");
-	if (ImGui::TreeNode("Filed.cpp"))
-	{
-		
-		ImGui::TreePop();
-	}
-	ImGui::End();
+	DEBUG_IMGUI_BEGIN({
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("Filed.cpp"))
+		{
+
+			ImGui::TreePop();
+		}
+		ImGui::End();
+		});
 
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);

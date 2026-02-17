@@ -26,8 +26,6 @@
 #include	 <map>
 
 
-static bool debugMode;
-
 //static	int	g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
 static XMFLOAT3 LightPos;
@@ -382,7 +380,10 @@ void Game_Draw()
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);
 	
-	Collision_DebugDraw();
+
+	DEBUG_IMGUI_BEGIN({
+		Collision_DebugDraw();
+		});
 
 	
 

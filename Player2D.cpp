@@ -10,7 +10,7 @@ using namespace mu;
 
 
 #include "debug.h"
-static bool debugMode = TRUE;
+
 
 
 
@@ -495,18 +495,20 @@ void Player2D_Move()
 		g_Player2D.Velocity.z = (g_Player2D.Velocity.z / speed) * maxSpeed;
 	}
 
-	if (debugMode)
-	{
+
+	DEBUG_IMGUI_BEGIN({
 		ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("pla2DMo.cpp"))
-		{
-			ImGui::Text("g_Player2DblockMovement: %s", g_Player2D.blockMovement ? "true" : "false");
-			ImGui::Text("g_Player2DVelocityX: %.2f", g_Player2D.Velocity.x);
-			ImGui::Text("g_Player2DVelocityZ: %.2f", g_Player2D.Velocity.z);
-			ImGui::TreePop();
-		}
-		ImGui::End();
-	}
+				if (ImGui::TreeNode("pla2DMo.cpp"))
+				{
+					ImGui::Text("g_Player2DblockMovement: %s", g_Player2D.blockMovement ? "true" : "false");
+					ImGui::Text("g_Player2DVelocityX: %.2f", g_Player2D.Velocity.x);
+					ImGui::Text("g_Player2DVelocityZ: %.2f", g_Player2D.Velocity.z);
+					ImGui::TreePop();
+				}
+				ImGui::End();
+
+		});
+
 }
 
 //=========================================================================================================

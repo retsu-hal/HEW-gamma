@@ -7,12 +7,6 @@
 #include "Player2D.h"
 #include <iostream>
 
-#if defined (_DEBUG)
-static bool debugMode = true;
-#else 
-static bool debugMode = false;
-#endif
-
 //=========================================================================================================
 // ÉOÉçÅ[ÉoÉãïœêî
 //=========================================================================================================
@@ -216,18 +210,19 @@ void Title_Camera_Update()
 void Camera_Draw()
 {
 
-    if (debugMode)
-    {
+    DEBUG_IMGUI_BEGIN({
         ImGui::Begin("Debug - han");
-        if (ImGui::TreeNode("camera.cpp"))
-        {
-            ImGui::Text("PosX: %.2f", CameraObject.Position.x);
-            ImGui::Text("PosY: %.2f", CameraObject.Position.y);
-            ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
-            ImGui::TreePop();
-        }
-        ImGui::End();
-    }
+                if (ImGui::TreeNode("camera.cpp"))
+                {
+                    ImGui::Text("PosX: %.2f", CameraObject.Position.x);
+                    ImGui::Text("PosY: %.2f", CameraObject.Position.y);
+                    ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
+                    ImGui::TreePop();
+                }
+                ImGui::End();
+
+        });
+
 
     float w = (float)Direct3D_GetBackBufferWidth();
     float h = (float)Direct3D_GetBackBufferHeight();
