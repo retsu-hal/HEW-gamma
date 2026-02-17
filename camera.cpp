@@ -545,16 +545,6 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 		XMFLOAT3 hitNormal{};
 		if (RaycastOBB(targetPos, rayDir, map[i].pos, boxHalf, map[i].rotate, rayLength, &hitNormal, &hitDist))
 		{
-			if (map[i].no == FIELD_EMPTY_BOX)
-			{
-				OutputDebugStringA("Camera hit FIELD_EMPTY_BOX\n");
-			}
-
-			char buf[128];
-			sprintf_s(buf, "Camera hit type=%d at (%.2f, %.2f, %.2f)\n",
-				(int)map[i].no, map[i].pos.x, map[i].pos.y, map[i].pos.z);
-			OutputDebugStringA(buf);
-
 			if (hitDist < closestHit)
 			{
 				closestHit = hitDist;
