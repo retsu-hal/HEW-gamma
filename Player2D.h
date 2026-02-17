@@ -11,31 +11,31 @@
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
-// プレイヤー当たり判定サイズ
+// プレイヤーの当たり判定用の半サイズ
 #define PLAYER2D_SOLID_HALF_X (0.5f)
 #define PLAYER2D_SOLID_HALF_Y (1.0f)
 #define PLAYER2D_SOLID_HALF_Z (0.07f)
 
 
-enum PLAYER2D_ANIM
+enum PLAYER2D_ANIME// アニメーションの種類
 {
-    PLAYER2D_ANIM_IDLE = 0, 
-    PLAYER2D_ANIM_WALK,     
-    PLAYER2D_ANIM_JUMP,     
-    PLAYER2D_ANIM_FALL,     
+    PLAYER2D_ANIME_IDLE = 0, 
+    PLAYER2D_ANIME_WALK,     
+    PLAYER2D_ANIME_JUMP,     
+    PLAYER2D_ANIME_FALL,     
 
-    PLAYER2D_ANIM_MAX
+    PLAYER2D_ANIME_MAX
 };
 
-struct Player2DAnimDef
+struct Player2DAnimeDef// アニメーション定義
 {
     const wchar_t* texturePath;
-    int cols;                  
-    int rows;                  
-    int startFrame;            
-    int frameCount;            
-    float frameSpeed;          
-    bool loop;                 
+    int cols;                  // 列数
+    int rows;                  // 行数
+    int startFrame;            // アニメ開始フレーム
+    int frameCount;            // フレーム数
+    float frameSpeed;          // フレーム切り替え速度（秒）
+    bool loop;                 // ループするか
 };
 
 
@@ -67,5 +67,5 @@ void Player2D_Uninit();
 void Player2D_SetActive(bool active);
 
 
-void Player2D_SetAnim(PLAYER2D_ANIM anim);
-PLAYER2D_ANIM Player2D_GetAnim();
+void Player2D_SetAnime(PLAYER2D_ANIME anime);
+PLAYER2D_ANIME Player2D_GetAnime();

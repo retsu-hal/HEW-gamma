@@ -241,8 +241,8 @@ void Game_Update()
 	field_Update();
 	SkyDome_Update();
 
+	// モード切り替えの更新は常に行う
 	PlayerModeSwitchManager_Update();
-
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		PlayerPushManager_Update();
@@ -284,15 +284,15 @@ void Game_Update()
 
 
 	Collision_SetShadowPrisms(g_ActiveShadowPrisms);
-
+	
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
-	{
+	{// 3Dモードの更新
 		Player3D_Update();
 		Player3DCamera_Update();
 
 	}
 	else
-	{
+	{// 2Dモードの更新
 		Player2D_Update();
 		Player2DCamera_Update();
 	}
@@ -308,11 +308,6 @@ void Game_Draw()
 	g_BallLight.SetEnable(TRUE);
 	Shader_SetLight(g_BallLight.Light);
 	SetDepthTest(TRUE);
-
-	if (debugMode)
-	{
-
-	}
 
 	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;

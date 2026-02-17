@@ -7,11 +7,25 @@ using namespace DirectX;
 
 static ShadowManager g_ShadowManager;
 
-static bool Field_IsReceiver(FIELD t)
+static bool Field_IsReceiver(FIELD t)// 影を受けるオブジェクトか
 {
     switch (t)
     {
     case FIELD_OBJ_1:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static bool Field_IsShadows(FIELD t)// 影を落とすオブジェクトか
+{
+    switch (t)
+    {
+    case FIELD_OBJ_2:
+    case FIELD_SEESAW_1:
+    case FIELD_SEESAW_2:
+    case FIELD_MANHOLE:
         return true;
     default:
         return false;
@@ -569,22 +583,6 @@ bool ShadowManager::HasValidShadows() const
     }
     return false;
 }
-
-
-static bool Field_IsShadows(FIELD t)
-{
-    switch (t)
-    {
-    case FIELD_OBJ_2:
-    case FIELD_SEESAW_1:
-    case FIELD_SEESAW_2:
-	case FIELD_MANHOLE:
-        return true;
-    default:
-        return false;
-    }
-}
-
 
 
 void ShadowManager::UpdateAllShadows(
