@@ -415,8 +415,10 @@ void field_Draw(void)
 		}
 	}
 
-	Seesaw_DebugDraw();
-	Manhole_DebugDraw();
+	DEBUG_IMGUI_BEGIN({
+		Seesaw_DebugDraw();
+		Manhole_DebugDraw();
+		});
 }
 
 //=========================================================================================================

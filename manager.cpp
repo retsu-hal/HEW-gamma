@@ -12,10 +12,11 @@
 
 #include "debug.h"
 #ifdef _DEBUG
-bool g_DebugMode = true;
+bool g_DebugMode = false;
 #else
 bool g_DebugMode = false;
 #endif
+
 
 //=========================================================================================================
 // グローバル変数
@@ -40,7 +41,6 @@ void	Manager_Initialize()
 	//本来の形
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
-
 }
 
 //=========================================================================================================
@@ -59,7 +59,7 @@ void	Manager_Update()
 {
 
 #ifdef _DEBUG
-	if (Keyboard_IsKeyDownTrigger(KK_F1))
+	if (Keyboard_IsKeyDownTrigger(KK_F1))// F1キーでデバッグモードのオンオフ切り替え
 	{
 		g_DebugMode = !g_DebugMode;
 	}

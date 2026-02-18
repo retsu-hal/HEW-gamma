@@ -87,6 +87,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	// フルスクリーン用のウィンドウスタイル（枠なし、タイトルバーなし）
 	DWORD window_style = WS_POPUP | WS_VISIBLE;
 
+
 	//DWORD window_style = WS_OVERLAPPEDWINDOW ^ (WS_THICKFRAME | WS_MAXIMIZEBOX);
 	//指定したクライアント領域を確保するために新たな矩形座標を計算
 	AdjustWindowRect(&window_rect, window_style, FALSE);
@@ -178,6 +179,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		ImGui_ImplDX11_Init(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	}
 
+
+
 	Manager_Initialize();
 
 
@@ -222,9 +225,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				SetWindowText(hWnd, g_DebugStr);
 #endif
 
+
 				ImGui_ImplWin32_NewFrame();
 				ImGui_ImplDX11_NewFrame();
 				ImGui::NewFrame();
+
 
 				//更新処理
 				Manager_Update();
@@ -244,6 +249,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 						ImGui::RenderPlatformWindowsDefault();
 					}
 				}
+
 
 				Direct3D_Present();
 				keycopy();
@@ -290,10 +296,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	HDC		hdc;	//ウィンドウ画面を表す情報（デバイスコンテキスト 入出力先）
 	PAINTSTRUCT	ps;	//ウィンドウ画面の大きさなど描画関連の情報
 
+
+#ifdef _DEBUG
 	if (ImGui::GetCurrentContext() != nullptr) {
 		if (ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam))
 			return 0;
 	}
+#endif // _DEBUG
+
 
 	switch (uMsg)
 	{
