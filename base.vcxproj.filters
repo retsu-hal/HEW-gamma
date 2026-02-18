@@ -263,9 +263,11 @@
     <ClInclude Include="FieldSeesaw.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="SkyBall.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="DirectXTex_Debug.lib" />
     <Library Include="DirectXTex_Release.lib" />
   </ItemGroup>
   <ItemGroup>

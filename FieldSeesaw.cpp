@@ -736,6 +736,5 @@ void Seesaw_DebugDraw()
 		}
 	}
 
-	ImGui::Checkbox("Enable Debug Draw", &g_SeesawDebugDraw);
 	ImGui::End();
 }
