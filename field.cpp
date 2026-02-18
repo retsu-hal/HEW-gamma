@@ -12,6 +12,8 @@
 #include "FieldManhole.h"
 #include "manager.h"
 
+#include "FieldWall_Interact.h"
+
 
 //=========================================================================================================
 // マクロ定義
@@ -167,6 +169,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	Seesaw_Initialize();
 	Manhole_Initialize();
+	Wall_Initialize(pDevice, pContext);
 
 	// テクスチャ
 	TexMetadata metadata;
@@ -211,7 +214,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	if (!Model[FIELD_OBJ_1])
 	{
-		Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\Building_A.fbx");
+		Model[FIELD_OBJ_1] = ModelLoad("asset\\model\\kabe_test_1.fbx",true);
 	}
 	if (!Model[FIELD_OBJ_2])
 	{
@@ -279,6 +282,7 @@ void field_Finalize(void)
 {
 	Seesaw_Finalize();
 	Manhole_Finalize();
+	Wall_Finalize();
 
 	g_MapData.clear();  // Clear the vector
 
@@ -312,6 +316,7 @@ void field_Update(void)
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);
 	Manhole_UpdateAll(deltaTime);
+	Wall_Update();
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
@@ -417,6 +422,8 @@ void field_Draw(void)
 
 	Seesaw_DebugDraw();
 	Manhole_DebugDraw();
+	Wall_Draw();
+	Wall_DebugDraw();
 }
 
 //=========================================================================================================
@@ -553,6 +560,7 @@ bool LoadMapFromFile(const char* filename)
 	g_MapData.clear();
 	Seesaw_ClearAll();
 	Manhole_ClearAll();
+	Wall_ClearAll();
 
 	// 追加: 読み込み開始時に初期位置をデフォルトへ
 	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -618,6 +626,27 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
+			// 追加: 'R' はプレイヤー初期位置マーカー
+			if (c == 'O')
+			{
+				WallParams wp;
+				wp.scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
+				wp.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+				wp.useCustomCollider = true;
+				wp.colliderHalf = XMFLOAT3(1.0f, 3.0f, 22.0f);
+
+				Wall_Create(
+					(float)(x - 2),
+					(float)(y - 1),
+					(float)z,
+					wp,
+					g_MapData
+				);
+				continue;
+			}
+
+
+
 			FIELD type;
 			bool valid = true;
 
@@ -628,7 +657,7 @@ bool LoadMapFromFile(const char* filename)
 			case 'B': type = FIELD_OBJ_BOX;  break;
 			case 'E': type = FIELD_EMPTY_BOX; break;
 			case '1': type = FIELD_GOAL;     break;
-			case 'O': type = FIELD_OBJ_1;    break;
+			//case 'O': type = FIELD_OBJ_1;   break;
 			case '2': type = FIELD_OBJ_2;    break;
 			case '3': type = FIELD_OBJ_3;    break;
 			case 'C': type = FIELD_BENCH;    break;

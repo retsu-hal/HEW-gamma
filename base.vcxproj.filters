@@ -138,6 +138,7 @@
     <ClCompile Include="newKeyBind.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="FieldWall_Interact.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h">
@@ -263,6 +264,8 @@
     <ClInclude Include="FieldSeesaw.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="SkyBall.h" />
+    <ClInclude Include="FieldWall_Interact.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="DirectXTex_Debug.lib" />

@@ -28,6 +28,10 @@ static const auto TABKey = KK_TAB;
 // 3DÌ¨°ÙÄÞ‚ÌAABB”¼•ª‚ÌƒTƒCƒY‚ðŽæ“¾
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
+    if (m.useCustomCollider)
+    {
+        return m.colliderHalf;
+    }
     return XMFLOAT3{
         BOX_RADIUS * m.scale.x,
         BOX_RADIUS * m.scale.y,

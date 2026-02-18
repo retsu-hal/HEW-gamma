@@ -36,7 +36,7 @@ struct MODEL
 	XMMATRIX GlobalInverse;
 };
 
-MODEL* ModelLoad(const char* FileName);
+MODEL* ModelLoad(const char* FileName , bool preTransformVertices = false);
 void ModelRelease(MODEL* model);
 
 void ModelDraw(MODEL* model);

@@ -147,6 +147,7 @@
     <ClCompile Include="field.cpp" />
     <ClCompile Include="FieldManhole.cpp" />
     <ClCompile Include="FieldSeesaw.cpp" />
+    <ClCompile Include="FieldWall_Interact.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="imgui-docking\backends\imgui_impl_win32.cpp" />
@@ -194,6 +195,7 @@
     <ClInclude Include="field.h" />
     <ClInclude Include="FieldManhole.h" />
     <ClInclude Include="FieldSeesaw.h" />
+    <ClInclude Include="FieldWall_Interact.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_dx11.h" />
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h" />
