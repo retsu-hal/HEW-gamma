@@ -8,27 +8,27 @@
 #include <iostream>
 
 //=========================================================================================================
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
 
 
-//ƒ}ƒEƒX‘€ì—p•Ï”
+//ãƒžã‚¦ã‚¹æ“ä½œç”¨å¤‰æ•°
 Mouse_State ms{};
-float cSize = 1.0f;//ƒJƒƒ‰‚ÌŠ´“x’²®—p
+float cSize = 1.0f;//ã‚«ãƒ¡ãƒ©ã®æ„Ÿåº¦èª¿æ•´ç”¨
 
-//ƒJƒƒ‰‘€ì—p•Ï”
-static bool   gCamAnglesInit = false;//ƒJƒƒ‰Šp“x‰Šú‰»ƒtƒ‰ƒO
-static XMFLOAT3 gCamTarget = { 0, 0, 0 };//ƒJƒƒ‰’Ž‹“_
-static XMFLOAT3 gCamPos = { 0, 0, 0 };//ƒJƒƒ‰ˆÊ’u
-static float gYawDeg = 180.0f;//ƒJƒƒ‰‚Ì…•½‰ñ“]Šp“x
-static float gPitchDeg = 15.0f;//ƒJƒƒ‰‚Ìã‰º‰ñ“]Šp“x
-static float gDistance = 6.0f;//ƒJƒƒ‰‚Æ’Ž‹“_‚Ì‹——£
-static const float kPitchMin = -75.0f;//ƒJƒƒ‰‚Ìã‰ºŒÀ“xŠp“x
+//ã‚«ãƒ¡ãƒ©æ“ä½œç”¨å¤‰æ•°
+static bool   gCamAnglesInit = false;//ã‚«ãƒ¡ãƒ©è§’åº¦åˆæœŸåŒ–ãƒ•ãƒ©ã‚°
+static XMFLOAT3 gCamTarget = { 0, 0, 0 };//ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹
+static XMFLOAT3 gCamPos = { 0, 0, 0 };//ã‚«ãƒ¡ãƒ©ä½ç½®
+static float gYawDeg = 180.0f;//ã‚«ãƒ¡ãƒ©ã®æ°´å¹³å›žè»¢è§’åº¦
+static float gPitchDeg = 15.0f;//ã‚«ãƒ¡ãƒ©ã®ä¸Šä¸‹å›žè»¢è§’åº¦
+static float gDistance = 8.0f;//ã‚«ãƒ¡ãƒ©ã¨æ³¨è¦–ç‚¹ã®è·é›¢
+static const float kPitchMin = -75.0f;//ã‚«ãƒ¡ãƒ©ã®ä¸Šä¸‹é™åº¦è§’åº¦
 static const float kPitchMax = 75.0f;
-static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//ƒJƒƒ‰’Ž‹“_ƒIƒtƒZƒbƒg
-static float gFollowLerp = 0.15f;//ƒJƒƒ‰’Ç]‚Ì‘¬‚³
+static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹ã‚ªãƒ•ã‚»ãƒƒãƒˆ
+static float gFollowLerp = 0.15f;//ã‚«ãƒ¡ãƒ©è¿½å¾“ã®é€Ÿã•
 
 
 static const float kCam2D_Distance = 8.0f;
@@ -40,7 +40,7 @@ static bool  g_Cam2D_Initialized = false;
 static float g_Cam2D_YawDeg = 0.0f;
 
 static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
-{// 3DƒxƒNƒgƒ‹‚ÌüŒ`•âŠÔ
+{// 3Dãƒ™ã‚¯ãƒˆãƒ«ã®ç·šå½¢è£œé–“
     return {
         a.x + (b.x - a.x) * t,
         a.y + (b.y - a.y) * t,
@@ -48,8 +48,103 @@ static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
     };
 }
 
+// Ray vs AABB intersection
+static bool RaycastAABB(
+	const XMFLOAT3& rayO,
+	const XMFLOAT3& rayD_in,
+	const XMFLOAT3& boxC,
+	const XMFLOAT3& boxHalf,
+	float maxDist,
+	XMFLOAT3* outNormal,
+	float* outT)
+{
+	XMFLOAT3 rayD = Normalize(rayD_in);
+
+	float tmin = 0.0f;
+	float tmax = maxDist;
+	XMFLOAT3 hitN = { 0, 0, 0 };
+
+	auto slab = [&](float ro, float rd, float c, float h, XMFLOAT3 nNeg, XMFLOAT3 nPos) -> bool
+		{
+			if (fabsf(rd) < 1e-6f)
+			{
+				return (ro >= c - h && ro <= c + h);
+			}
+
+			float inv = 1.0f / rd;
+			float t1 = (c - h - ro) * inv;
+			float t2 = (c + h - ro) * inv;
+
+			XMFLOAT3 n1 = nNeg;
+			XMFLOAT3 n2 = nPos;
+
+			if (t1 > t2) { std::swap(t1, t2); std::swap(n1, n2); }
+
+			if (t1 > tmin) { tmin = t1; hitN = n1; }
+			if (t2 < tmax) { tmax = t2; }
+
+			return tmin <= tmax;
+		};
+
+	if (!slab(rayO.x, rayD.x, boxC.x, boxHalf.x, { -1, 0, 0 }, { 1, 0, 0 })) return false;
+	if (!slab(rayO.y, rayD.y, boxC.y, boxHalf.y, { 0, -1, 0 }, { 0, 1, 0 })) return false;
+	if (!slab(rayO.z, rayD.z, boxC.z, boxHalf.z, { 0, 0, -1 }, { 0, 0, 1 })) return false;
+
+	if (tmin < 0.0f || tmin > maxDist) return false;
+
+	if (outNormal) *outNormal = hitN;
+	if (outT) *outT = tmin;
+	return true;
+}
+
+// Ray vs OBB intersection (uses boxHalf you already computed)
+static bool RaycastOBB(
+	const XMFLOAT3& rayO,
+	const XMFLOAT3& rayD_in,
+	const XMFLOAT3& boxC,
+	const XMFLOAT3& boxHalf,
+	const XMFLOAT3& boxRotDeg,
+	float maxDist,
+	XMFLOAT3* outNormalW,
+	float* outT)
+{
+	const XMMATRIX R = XMMatrixRotationRollPitchYaw(
+		XMConvertToRadians(boxRotDeg.x),
+		XMConvertToRadians(boxRotDeg.y),
+		XMConvertToRadians(boxRotDeg.z));
+
+	const XMMATRIX invR = XMMatrixTranspose(R);
+
+	XMVECTOR O = XMLoadFloat3(&rayO);
+	XMVECTOR D = XMLoadFloat3(&rayD_in);
+	D = XMVector3Normalize(D);
+
+	XMVECTOR C = XMLoadFloat3(&boxC);
+
+	XMVECTOR Orel = O - C;
+	XMVECTOR OlocV = XMVector3TransformNormal(Orel, invR);
+	XMVECTOR DlocV = XMVector3TransformNormal(D, invR);
+
+	XMFLOAT3 Oloc, Dloc;
+	XMStoreFloat3(&Oloc, OlocV);
+	XMStoreFloat3(&Dloc, DlocV);
+
+	XMFLOAT3 nL = { 0, 0, 0 };
+	float t = 0.0f;
+
+	if (!RaycastAABB(Oloc, Dloc, XMFLOAT3(0, 0, 0), boxHalf, maxDist, &nL, &t))
+		return false;
+
+	XMVECTOR nW = XMVector3TransformNormal(XMLoadFloat3(&nL), R);
+	nW = XMVector3Normalize(nW);
+
+	if (outNormalW) XMStoreFloat3(outNormalW, nW);
+	if (outT) *outT = t;
+	return true;
+}
+
 //=========================================================================================================
-// ‰Šú‰»
+// åˆæœŸåŒ–
 //=========================================================================================================
 void Camera_Initialize()
 {
@@ -71,7 +166,7 @@ void Camera_Initialize()
 
 
 //=========================================================================================================
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 //=========================================================================================================
 void Camera_Finalize()
 {
@@ -80,7 +175,7 @@ void Camera_Finalize()
 
 
 //=========================================================================================================
-// XVˆ—
+// æ›´æ–°å‡¦ç†
 //=========================================================================================================
 void Player3DCamera_Update()
 {
@@ -205,7 +300,7 @@ void Title_Camera_Update()
 }
 
 //=========================================================================================================
-// •`‰æˆ—
+// æç”»å‡¦ç†
 //=========================================================================================================
 void Camera_Draw()
 {
@@ -240,7 +335,7 @@ void Camera_Draw()
 }
 
 //=========================================================================================================
-// Ž‹–ìŠp
+// è¦–é‡Žè§’
 //=========================================================================================================
 void SetCameraFov(float fov)
 {
@@ -249,7 +344,7 @@ void SetCameraFov(float fov)
 
 
 //=========================================================================================================
-// ƒAƒXƒyƒNƒg”ä
+// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
 //=========================================================================================================
 void SetCameraAspect(float asp)
 {
@@ -257,7 +352,7 @@ void SetCameraAspect(float asp)
 }
 
 //=========================================================================================================
-// ƒNƒŠƒbƒv‹——£
+// ã‚¯ãƒªãƒƒãƒ—è·é›¢
 //=========================================================================================================
 void SetCameraClip(float n, float f)
 {
@@ -266,7 +361,7 @@ void SetCameraClip(float n, float f)
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ˆÊ’u
+// ã‚«ãƒ¡ãƒ©ä½ç½®
 //=========================================================================================================
 void SetCameraPosition(XMFLOAT3 pos)
 {
@@ -274,7 +369,7 @@ void SetCameraPosition(XMFLOAT3 pos)
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰’Ž‹“_
+// ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹
 //=========================================================================================================
 void SetCameraAtPosition(XMFLOAT3 atpos )
 {
@@ -282,7 +377,7 @@ void SetCameraAtPosition(XMFLOAT3 atpos )
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ã•ûŒüƒxƒNƒgƒ‹
+// ã‚«ãƒ¡ãƒ©ä¸Šæ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 //=========================================================================================================
 void SetCameraUpVector(XMFLOAT3 up)
 {
@@ -290,7 +385,7 @@ void SetCameraUpVector(XMFLOAT3 up)
 }
 
 //=========================================================================================================
-// ƒrƒ…[s—ñŽæ“¾
+// ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—å–å¾—
 //=========================================================================================================
 XMMATRIX GetViewMatrix()
 {
@@ -298,7 +393,7 @@ XMMATRIX GetViewMatrix()
 }
 
 //=========================================================================================================
-// ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñŽæ“¾
+// ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—å–å¾—
 //=========================================================================================================
 XMMATRIX GetProjectionMatrix()
 {
@@ -306,7 +401,7 @@ XMMATRIX GetProjectionMatrix()
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰’Ž‹“_Žæ“¾
+// ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹å–å¾—
 //=========================================================================================================
 XMFLOAT3 GetCameraAtPosition()
 {
@@ -314,7 +409,7 @@ XMFLOAT3 GetCameraAtPosition()
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ˆÊ’uŽæ“¾
+// ã‚«ãƒ¡ãƒ©ä½ç½®å–å¾—
 //=========================================================================================================
 XMFLOAT3 GetCameraPosition()
 {
@@ -323,6 +418,148 @@ XMFLOAT3 GetCameraPosition()
 
 void Camera_Reset2DState()
 {
-    g_Cam2D_Initialized = false;
-    g_Cam2D_YawDeg = 0.0f;
+	g_Cam2D_Initialized = false;
+	g_Cam2D_YawDeg = 0.0f;
+}
+
+// Camera collision configuration
+static const float kCameraCollisionRadius = 0.1f;      // Camera collision sphere size
+static const float kCameraCollisionPadding = 0.1f;    // Extra space from walls
+static const float kCameraMinDistance = 1.2f;         // Minimum distance from player
+
+static bool CameraShouldCollide(FIELD type)
+{
+	switch (type)
+	{
+	case FIELD_GROUND:
+	case FIELD_WALL:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static void DrawRayDebug(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col = IM_COL32(255, 0, 0, 255))
+{
+	auto WorldToScreen = [](const XMFLOAT3& p, ImVec2& out) -> bool
+		{
+			XMMATRIX vp = GetViewMatrix() * GetProjectionMatrix();
+			XMVECTOR vW = XMVectorSet(p.x, p.y, p.z, 1.0f);
+			XMVECTOR vC = XMVector3TransformCoord(vW, vp);
+
+			XMFLOAT3 ndc;
+			XMStoreFloat3(&ndc, vC);
+
+			if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f || ndc.z < 0.0f)
+				return false;
+
+			ImGuiViewport* vp_ = ImGui::GetMainViewport();
+			float w = (float)Direct3D_GetBackBufferWidth();
+			float h = (float)Direct3D_GetBackBufferHeight();
+
+			out.x = vp_->Pos.x + (ndc.x * 0.5f + 0.5f) * w;
+			out.y = vp_->Pos.y + (-ndc.y * 0.5f + 0.5f) * h;
+			return true;
+		};
+
+	ImVec2 sa, sb;
+	if (WorldToScreen(a, sa) && WorldToScreen(b, sb))
+	{
+		ImGui::GetBackgroundDrawList()->AddLine(sa, sb, col, 2.0f);
+	}
+}
+
+void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3& outCamPos)
+{
+	DrawRayDebug(targetPos, desiredCamPos, IM_COL32(255, 0, 0, 255));
+	outCamPos = desiredCamPos;
+
+	// Calculate ray from target to desired camera position
+	XMFLOAT3 rayDir;
+	rayDir.x = desiredCamPos.x - targetPos.x;
+	rayDir.y = desiredCamPos.y - targetPos.y;
+	rayDir.z = desiredCamPos.z - targetPos.z;
+
+	float rayLength = sqrtf(rayDir.x * rayDir.x + rayDir.y * rayDir.y + rayDir.z * rayDir.z);
+
+	if (rayLength < 0.001f)
+	{
+		return;
+	}
+
+	// Normalize ray direction
+	rayDir.x /= rayLength;
+	rayDir.y /= rayLength;
+	rayDir.z /= rayLength;
+
+	std::vector<MAPDATA>& map = GetFieldMap();
+
+	float closestHit = rayLength;
+	bool hitSomething = false;
+
+	const float cameraRadius = kCameraCollisionRadius;
+
+	for (size_t i = 0; i < map.size(); i++)
+	{
+		if (map[i].pos.y < targetPos.y )
+			continue;
+		if (!CameraShouldCollide(map[i].no))
+			continue;
+
+		XMFLOAT3 boxHalf;
+		if (map[i].useCustomCollider)
+		{
+			boxHalf = map[i].colliderHalf;
+		}
+		else
+		{
+			boxHalf = XMFLOAT3(
+				BOX_RADIUS * map[i].scale.x,
+				BOX_RADIUS * map[i].scale.y,
+				BOX_RADIUS * map[i].scale.z
+			);
+		}
+
+		// Only slightly expand the box
+		boxHalf.x += cameraRadius;
+		boxHalf.y += cameraRadius;
+		boxHalf.z += cameraRadius;
+
+		float hitDist = 0.0f;
+
+		XMFLOAT3 hitNormal{};
+		if (RaycastOBB(targetPos, rayDir, map[i].pos, boxHalf, map[i].rotate, rayLength, &hitNormal, &hitDist))
+		{
+			if (map[i].no == FIELD_EMPTY_BOX)
+			{
+				OutputDebugStringA("Camera hit FIELD_EMPTY_BOX\n");
+			}
+
+			char buf[128];
+			sprintf_s(buf, "Camera hit type=%d at (%.2f, %.2f, %.2f)\n",
+				(int)map[i].no, map[i].pos.x, map[i].pos.y, map[i].pos.z);
+			OutputDebugStringA(buf);
+
+			if (hitDist < closestHit)
+			{
+				closestHit = hitDist;
+				hitSomething = true;
+			}
+		}
+
+	}
+
+	if (hitSomething)
+	{
+		// Keep a comfortable distance from the obstacle
+		float safeDistance = closestHit - cameraRadius - kCameraCollisionPadding;
+
+		if (safeDistance < kCameraMinDistance)
+			safeDistance = kCameraMinDistance;
+
+		outCamPos.x = targetPos.x + rayDir.x * safeDistance;
+		outCamPos.y = targetPos.y + rayDir.y * safeDistance;
+		outCamPos.z = targetPos.z + rayDir.z * safeDistance;
+	}
+
 }
