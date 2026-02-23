@@ -212,26 +212,7 @@ void Option_Update()
     bool leftPressed = (ms.leftButton && !s_prevLeft);
     
     
-    if (debugMode)
-    {
-        ImGui::Begin("Debug - han");
-        if (ImGui::TreeNode("Option.cpp"))
-        {
-			ImGui::Text("SelectedOption: %d", g_SelectedOption);
-            ImGui::Text("bool:%s", g_OptionRect[debug].contains(g_mouseX, g_mouseY) ? "true" : "false");
-            ImGui::Text("BarPos: %.2f", g_BarPos[debug]);
-            ImGui::Text("Rectpos: %.2f", g_OptionRectPos[debug].x);
-            ImGui::Text("MasterVolume: %.2f", g_MasterVolume);
-            ImGui::Text("BgmVolume: %.2f", g_BgmVolume);
-            ImGui::Text("MouseposX: %.2f", g_MouseSensYaw);
-            ImGui::Text("MouseposY: %.2f", g_MouseSensPitch);
-            
-
-            
-            ImGui::TreePop();
-        }
-        ImGui::End();
-    }
+    
 
 
     // マウスカーソルと重なったオプションを選択状態にする
