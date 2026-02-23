@@ -270,8 +270,12 @@
     <ClInclude Include="SkyBall.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Player2DCapsule.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <Library Include="DirectXTex_Debug.lib" />
     <Library Include="DirectXTex_Debug.lib">
       <Filter>ライブラリーファイル</Filter>
     </Library>

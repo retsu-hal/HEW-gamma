@@ -24,6 +24,10 @@ static float g_StopTime = 0.0f;
 static Player2DAnimeDef g_AnimDefs[PLAYER2D_ANIME_MAX] = {
 	//                  texturePath                               cols rows start count speed loop
 	/* IDLE */ { L"asset\\Texture\\Player2D\\Taiki_2D.png",        5,   5,    0,    25,  1.5f, true  },
+	
+	/* WALK */ { NULL,                                              5,   5,    0,    25,  1.5f, true  },
+	/* JUMP */ { NULL,                                              5,   5,    0,    25,  1.5f, false },
+	/* FALL */ { NULL,                                              5,   5,    0,    25,  1.5f, false },
 
 };
 
@@ -100,33 +104,39 @@ static void Player2D_UpdateAnime()
 		g_CurrentAnim = PLAYER2D_ANIME_IDLE;
 	}
 
+	if (g_Player2D.state == PLAYER_STATE_FALL && !g_Player2D.isGround)
+	{
+		Player2D_SetAnime((g_Player2D.Velocity.y > 0.0f) ? PLAYER2D_ANIME_JUMP : PLAYER2D_ANIME_FALL);
+	}
+	else if (g_Player2D.isGround)
+	{
+		float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
+			g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+
+		Player2D_SetAnime((speedSq > 0.0001f) ? PLAYER2D_ANIME_WALK : PLAYER2D_ANIME_IDLE);
+	}
+
 	const Player2DAnimeDef& def = g_AnimDefs[g_CurrentAnim];
 
-	int frameCount = def.frameCount;
-	if (frameCount <= 0) frameCount = 1;
-
-	if (g_AnimFinished) return;
-
-	g_AnimTimer += 1.0f;
-
-	float speed = def.frameSpeed;
-	if (speed <= 0.0f) speed = 1.0f;
-
-	if (g_AnimTimer >= speed)
+	if (!(g_AnimFinished && !def.loop))
 	{
-		g_AnimTimer = 0.0f;
-		g_AnimFrame++;
+		int frameCount = (def.frameCount > 0) ? def.frameCount : 1;
+		float speed = (def.frameSpeed > 0.0f) ? def.frameSpeed : 1.0f;
 
-		if (g_AnimFrame >= frameCount)
+		g_AnimTimer += 1.0f;
+		if (g_AnimTimer >= speed)
 		{
-			if (def.loop)
+			g_AnimTimer = 0.0f;
+			g_AnimFrame++;
+
+			if (g_AnimFrame >= frameCount)
 			{
-				g_AnimFrame = 0;
-			}
-			else
-			{
-				g_AnimFrame = frameCount - 1;
-				g_AnimFinished = true;
+				if (def.loop) g_AnimFrame = 0;
+				else
+				{
+					g_AnimFrame = frameCount - 1;
+					g_AnimFinished = true;
+				}
 			}
 		}
 	}
@@ -266,6 +276,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
+	if (!g_VertexBuffer) return;
 	// 頂点バッファに初期データを書き込む
 	D3D11_MAPPED_SUBRESOURCE msr;
 	g_pContext->Map(g_VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
@@ -288,6 +299,7 @@ void Player2D_Finalize(void)
 			{
 				if (g_AnimTextures[j] == g_AnimTextures[i])
 				{
+					g_AnimTextures[j]->Release();
 					g_AnimTextures[j] = NULL;
 				}
 			}
@@ -334,10 +346,31 @@ PLAYER * GetPlayer2D()
 {
 	return &g_Player2D;
 }
-// プレイヤーの当たり判定の半分のサイズを取得する
+
+
+Capsule2D Player2D_GetCapsule()
+{
+	Capsule2D cap;
+
+	float totalHeight = PLAYER2D_CAPSULE_HEIGHT + PLAYER2D_CAPSULE_RADIUS * 2.0f;
+	cap.center = XMFLOAT3(
+		g_Player2D.Position.x,
+		g_Player2D.Position.y + totalHeight * 0.5f,
+		g_Player2D.Position.z
+	);
+
+	cap.radius = PLAYER2D_CAPSULE_RADIUS;
+	cap.halfHeight = PLAYER2D_CAPSULE_HEIGHT * 0.5f;
+	cap.halfZ = PLAYER2D_CAPSULE_HALF_Z;
+	cap.rotationZ = XMConvertToRadians(g_Player2D.Rotation.z);
+
+	return cap;
+}
+
 XMFLOAT3 Player2D_GetSolidHalfSize()
 {
-	return g_SolidHalfSize_2d;
+	Capsule2D cap = Player2D_GetCapsule();
+	return cap.GetBoundingHalfSize();
 }
 
 
@@ -704,6 +737,13 @@ void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
 	g_StopTime = 0.0f;
 
 	g_Player2D.Quaternion = XMQuaternionIdentity();
+
+	g_Player2D.FirstScaling = g_Player2D.Scaling;
+	g_Player2D.FirstVelocity = g_Player2D.Velocity;
+	g_Player2D.FirstAcceleration = g_Player2D.Acceleration;
+	g_Player2D.FirstState = g_Player2D.state;
+	g_Player2D.FirstStopTime = g_StopTime;
+	g_Player2D.FirstQuaternion = g_Player2D.Quaternion;
 
 	g_Player2D.Active = true;
 }

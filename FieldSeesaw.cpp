@@ -177,21 +177,44 @@ float Seesaw_GetPlayerPosition(int seesawIndex, const XMFLOAT3& playerPos)
 	float localX = dx * cosf(-yawRad) - dz * sinf(-yawRad);
 	float localZ = dx * sinf(-yawRad) + dz * cosf(-yawRad);
 
-	float projection = 0.0f;
 	float boardLength = seesaw.params.boardLength;
+	if (boardLength < 0.01f) return 0.0f;
 
+	float position = 0.0f;
 	if (seesaw.params.tiltAxis == SEESAW_TILT_X)
 	{
-		projection = localZ;
+		position = localZ / boardLength;
 	}
 	else
 	{
-		projection = localX;
+		position = localX / boardLength;
 	}
 
-	if (boardLength > 0.01f)
-		return projection / boardLength;
-	return 0.0f;
+	return fmaxf(-1.0f, fminf(1.0f, position));
+}
+
+static float GetBoardSurfaceHeightAt(
+	const SeesawData& seesaw,
+	const MAPDATA& board,
+	float localX,
+	float localZ,
+	const XMFLOAT3& boardHalf)
+{
+	float baseCenterY = board.pos.y + SEESAW_PARTS[1].colliderOffsetY;
+
+	float tiltRad = XMConvertToRadians(seesaw.params.tiltAngle);
+	float heightOffset = 0.0f;
+
+	if (seesaw.params.tiltAxis == SEESAW_TILT_X)
+	{
+		heightOffset = sinf(tiltRad) * localZ;
+	}
+	else // SEESAW_TILT_Z
+	{
+		heightOffset = sinf(tiltRad) * localX;
+	}
+
+	return baseCenterY + heightOffset + boardHalf.y;
 }
 
 bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
@@ -212,54 +235,32 @@ bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
 	const MAPDATA& board = mapData[boardIdx];
 	XMFLOAT3 boardHalf = Field_GetColliderHalfSize(board);
 
-	float colliderCenterY = board.pos.y + SEESAW_PARTS[1].colliderOffsetY;
-
-
 	float dx = playerPos.x - board.pos.x;
 	float dz = playerPos.z - board.pos.z;
 
 	float yawRad = XMConvertToRadians(board.rotate.y);
-	float localX = dx * cosf(-yawRad) - dz * sinf(-yawRad);
-	float localZ = dx * sinf(-yawRad) + dz * cosf(-yawRad);
+	float cosYaw = cosf(-yawRad);
+	float sinYaw = sinf(-yawRad);
+	float localX = dx * cosYaw - dz * sinYaw;
+	float localZ = dx * sinYaw + dz * cosYaw;
 
 	const float playerRadius = 0.45f;
-	if (fabsf(localX) > boardHalf.x + playerRadius) return false;
-	if (fabsf(localZ) > boardHalf.z + playerRadius) return false;
+	const float xMargin = boardHalf.x + playerRadius;
+	const float zMargin = boardHalf.z + playerRadius;
 
-	float boardLength = seesaw.params.boardLength;
-	float normalizedPos = 0.0f;
+	if (fabsf(localX) > xMargin) return false;
+	if (fabsf(localZ) > zMargin) return false;
 
-	if (seesaw.params.tiltAxis == SEESAW_TILT_X)
-	{
-		float clampedZ = fmaxf(-boardLength, fminf(boardLength, localZ));
-		normalizedPos = (boardLength > 0.01f) ? (clampedZ / boardLength) : 0.0f;
-	}
-	else
-	{
-		float clampedX = fmaxf(-boardLength, fminf(boardLength, localX));
-		normalizedPos = (boardLength > 0.01f) ? (clampedX / boardLength) : 0.0f;
-	}
+	float boardSurfaceY = GetBoardSurfaceHeightAt(seesaw, board, localX, localZ, boardHalf);
 
-	normalizedPos = fmaxf(-1.0f, fminf(1.0f, normalizedPos));
-
-	float tiltRad = XMConvertToRadians(seesaw.params.tiltAngle);
-
-	float heightOffset = 0.0f;
-	if (seesaw.params.tiltAxis == SEESAW_TILT_X)
-	{
-		heightOffset = sinf(tiltRad) * localZ;
-	}
-	else
-	{
-		heightOffset = sinf(tiltRad) * localX;
-	}
-
-	float boardHeightAtPlayer = colliderCenterY + heightOffset;
-	float boardTopY = boardHeightAtPlayer + boardHalf.y;
 	float playerFootY = playerPos.y;
-	float heightDiff = playerFootY - boardTopY;
 
-	return (heightDiff >= -0.25f && heightDiff <= 0.5f);
+	float heightDiff = playerFootY - boardSurfaceY;
+
+	const float toleranceBelow = -1.2f;
+	const float toleranceAbove = 0.8f; 
+
+	return (heightDiff >= toleranceBelow && heightDiff <= toleranceAbove);
 }
 
 static void UpdateSingleSeesaw(int index, float deltaTime)
@@ -475,10 +476,23 @@ int Seesaw_PlayerCollision()
 
 		XMFLOAT3 boardHalf = Field_GetColliderHalfSize(board);
 
+		XMFLOAT3 localOffset = { 0.0f, SEESAW_PARTS[1].colliderOffsetY, 0.0f };
+
+		XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
+			XMConvertToRadians(board.rotate.x),
+			XMConvertToRadians(board.rotate.y),
+			XMConvertToRadians(board.rotate.z)
+		);
+
+		XMVECTOR vOffset = XMLoadFloat3(&localOffset);
+		XMVECTOR vRotatedOffset = XMVector3TransformNormal(vOffset, rotMat);
+		XMFLOAT3 rotatedOffset;
+		XMStoreFloat3(&rotatedOffset, vRotatedOffset);
+
 		XMFLOAT3 boardCenter = {
-			board.pos.x,
-			board.pos.y + SEESAW_PARTS[1].colliderOffsetY,
-			board.pos.z
+			board.pos.x + rotatedOffset.x,
+			board.pos.y + rotatedOffset.y,
+			board.pos.z + rotatedOffset.z
 		};
 
 		XMFLOAT3 push, norm;
@@ -638,10 +652,23 @@ void Seesaw_DebugDraw()
 		const MAPDATA& board = mapData[boardIdx];
 		XMFLOAT3 boardHalf = Field_GetColliderHalfSize(board);
 
+		XMFLOAT3 localOffset = { 0.0f, SEESAW_PARTS[1].colliderOffsetY, 0.0f };
+
+		XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
+			XMConvertToRadians(board.rotate.x),
+			XMConvertToRadians(board.rotate.y),
+			XMConvertToRadians(board.rotate.z)
+		);
+
+		XMVECTOR vOffset = XMLoadFloat3(&localOffset);
+		XMVECTOR vRotatedOffset = XMVector3TransformNormal(vOffset, rotMat);
+		XMFLOAT3 rotatedOffset;
+		XMStoreFloat3(&rotatedOffset, vRotatedOffset);
+
 		XMFLOAT3 boardColliderCenter = {
-		   board.pos.x,
-		   board.pos.y + SEESAW_PARTS[1].colliderOffsetY,
-		   board.pos.z
+			board.pos.x + rotatedOffset.x,
+			board.pos.y + rotatedOffset.y,
+			board.pos.z + rotatedOffset.z
 		};
 
 		bool playerOnBoard = player && Seesaw_IsPlayerOnBoard(i, player->Position);
@@ -653,6 +680,29 @@ void Seesaw_DebugDraw()
 		SeesawDrawOBB_FullRotation(boardColliderCenter, boardHalf, board.rotate, boardColor);
 
 		SeesawDrawPoint3D(boardColliderCenter, IM_COL32(255, 255, 0, 255), 5.0f);
+
+		if (player)
+		{
+			float dx = player->Position.x - board.pos.x;
+			float dz = player->Position.z - board.pos.z;
+			float yawRad = XMConvertToRadians(board.rotate.y);
+			float localX = dx * cosf(-yawRad) - dz * sinf(-yawRad);
+			float localZ = dx * sinf(-yawRad) + dz * cosf(-yawRad);
+
+			float tiltRad = XMConvertToRadians(seesaw.params.tiltAngle);
+			float heightOffset = (seesaw.params.tiltAxis == SEESAW_TILT_X) ?
+				sinf(tiltRad) * localZ : sinf(tiltRad) * localX;
+
+			float baseCenterY = board.pos.y + SEESAW_PARTS[1].colliderOffsetY;
+			float surfaceY = baseCenterY + heightOffset + boardHalf.y;
+
+			XMFLOAT3 surfacePoint = { player->Position.x, surfaceY, player->Position.z };
+			SeesawDrawPoint3D(surfacePoint, IM_COL32(0, 255, 255, 255), 6.0f);
+
+			XMFLOAT3 footPoint = { player->Position.x, player->Position.y, player->Position.z };
+			SeesawDrawLine3D(footPoint, surfacePoint, IM_COL32(255, 0, 255, 200), 2.0f);
+		}
+
 
 		if (seesaw.partIndices.size() >= 1)
 		{
