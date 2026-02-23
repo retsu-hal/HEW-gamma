@@ -12,7 +12,8 @@
 using namespace DirectX;
 using namespace mu;
 
-static bool debugMode = TRUE;
+
+
 
 static std::vector<const ShadowPrism*> g_ShadowPrisms;
 static ShadowDebugOptions g_ShadowDebugOpts;
@@ -32,10 +33,8 @@ static int    s_LastStandingPrismIndex = -1;
 static XMFLOAT3 s_LastShadowTopPos = { 0, 0, 0 };
 static int    s_GraceFrames = 0;
 
-//=========================================================================================================
-// ?{?[????t?B?[???h?????????
-//=========================================================================================================
 
+// シャドウの当たり判定の状態をリセット（プレイヤーが地面から離れたときなどに呼び出す）
 void Collision_ResetShadowContactState()
 {
 	s_LastStandingPrismIndex = -1;
@@ -43,17 +42,19 @@ void Collision_ResetShadowContactState()
 	s_GraceFrames = 0;
 }
 
-
+// プリズムリストを設定
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms)
 {
 	g_ShadowPrisms = prisms;
 }
 
+// 現在のプリズムリストを取得
 const std::vector<const ShadowPrism*>& Collision_GetShadowPrisms()
 {
 	return g_ShadowPrisms;
 }
 
+// 単一のプリズムを設定（接地判定などで使用）
 void Collision_SetShadowPrism(const ShadowPrism* prism)
 {
 	g_ShadowPrisms.clear();
@@ -63,17 +64,19 @@ void Collision_SetShadowPrism(const ShadowPrism* prism)
 	}
 }
 
+// 最初のプリズムを取得（接地判定などで使用）
 const ShadowPrism* Collision_GetShadowPrism()
 {
 	return g_ShadowPrisms.empty() ? nullptr : g_ShadowPrisms[0];
 }
 
+// デバッグオプションの設定
 static ImU32 MakeColor(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
 	return ((ImU32)a << 24) | ((ImU32)b << 16) | ((ImU32)g << 8) | (ImU32)r;
 }
 
-// ?{?b?N?X???????T?C?Y???擾
+// フィールドの当たり判定用半サイズを取得
 static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 {
 	if (m.useCustomCollider)
@@ -87,7 +90,7 @@ static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
 	};
 }
 
-// ???[???h???W???X?N???[?????W????
+// ワールド座標をスクリーン座標に変換する関数
 struct ScreenPt { ImVec2 pos; bool valid; };
 static ScreenPt WorldToScreen(const XMFLOAT3& p)
 {
@@ -118,7 +121,7 @@ static ScreenPt WorldToScreen(const XMFLOAT3& p)
 	return out;
 }
 
-// 3D???C????`??
+// 3D空間の線を描画する関数
 static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick = 1.0f)
 {
 	ScreenPt sa = WorldToScreen(a);
@@ -126,7 +129,7 @@ static void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float th
 	if (sa.valid && sb.valid)
 		ImGui::GetBackgroundDrawList()->AddLine(sa.pos, sb.pos, col, thick);
 }
-// 3D?|?C???g??`??
+// 3D空間の点を描画する関数
 static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
 {
 	ScreenPt sp = WorldToScreen(p);
@@ -135,7 +138,7 @@ static void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
 }
 
 
-// AABB??`??
+// AABBのデバッグ描画関数
 static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 {
 	XMFLOAT3 corners[8] = {
@@ -153,7 +156,7 @@ static void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
-// OBB??Yaw??]??`??
+// OBBのデバッグ描画関数（Y軸回転のみ対応）
 static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg, ImU32 col)
 {
 	float yaw = XMConvertToRadians(yawDeg);
@@ -175,7 +178,7 @@ static void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg,
 		DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
-// ??~???`??
+// 楕円のデバッグ描画関数（Y軸回転には非対応）
 static void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, int seg = 24)
 {
 	const float PI2 = 6.28318530718f;
@@ -197,53 +200,7 @@ static void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, 
 	drawRing(0); drawRing(1); drawRing(2);
 }
 
-
-static void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOptions& opts)
-{
-	if (!prism.isValid || prism.poly.size() < 3) return;
-
-	int n = (int)prism.baseWorld.size();
-	ImU32 colPrism = opts.prismColor;
-	ImU32 colFaded = (colPrism & 0x00FFFFFF) | 0x60000000;
-
-	if (opts.drawPrism)
-	{
-		for (int i = 0; i < n; i++)
-			DrawLine3D(prism.baseWorld[i], prism.baseWorld[(i + 1) % n], colPrism, 2.0f);
-
-		if (!prism.topWorld.empty())
-		{
-			for (int i = 0; i < n; i++)
-				DrawLine3D(prism.topWorld[i], prism.topWorld[(i + 1) % n], colPrism, 2.0f);
-
-			for (int i = 0; i < n; i++)
-				DrawLine3D(prism.baseWorld[i], prism.topWorld[i], colFaded, 1.0f);
-		}
-	}
-
-	if (opts.drawNormal)
-	{
-		XMFLOAT3 nEnd = prism.origin + prism.n * 0.5f;
-		DrawLine3D(prism.origin, nEnd, opts.normalColor, 2.0f);
-		DrawPoint3D(prism.origin, opts.normalColor, 5.0f);
-	}
-
-	if (opts.drawVertices)
-	{
-		for (const auto& p : prism.baseWorld)
-			DrawPoint3D(p, opts.vertexColor, 4.0f);
-	}
-
-	if (opts.drawAABB)
-	{
-		XMFLOAT3 c = (prism.aabbMin + prism.aabbMax) * 0.5f;
-		XMFLOAT3 h = (prism.aabbMax - prism.aabbMin) * 0.5f;
-		DebugDrawAABB(c, h, opts.aabbColor);
-	}
-}
-
-
-// ?v???C???[????R???C?_?[???S???擾
+// プレイヤーの当たり判定用コライダーの中心座標を取得
 static XMFLOAT3 GetPlayerSolidCollider()
 {
 	PLAYER* p = GetPlayer3D();
@@ -251,7 +208,7 @@ static XMFLOAT3 GetPlayerSolidCollider()
 	c.y += Player3D_GetSolidHalfSize().y;
 	return c;
 }
-// ?v???C???[2D????R???C?_?[???S???擾
+// プレイヤー2Dの当たり判定用コライダーの中心座標を取得
 static XMFLOAT3 GetPlayer2DSolidCollider()
 {
 	PLAYER* p = GetPlayer2D();
@@ -259,7 +216,7 @@ static XMFLOAT3 GetPlayer2DSolidCollider()
 	c.y += Player2D_GetSolidHalfSize().y + 0.1f;
 	return c;
 }
-// ?v???C???[??g???K?[?R???C?_?[???S???擾
+// プレイヤーのトリガー用コライダーの中心座標を取得
 static XMFLOAT3 GetPlayerTriggerCollider()
 {
 	PLAYER* p = GetPlayer3D();
@@ -268,7 +225,7 @@ static XMFLOAT3 GetPlayerTriggerCollider()
 	return c;
 }
 
-// ?t?B?[???h??????????????擾
+// フィールドが当たり判定用かどうかを取得
 static bool Field_IsSolid(FIELD t)
 {
 	switch (t)
@@ -289,10 +246,8 @@ static bool Field_IsSolid(FIELD t)
 		return false;
 	}
 }
-// ?t?B?[???h???g???K?[??????????擾
-//For debug only
-// フィールドがトリガーかどうかを取得
 
+// フィールドがトリガーかどうかを取得
 static bool Field_IsTrigger(FIELD t)
 {
 	switch (t)
@@ -308,7 +263,7 @@ static bool Field_IsTrigger(FIELD t)
 	}
 }
 
-// OBB vs OBB ???Z?iYaw??]??????j
+// OBB同士の当たり判定（Y軸回転のみ対応）
 static bool OBB_Intersect_Yaw(
 	const XMFLOAT3& cA, const XMFLOAT3& hA, float yawA,
 	const XMFLOAT3& cB, const XMFLOAT3& hB, float yawB)
@@ -344,7 +299,7 @@ static bool OBB_Intersect_Yaw(
 	return true;
 }
 
-// ??~?? vs OBB ???Z?iYaw??]??????j
+// 楕円とOBBの当たり判定（Y軸回転のみ対応）
 static bool Resolve_Ellipsoid_OBB_Yaw(
 	const XMFLOAT3& ellC, const XMFLOAT3& ellR,
 	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYaw,
@@ -404,7 +359,7 @@ static bool Resolve_Ellipsoid_OBB_Yaw(
 	return true;
 }
 
-// ?g???K?[??????????????v?Z?iPlayer3d Yaw??j
+// プレイヤーのトリガーが当たった面を計算
 static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& targetC)
 {
 	PLAYER* p = GetPlayer3D();
@@ -423,17 +378,18 @@ static TRIGGER_SIDE CalcTriggerSide(const XMFLOAT3& playerC, const XMFLOAT3& tar
 	return (r >= 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
 }
 
-
+// シャドウの当たり判定のデバッグ描画オプションを設定
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options)
 {
 	g_ShadowDebugOpts = options;
 }
-
+// シャドウの当たり判定のデバッグ描画オプションを取得
 void Collision_DebugClearExtraBoxes()
 {
 	g_ExtraBoxes.clear();
 }
-// AABB???f?o?b?O?`???X?g????
+
+
 void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
 	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -444,7 +400,7 @@ void Collision_DebugAddExtraAABB(const XMFLOAT3& c, const XMFLOAT3& h,
 	box.color = MakeColor(r, g, b, a);
 	g_ExtraBoxes.push_back(box);
 }
-// OBB???f?o?b?O?`???X?g????
+
 void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFLOAT3& rot,
 	unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
@@ -458,21 +414,17 @@ void Collision_DebugAddExtraOBB(const XMFLOAT3& c, const XMFLOAT3& h, const XMFL
 }
 
 bool Resolve_OBB_OBB_ZY(
-	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,  // ?v???C???[?iZ??]?j
-	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,  // ?t?B?[???h?iY??]?j
+	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,
 	XMFLOAT3* outPush, XMFLOAT3* outNorm)
 {
-	// ?v???C???[??Z??]?s??i2D???????]?j
 	XMMATRIX rotMatA = XMMatrixRotationZ(rotZRadA);
 
-	// ?t?B?[???h??Y??]?s??
 	float rotYRadB = XMConvertToRadians(rotYDegB);
 	XMMATRIX rotMatB = XMMatrixRotationY(rotYRadB);
 
-	// ?eOBB????[?J???????擾
 	XMFLOAT3 axesA[3], axesB[3];
 
-	// ?v???C???[????iZ??]?j
 	XMVECTOR axA0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatA);
 	XMVECTOR axA1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatA);
 	XMVECTOR axA2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatA);
@@ -480,7 +432,6 @@ bool Resolve_OBB_OBB_ZY(
 	XMStoreFloat3(&axesA[1], axA1);
 	XMStoreFloat3(&axesA[2], axA2);
 
-	// ?t?B?[???h????iY??]?j
 	XMVECTOR axB0 = XMVector3TransformNormal(XMVectorSet(1, 0, 0, 0), rotMatB);
 	XMVECTOR axB1 = XMVector3TransformNormal(XMVectorSet(0, 1, 0, 0), rotMatB);
 	XMVECTOR axB2 = XMVector3TransformNormal(XMVectorSet(0, 0, 1, 0), rotMatB);
@@ -488,7 +439,6 @@ bool Resolve_OBB_OBB_ZY(
 	XMStoreFloat3(&axesB[1], axB1);
 	XMStoreFloat3(&axesB[2], axB2);
 
-	// ???S??x?N?g??
 	XMVECTOR vD = XMVectorSet(posA.x - posB.x, posA.y - posB.y, posA.z - posB.z, 0);
 
 	float halfExtA[3] = { halfA.x, halfA.y, halfA.z };
@@ -497,15 +447,13 @@ bool Resolve_OBB_OBB_ZY(
 	float minPen = FLT_MAX;
 	XMFLOAT3 minAxis = { 0, 1, 0 };
 
-	// 15????SAT????
 	auto TestAxis = [&](XMVECTOR axis) -> bool
 		{
 			float len = XMVectorGetX(XMVector3Length(axis));
-			if (len < 1e-6f) return true;  // ???s?????X?L?b?v
+			if (len < 1e-6f) return true;
 
 			axis = XMVector3Normalize(axis);
 
-			// ?eOBB????e???a
 			float rA = 0, rB = 0;
 			for (int i = 0; i < 3; i++)
 			{
@@ -521,7 +469,7 @@ bool Resolve_OBB_OBB_ZY(
 			float dist = fabsf(XMVectorGetX(XMVector3Dot(vD, axis)));
 			float pen = (rA + rB) - dist;
 
-			if (pen < 0) return false;  // ?????????? ?? ?????
+			if (pen < 0) return false;
 
 			if (pen < minPen)
 			{
@@ -531,17 +479,14 @@ bool Resolve_OBB_OBB_ZY(
 			return true;
 		};
 
-	// A ??3??
 	if (!TestAxis(axA0)) return false;
 	if (!TestAxis(axA1)) return false;
 	if (!TestAxis(axA2)) return false;
 
-	// B ??3??
 	if (!TestAxis(axB0)) return false;
 	if (!TestAxis(axB1)) return false;
 	if (!TestAxis(axB2)) return false;
 
-	// ?O????i9???j
 	if (!TestAxis(XMVector3Cross(axA0, axB0))) return false;
 	if (!TestAxis(XMVector3Cross(axA0, axB1))) return false;
 	if (!TestAxis(XMVector3Cross(axA0, axB2))) return false;
@@ -552,7 +497,6 @@ bool Resolve_OBB_OBB_ZY(
 	if (!TestAxis(XMVector3Cross(axA2, axB1))) return false;
 	if (!TestAxis(XMVector3Cross(axA2, axB2))) return false;
 
-	// ?????o????????????iA??B???痣???????j
 	XMVECTOR normAxis = XMLoadFloat3(&minAxis);
 	if (XMVectorGetX(XMVector3Dot(vD, normAxis)) < 0)
 	{
@@ -574,36 +518,12 @@ bool OBB_Intersect_ZY(
 	return Resolve_OBB_OBB_ZY(posA, halfA, rotZRadA, posB, halfB, rotYDegB, &push, &norm);
 }
 
+
 //=========================================================================================================
-// 2D?p?g???K?[????????i?v???C???[???]???l???j
+// 3Dプレイヤーの当たり判定
 //=========================================================================================================
-static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRotZ, const XMFLOAT3& triggerPos)
-{
-	// ?v???C???[????g???K?[???x?N?g??
-	float dx = triggerPos.x - playerPos.x;
-	float dy = triggerPos.y - playerPos.y;
 
-	// ?v???C???[???]???l????????[?J?????W????
-	float radZ = XMConvertToRadians(playerRotZ);
-	float cosZ = cosf(-radZ);  // ?t??]????[?J?????W??
-	float sinZ = sinf(-radZ);
-
-	float localX = dx * cosZ - dy * sinZ;
-	float localY = dx * sinZ + dy * cosZ;
-
-	// ???[?J?????W??????????
-	if (fabsf(localX) > fabsf(localY))
-	{
-		return (localX > 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
-	}
-	else
-	{
-		return (localY > 0) ? TRIGGER_SIDE_TOP : TRIGGER_SIDE_BOTTOM;
-	}
-}
-
-
-// ?v???C???[3D??t?B?[???h?????????
+// 3Dプレイヤーとフィールドの当たり判定を行い、当たった面を返す
 int Player3DField_Collision()
 {
 	int hit = HIT_NONE;
@@ -620,13 +540,13 @@ int Player3DField_Collision()
 	{
 		if (!Field_IsSolid(map[i].no)) continue;
 
-		// ?? ?????????壬????????
+		// シーソーは片方だけ当たり判定を行う
 		if (map[i].no == FIELD_SEESAW_2) continue;
 
 		float boxYaw = (map[i].no == FIELD_OBJ_1) ? map[i].rotate.y : 0.0f;
 
 		XMFLOAT3 push, norm;
-		// ?? ??????????
+		// 楕円とOBBの当たり判定を行い、衝突している場合は押し出しベクトルと法線を取得
 		if (!Resolve_Ellipsoid_OBB_Yaw(ellC, ellR, map[i].pos,
 			Field_GetHalfSize(map[i]), boxYaw, &push, &norm))
 			continue;
@@ -659,6 +579,36 @@ int Player3DField_Collision()
 	return hit;
 }
 
+
+//=========================================================================================================
+// 2Dプレイヤーの当たり判定
+//=========================================================================================================
+
+// 2Dプレイヤーのトリガーが当たった面を計算
+static TRIGGER_SIDE CalcTriggerSide2D(const XMFLOAT3& playerPos, float playerRotZ, const XMFLOAT3& triggerPos)
+{
+
+	float dx = triggerPos.x - playerPos.x;
+	float dy = triggerPos.y - playerPos.y;
+
+	float radZ = XMConvertToRadians(playerRotZ);
+	float cosZ = cosf(-radZ);
+	float sinZ = sinf(-radZ);
+
+	float localX = dx * cosZ - dy * sinZ;
+	float localY = dx * sinZ + dy * cosZ;
+
+	if (fabsf(localX) > fabsf(localY))
+	{
+		return (localX > 0) ? TRIGGER_SIDE_RIGHT : TRIGGER_SIDE_LEFT;
+	}
+	else
+	{
+		return (localY > 0) ? TRIGGER_SIDE_TOP : TRIGGER_SIDE_BOTTOM;
+	}
+}
+
+// 2Dプレイヤーとフィールドの当たり判定を行い、当たった面を返す
 int Player2DField_Collision()
 {
 	int hit = HIT_NONE;
@@ -670,14 +620,14 @@ int Player2DField_Collision()
 	player->isGround = false;
 	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
 
-	// 2D?v???C???[??????????S?i??????????S??????j
+	// 2Dプレイヤーの当たり判定用コライダーの中心座標を計算
 	XMFLOAT3 colliderCenter = XMFLOAT3(
 		player->Position.x,
 		player->Position.y + halfSize.y,
 		player->Position.z
 	);
 
-	// ?v???C???[??Z????]?p?x?i?x?????W?A???j
+	// 2DプレイヤーのZ回転をラジアンに変換
 	float playerZRot = XMConvertToRadians(player->Rotation.z);
 
 	for (size_t i = 0; i < map.size(); ++i)
@@ -686,10 +636,10 @@ int Player2DField_Collision()
 
 		XMFLOAT3 push, norm;
 
-		// OBB vs OBB?i?v???C???[??Z??]?A?t?B?[???h??Y??]?j
+		// 2DプレイヤーのコライダーとフィールドのOBBの当たり判定を行い、衝突している場合は押し出しベクトルと法線を取得
 		if (!Resolve_OBB_OBB_ZY(
-			colliderCenter, halfSize, playerZRot,      // ?v???C???[?iZ??]?j
-			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,  // ?t?B?[???h?iY??]?j
+			colliderCenter, halfSize, playerZRot,
+			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,
 			&push, &norm))
 			continue;
 
@@ -703,7 +653,7 @@ int Player2DField_Collision()
 
 		if (ay >= ax && ay >= az)
 		{
-			// ??????
+			
 			if (norm.y > 0)
 			{
 				player->isGround = true;
@@ -717,19 +667,18 @@ int Player2DField_Collision()
 		}
 		else if (ax >= az)
 		{
-			// ???E?????
+			
 			player->Velocity.x = 0;
 			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
 		}
 		else
 		{
-			// ?O??????
+			
 			player->Velocity.z = 0;
 			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
 		}
 	}
 
-	// ???S???W?????????W????
 	player->Position.x = colliderCenter.x;
 	player->Position.y = colliderCenter.y - halfSize.y;
 	player->Position.z = colliderCenter.z;
@@ -737,9 +686,11 @@ int Player2DField_Collision()
 	return hit;
 }
 
+//=========================================================================================================
+// プレイヤーのトリガー判定
+//=========================================================================================================
 
-
-// ?v???C???[??g???K?[????????
+// 3Dプレイヤーとフィールドのトリガーの当たり判定
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
@@ -788,6 +739,7 @@ bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange)
 	return true;
 }
 
+// 2Dプレイヤーとフィールドのトリガーの当たり判定
 bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 {
 	if (outHit) *outHit = TRIGGER_HIT{};
@@ -851,8 +803,10 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 
 
 //=========================================================================================================
-// ?_???v???Y??????????`?F?b?N?i2D???p?`????j
+// 2Dプレイヤーのシャドウの当たり判定
 //=========================================================================================================
+
+// 2DプレイヤーのXZ平面での点と多角形の内外判定
 static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& poly)
 {
 	if (poly.size() < 3) return false;
@@ -873,15 +827,12 @@ static bool PointInPolygon2D(float px, float py, const std::vector<XMFLOAT2>& po
 	}
 	return inside;
 }
-
-//=========================================================================================================
-// ?v???C???[2D??e?v???Y???????????
-//=========================================================================================================
+// 2DプレイヤーのXZ平面でのドット積
 static float DotXZ(const XMFLOAT3& a, const XMFLOAT3& b)
 {
 	return a.x * b.x + a.z * b.z;
 }
-
+// シャドウの辺に対するプレイヤーの半径の投影を計算（Y軸回転のみ対応）
 static float ProjectRadiusOnAxis_Yaw(const XMFLOAT3& axis, const XMFLOAT3& half, float yawDeg)
 {
 	const float yaw = XMConvertToRadians(yawDeg);
@@ -894,7 +845,7 @@ static float ProjectRadiusOnAxis_Yaw(const XMFLOAT3& axis, const XMFLOAT3& half,
 		+ fabsf(Dot(axis, fwd)) * half.z;
 }
 
-
+// 2Dプレイヤーとシャドウの当たり判定
 bool Player2DShadow_Collision()
 {
 	PLAYER* player = GetPlayer2D();
@@ -1139,6 +1090,7 @@ bool Player2DShadow_Collision()
 	return hitAny;
 }
 
+// 2Dプレイヤーとシャドウの接触判定（上から乗っているか）
 bool Player2DShadow_TopContact()
 {
 	PLAYER* player = GetPlayer2D();
@@ -1321,33 +1273,78 @@ bool Player2DShadow_TopContact()
 	return hitAny;
 }
 
+// シャドウプリズムのデバッグ描画関数
+static void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOptions& opts)
+{
+	if (!prism.isValid || prism.poly.size() < 3) return;
 
+	int n = (int)prism.baseWorld.size();
+	ImU32 colPrism = opts.prismColor;
+	ImU32 colFaded = (colPrism & 0x00FFFFFF) | 0x60000000;
 
-// ?f?o?b?O?`??
+	if (opts.drawPrism)
+	{
+		for (int i = 0; i < n; i++)
+			DrawLine3D(prism.baseWorld[i], prism.baseWorld[(i + 1) % n], colPrism, 2.0f);
+
+		if (!prism.topWorld.empty())
+		{
+			for (int i = 0; i < n; i++)
+				DrawLine3D(prism.topWorld[i], prism.topWorld[(i + 1) % n], colPrism, 2.0f);
+
+			for (int i = 0; i < n; i++)
+				DrawLine3D(prism.baseWorld[i], prism.topWorld[i], colFaded, 1.0f);
+		}
+	}
+
+	if (opts.drawNormal)
+	{
+		XMFLOAT3 nEnd = prism.origin + prism.n * 0.5f;
+		DrawLine3D(prism.origin, nEnd, opts.normalColor, 2.0f);
+		DrawPoint3D(prism.origin, opts.normalColor, 5.0f);
+	}
+
+	if (opts.drawVertices)
+	{
+		for (const auto& p : prism.baseWorld)
+			DrawPoint3D(p, opts.vertexColor, 4.0f);
+	}
+
+	if (opts.drawAABB)
+	{
+		XMFLOAT3 c = (prism.aabbMin + prism.aabbMax) * 0.5f;
+		XMFLOAT3 h = (prism.aabbMax - prism.aabbMin) * 0.5f;
+		DebugDrawAABB(c, h, opts.aabbColor);
+	}
+}
+
+// デバッグ描画関数
 void Collision_DebugDraw()
 {
-	// 3D?v???C???[?R???C?_?[
+
+	// 3Dプレイヤーの当たり判定ボックスのデバッグ描画
 	PLAYER* player3D = GetPlayer3D();
 	if (player3D)
 	{
 		XMFLOAT3 pC = GetPlayerSolidCollider();
 		XMFLOAT3 pH = Player3D_GetSolidHalfSize();
-		DebugDrawEllipsoid(pC, pH, IM_COL32(0, 255, 0, 255));
+		DebugDrawEllipsoid(pC, pH, IM_COL32(0, 255, 0, 255));// 緑の楕円でプレイヤーの当たり判定を描画
 
 		XMFLOAT3 tC = GetPlayerTriggerCollider();
 		XMFLOAT3 tH = Player3D_GetTriggerHalfSize();
-		DebugDrawOBB_Yaw(tC, tH, player3D->Rotation.y, IM_COL32(255, 255, 255, 255));
+		DebugDrawOBB_Yaw(tC, tH, player3D->Rotation.y, IM_COL32(255, 255, 255, 255));// 白のOBBでプレイヤーのトリガー判定を描画
 	}
-	// 2D?v???C???[?R???C?_?[
+	
+	// 2Dプレイヤーの当たり判定ボックスのデバッグ描画
 	PLAYER* player2D = GetPlayer2D();
 	if (player2D)
 	{
 		XMFLOAT3 pC = GetPlayer2DSolidCollider();
 		XMFLOAT3 pH = Player2D_GetSolidHalfSize();
-		DebugDrawOBB_Yaw(pC, pH, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));
+		DebugDrawOBB_Yaw(pC, pH, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));// 緑のOBBで2Dプレイヤーの当たり判定を描画
 	}
 
-	// ?t?B?[???h?g???K?[
+	// フィールドのトリガーの当たり判定ボックスのデバッグ描画
 	std::vector<MAPDATA>& map = GetFieldMap();
 	if (player3D && !map.empty())
 	{
@@ -1367,6 +1364,7 @@ void Collision_DebugDraw()
 		}
 	}
 
+	// シャドウプリズムのデバッグ描画
 	if (!g_ShadowPrisms.empty())
 	{
 		static const ImU32 prismColors[] = {
@@ -1390,6 +1388,7 @@ void Collision_DebugDraw()
 		}
 	}
 
+	// その他のデバッグ用の当たり判定ボックス
 	for (const auto& box : g_ExtraBoxes)
 	{
 		if (box.isOBB)

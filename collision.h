@@ -19,33 +19,33 @@
 //=========================================================================================================
 enum COLLISION_HIT
 {
-	HIT_NONE,
-	HIT_GROUND,
-	HIT_WALL_NegZ,		//-Z
-	HIT_WALL_PlusX,		//+x
-	HIT_WALL_PlusZ,		//+Z
-	HIT_WALL_NegX,		//-X
+    HIT_NONE,
+    HIT_GROUND,
+    HIT_WALL_NegZ,		//-Z
+    HIT_WALL_PlusX,		//+x
+    HIT_WALL_PlusZ,		//+Z
+    HIT_WALL_NegX,		//-X
 
-	HIT_MAX,
+    HIT_MAX,
 };
 
 enum TRIGGER_SIDE//トリガーが当たった面
 {
-	TRIGGER_SIDE_NONE = 0,
-	TRIGGER_SIDE_FRONT,
-	TRIGGER_SIDE_BACK,
-	TRIGGER_SIDE_LEFT,
-	TRIGGER_SIDE_RIGHT,
-	TRIGGER_SIDE_TOP,    
-	TRIGGER_SIDE_BOTTOM, 
+    TRIGGER_SIDE_NONE = 0,
+    TRIGGER_SIDE_FRONT,
+    TRIGGER_SIDE_BACK,
+    TRIGGER_SIDE_LEFT,
+    TRIGGER_SIDE_RIGHT,
+    TRIGGER_SIDE_TOP,    
+    TRIGGER_SIDE_BOTTOM, 
 };
 
 struct TRIGGER_HIT//トリガーヒット情報
 {
-	bool hit = false;
-	size_t mapIndex = 0;// 当たったマップデータのインデックス
-	FIELD type = FIELD_MAX;
-	TRIGGER_SIDE side = TRIGGER_SIDE_NONE;
+    bool hit = false;
+    size_t mapIndex = 0;// 当たったマップデータのインデックス
+    FIELD type = FIELD_MAX;
+    TRIGGER_SIDE side = TRIGGER_SIDE_NONE;
 };
 
 //=========================================================================================================
@@ -62,13 +62,13 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
 
 
 bool Resolve_OBB_OBB_ZY(
-	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
-	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,
-	XMFLOAT3* outPush, XMFLOAT3* outNorm);
+    const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+    const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB,
+    XMFLOAT3* outPush, XMFLOAT3* outNorm);
 
 bool OBB_Intersect_ZY(
-	const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
-	const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB);
+    const XMFLOAT3& posA, const XMFLOAT3& halfA, float rotZRadA,
+    const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB);
 
 
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms);
@@ -82,26 +82,26 @@ void Collision_DebugClearExtraBoxes();
 
 
 void Collision_DebugAddExtraAABB(const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& half,
-	unsigned char r = 255, unsigned char g = 255, unsigned char b = 0, unsigned char a = 255);
+    unsigned char r = 255, unsigned char g = 255, unsigned char b = 0, unsigned char a = 255);
 
 void Collision_DebugAddExtraOBB(const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& half, const DirectX::XMFLOAT3& rotDeg,
-	unsigned char r = 255, unsigned char g = 255, unsigned char b = 0, unsigned char a = 255);
+    unsigned char r = 255, unsigned char g = 255, unsigned char b = 0, unsigned char a = 255);
 
 
 void Collision_DebugDraw();
 
 
-struct ShadowDebugOptions
+struct ShadowDebugOptions//シャドウの当たり判定のデバッグ描画オプション
 {
-	bool drawPrism = true; 
-	bool drawAABB = false; 
-	bool drawNormal = true;   
-	bool drawVertices = false;
+    bool drawPrism = true; 
+    bool drawAABB = false; 
+    bool drawNormal = true;   
+    bool drawVertices = false;
 
-	unsigned int prismColor = 0xFF0000FF; 
-	unsigned int aabbColor = 0x80FFFF00;
-	unsigned int normalColor = 0xFFFFFF00;
-	unsigned int vertexColor = 0xFF00FF00;
+    unsigned int prismColor = 0xFF0000FF; 
+    unsigned int aabbColor = 0x80FFFF00;
+    unsigned int normalColor = 0xFFFFFF00;
+    unsigned int vertexColor = 0xFF00FF00;
 };
 
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options);

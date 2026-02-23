@@ -267,6 +267,7 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="Option.h">
+    <ClInclude Include="SkyBall.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

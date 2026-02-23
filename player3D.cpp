@@ -15,7 +15,7 @@ using namespace mu;
 
 #include "FieldSeesaw.h"
 
-static bool debugMode = TRUE;
+
 
 
 //=========================================================================================================
@@ -93,8 +93,7 @@ void Player3D_Finalize(void)
 //=========================================================================================================
 void Player3D_Update()
 {
-	if (debugMode)
-	{
+	DEBUG_IMGUI_BEGIN({
 		ImGui::Begin("Debug - han");
 		if (ImGui::TreeNode("Player3d.cpp"))
 		{
@@ -105,7 +104,9 @@ void Player3D_Update()
 			ImGui::TreePop();
 		}
 		ImGui::End();
-	}
+
+	});
+
 
 	if (!g_Player3D.Active) return;
 
@@ -416,16 +417,16 @@ void Player3D_Draw(void)
 {
 	if (!g_Player3D.Active) return;
 
-	if (debugMode)
-	{
+	DEBUG_IMGUI_BEGIN({
 		ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("Player3D.cpp"))
-		{
-			ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
-			ImGui::TreePop();
-		}
-		ImGui::End();
-	}
+				if (ImGui::TreeNode("Player3D.cpp"))
+				{
+					ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
+					ImGui::TreePop();
+				}
+				ImGui::End();
+	});
+
 
 	XMMATRIX scale = XMMatrixScaling
 	(

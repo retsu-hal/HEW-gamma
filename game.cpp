@@ -33,11 +33,11 @@ static bool g_OptionMenu = false;
 LIGHTOBJECT g_BallLight;
 static XMFLOAT3 LightPos;
 
-// BGMŠÇ—
-static int g_Bgm3D = -1;  // 3Dƒ‚[ƒh‚ÌBGM
-static int g_Bgm2D = -1;  // 2Dƒ‚[ƒh‚ÌBGM
-static PLAYER_MODE g_PrevMode = MODE_3D;  // ‘OƒtƒŒ[ƒ€‚Ìƒ‚[ƒh
-static const float CROSSFADE_DURATION = 2.0f;  // ƒNƒƒXƒtƒF[ƒhŠÔi•bj
+// BGMç®¡ç†
+static int g_Bgm3D = -1;  // 3Dãƒ¢ãƒ¼ãƒ‰ã®BGM
+static int g_Bgm2D = -1;  // 2Dãƒ¢ãƒ¼ãƒ‰ã®BGM
+static PLAYER_MODE g_PrevMode = MODE_3D;  // å‰ãƒ•ãƒ¬ãƒ¼ãƒ ã®ãƒ¢ãƒ¼ãƒ‰
+static const float CROSSFADE_DURATION = 2.0f;  // ã‚¯ãƒ­ã‚¹ãƒ•ã‚§ãƒ¼ãƒ‰æ™‚é–“ï¼ˆç§’ï¼‰
 
 
 static ID3D11Device* g_pDevice = nullptr;
@@ -124,22 +124,22 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		LoadMapFromFile("asset\\MapData\\stage_select.txt");
 	}
 
-	// BGM‰Šú‰»
-	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3Dƒ‚[ƒh‚ÌBGMƒtƒ@ƒCƒ‹–¼‚ğw’è
-	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2Dƒ‚[ƒh‚ÌBGMƒtƒ@ƒCƒ‹–¼‚ğw’è
+	// BGMåˆæœŸåŒ–
+	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3Dãƒ¢ãƒ¼ãƒ‰ã®BGMãƒ•ã‚¡ã‚¤ãƒ«åã‚’æŒ‡å®š
+	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2Dãƒ¢ãƒ¼ãƒ‰ã®BGMãƒ•ã‚¡ã‚¤ãƒ«åã‚’æŒ‡å®š
 
-	// ‰Šúó‘Ô‚Í3Dƒ‚[ƒh‚È‚Ì‚ÅBGM3D‚ğÄ¶
+	// åˆæœŸçŠ¶æ…‹ã¯3Dãƒ¢ãƒ¼ãƒ‰ãªã®ã§BGM3Dã‚’å†ç”Ÿ
 	if (g_Bgm3D >= 0)
 	{
-		PlayAudio(g_Bgm3D, true);  // ƒ‹[ƒvÄ¶
+		PlayAudio(g_Bgm3D, true);  // ãƒ«ãƒ¼ãƒ—å†ç”Ÿ
 		SetAudioVolume(g_Bgm3D, 1.0f);
 	}
 
-	// 2Dƒ‚[ƒh‚ÌBGM‚Í–³‰¹‚Å‘Ò‹@
+	// 2Dãƒ¢ãƒ¼ãƒ‰ã®BGMã¯ç„¡éŸ³ã§å¾…æ©Ÿ
 	if (g_Bgm2D >= 0)
 	{
-		PlayAudio(g_Bgm2D, true);  // ƒ‹[ƒvÄ¶
-		SetAudioVolume(g_Bgm2D, 0.0f);  // –³‰¹
+		PlayAudio(g_Bgm2D, true);  // ãƒ«ãƒ¼ãƒ—å†ç”Ÿ
+		SetAudioVolume(g_Bgm2D, 0.0f);  // ç„¡éŸ³
 	}
 
 	g_PrevMode = MODE_3D;
@@ -169,7 +169,7 @@ void Game_Finalize()
 	SAFE_RELEASE(g_Goal_2_Texture);
 	SAFE_RELEASE(g_Goal_3_Texture);
 
-	// BGM‰ğ•ú
+	// BGMè§£æ”¾
 	if (g_Bgm3D >= 0)
 	{
 		UnloadAudio(g_Bgm3D);
@@ -199,18 +199,18 @@ void Game_Finalize()
 
 void Game_Update()
 {
-	// BGMXViƒtƒF[ƒhˆ—j
+	// BGMæ›´æ–°ï¼ˆãƒ•ã‚§ãƒ¼ãƒ‰å‡¦ç†ï¼‰
 	UpdateAudio();
 
-	// ƒ‚[ƒhØ‚è‘Ö‚¦ŒŸo‚ÆƒNƒƒXƒtƒF[ƒh
+	// ãƒ¢ãƒ¼ãƒ‰åˆ‡ã‚Šæ›¿ãˆæ¤œå‡ºã¨ã‚¯ãƒ­ã‚¹ãƒ•ã‚§ãƒ¼ãƒ‰
 	PLAYER_MODE currentMode = PlayerModeSwitchManager_GetMode();
 
 	if (currentMode != g_PrevMode)
 	{
-		// ƒ‚[ƒh‚ªØ‚è‘Ö‚í‚Á‚½
+		// ãƒ¢ãƒ¼ãƒ‰ãŒåˆ‡ã‚Šæ›¿ã‚ã£ãŸ
 		if (currentMode == MODE_3D)
 		{
-			// 2D¨3DØ‚è‘Ö‚¦F3D‚ÌBGM‚ğƒtƒF[ƒhƒCƒ“A2D‚ÌBGM‚ğƒtƒF[ƒhƒAƒEƒg
+			// 2Dâ†’3Dåˆ‡ã‚Šæ›¿ãˆï¼š3Dã®BGMã‚’ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã€2Dã®BGMã‚’ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆ
 			if (g_Bgm3D >= 0)
 			{
 				FadeInAudio(g_Bgm3D, CROSSFADE_DURATION, 1.0f);
@@ -222,7 +222,7 @@ void Game_Update()
 		}
 		else if (currentMode == MODE_2D)
 		{
-			// 3D¨2DØ‚è‘Ö‚¦F2D‚ÌBGM‚ğƒtƒF[ƒhƒCƒ“A3D‚ÌBGM‚ğƒtƒF[ƒhƒAƒEƒg
+			// 3Dâ†’2Dåˆ‡ã‚Šæ›¿ãˆï¼š2Dã®BGMã‚’ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã€3Dã®BGMã‚’ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆ
 			if (g_Bgm2D >= 0)
 			{
 				FadeInAudio(g_Bgm2D, CROSSFADE_DURATION, 1.0f);
@@ -243,8 +243,8 @@ void Game_Update()
 	field_Update();
 	SkyDome_Update();
 
+	// ãƒ¢ãƒ¼ãƒ‰åˆ‡ã‚Šæ›¿ãˆã®æ›´æ–°ã¯å¸¸ã«è¡Œã†
 	PlayerModeSwitchManager_Update();
-
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
 		PlayerPushManager_Update();
@@ -286,15 +286,15 @@ void Game_Update()
 
 
 	Collision_SetShadowPrisms(g_ActiveShadowPrisms);
-
+	
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
-	{
+	{// 3Dãƒ¢ãƒ¼ãƒ‰ã®æ›´æ–°
 		Player3D_Update();
 		Player3DCamera_Update();
 
 	}
 	else
-	{
+	{// 2Dãƒ¢ãƒ¼ãƒ‰ã®æ›´æ–°
 		Player2D_Update();
 		Player2DCamera_Update();
 	}
@@ -310,11 +310,6 @@ void Game_Draw()
 	g_BallLight.SetEnable(TRUE);
 	Shader_SetLight(g_BallLight.Light);
 	SetDepthTest(TRUE);
-
-	if (debugMode)
-	{
-
-	}
 
 	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
@@ -389,7 +384,10 @@ void Game_Draw()
 	g_BallLight.SetEnable(FALSE);
 	Shader_SetLight(g_BallLight.Light);
 	
-	Collision_DebugDraw();
+
+	DEBUG_IMGUI_BEGIN({
+		Collision_DebugDraw();
+		});
 
 	
 
