@@ -1,12 +1,9 @@
 //model.cpp
 #define NOMINMAX
 
-//#include "directx.h"
-//#include "texture.h"
 #include "model.h"
 #include "debug_ostream.h"
 
-//#include "renderer.h"
 
 XMMATRIX AiToXM(const aiMatrix4x4& m)
 {
@@ -41,20 +38,7 @@ MODEL* ModelLoad(const char* FileName)
 		return nullptr;
 	}
 
-	hal::dout << "Model loaded successfully." << std::endl;
-	hal::dout << "  Meshes: " << model->AiScene->mNumMeshes << std::endl;
-	hal::dout << "  Animations: " << model->AiScene->mNumAnimations << std::endl;
-	hal::dout << "  Bones total: " << model->BoneMap.size() << std::endl;
-
-
 	XMMATRIX rootTransform = AiToXM(model->AiScene->mRootNode->mTransformation);
-	hal::dout << "Root node transform (before inverse):" << std::endl;
-	XMFLOAT4X4 debugRoot;
-	XMStoreFloat4x4(&debugRoot, rootTransform);
-	hal::dout << debugRoot._11 << " " << debugRoot._12 << " " << debugRoot._13 << " " << debugRoot._14 << std::endl;
-	hal::dout << debugRoot._21 << " " << debugRoot._22 << " " << debugRoot._23 << " " << debugRoot._24 << std::endl;
-	hal::dout << debugRoot._31 << " " << debugRoot._32 << " " << debugRoot._33 << " " << debugRoot._34 << std::endl;
-	hal::dout << debugRoot._41 << " " << debugRoot._42 << " " << debugRoot._43 << " " << debugRoot._44 << std::endl;
 
 	XMVECTOR det;
 	model->GlobalInverse = XMMatrixInverse(&det, rootTransform);
@@ -137,40 +121,6 @@ MODEL* ModelLoad(const char* FileName)
 						}
 					}
 				}
-			}
-
-			for (UINT v = 0; v < mesh->mNumVertices; v++)
-			{
-				float sum =
-					vertex[v].boneWeight[0] +
-					vertex[v].boneWeight[1] +
-					vertex[v].boneWeight[2] +
-					vertex[v].boneWeight[3];
-
-				if (sum > 0.0f)
-				{
-					for (int i = 0; i < 4; i++)
-						vertex[v].boneWeight[i] /= sum;
-				}
-			}
-
-			// Add debug output to check bone weights
-			for (UINT v = 0; v < mesh->mNumVertices && v < 10; v++) // Check first 10 vertices
-			{
-				hal::dout << "Vertex " << v << ": ";
-				hal::dout << "Indices: "
-					<< vertex[v].boneIndex[0] << ", "
-					<< vertex[v].boneIndex[1] << ", "
-					<< vertex[v].boneIndex[2] << ", "
-					<< vertex[v].boneIndex[3] << " | ";
-				hal::dout << "Weights: "
-					<< vertex[v].boneWeight[0] << ", "
-					<< vertex[v].boneWeight[1] << ", "
-					<< vertex[v].boneWeight[2] << ", "
-					<< vertex[v].boneWeight[3]
-					<< " (sum: " << (vertex[v].boneWeight[0] + vertex[v].boneWeight[1] +
-						vertex[v].boneWeight[2] + vertex[v].boneWeight[3]) << ")"
-					<< std::endl;
 			}
 
 			D3D11_BUFFER_DESC bd;
@@ -449,17 +399,6 @@ void ReadNodeHierarchy(
 		//	model->GlobalInverse *
 		//	model->Bones[index].offset *
 		//	globalTransform;
-
-
-		if (index == 0 && animTime == 0.0f) {
-			XMFLOAT4X4 debugBone;
-			XMStoreFloat4x4(&debugBone, model->Bones[index].finalTransform);
-			hal::dout << "First bone final transform:" << std::endl;
-			hal::dout << debugBone._11 << " " << debugBone._12 << " " << debugBone._13 << " " << debugBone._14 << std::endl;
-			hal::dout << debugBone._21 << " " << debugBone._22 << " " << debugBone._23 << " " << debugBone._24 << std::endl;
-			hal::dout << debugBone._31 << " " << debugBone._32 << " " << debugBone._33 << " " << debugBone._34 << std::endl;
-			hal::dout << debugBone._41 << " " << debugBone._42 << " " << debugBone._43 << " " << debugBone._44 << std::endl;
-		}
 	}
 
 	for (UINT i = 0; i < node->mNumChildren; i++)
