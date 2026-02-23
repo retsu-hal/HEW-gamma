@@ -7,14 +7,18 @@
 #include "model.h"
 #include "PlayerStatus.h"
 #include "newKeyBind.h"
+#include "Player2DCapsule.h"
 
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
+
+
 // プレイヤーの当たり判定用の半サイズ
 #define PLAYER2D_SOLID_HALF_X (0.5f)
 #define PLAYER2D_SOLID_HALF_Y (1.0f)
 #define PLAYER2D_SOLID_HALF_Z (0.07f)
+
 
 
 enum PLAYER2D_ANIME// アニメーションの種類
@@ -59,6 +63,8 @@ void Player2D_Respawn();
 
 PLAYER* GetPlayer2D();
 
+
+Capsule2D Player2D_GetCapsule();
 XMFLOAT3 Player2D_GetSolidHalfSize();
 
 

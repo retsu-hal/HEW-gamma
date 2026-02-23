@@ -519,6 +519,282 @@ bool OBB_Intersect_ZY(
 }
 
 
+static XMFLOAT3 ClosestPointOnSegment(const XMFLOAT3& p, const XMFLOAT3& a, const XMFLOAT3& b)
+{
+	XMFLOAT3 ab = { b.x - a.x, b.y - a.y, b.z - a.z };
+	XMFLOAT3 ap = { p.x - a.x, p.y - a.y, p.z - a.z };
+
+	float abLenSq = ab.x * ab.x + ab.y * ab.y + ab.z * ab.z;
+	if (abLenSq < 1e-8f)
+		return a;
+
+	float t = (ap.x * ab.x + ap.y * ab.y + ap.z * ab.z) / abLenSq;
+	t = Clamp(t, 0.0f, 1.0f);
+
+	return XMFLOAT3(
+		a.x + ab.x * t,
+		a.y + ab.y * t,
+		a.z + ab.z * t
+	);
+}
+
+static float ClosestParamOnSegment(const XMFLOAT3& p, const XMFLOAT3& a, const XMFLOAT3& b)
+{
+	XMFLOAT3 ab = b - a;
+	XMFLOAT3 ap = p - a;
+	float abLenSq = Dot(ab, ab);
+	if (abLenSq < 1e-8f) return 0.0f;
+	return Clamp(Dot(ap, ab) / abLenSq, 0.0f, 1.0f);
+}
+
+static XMFLOAT3 ClosestPointOnOBB_Full(
+	const XMFLOAT3& point,
+	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYawDeg)
+{
+	float yawRad = XMConvertToRadians(boxYawDeg);
+	float cy = cosf(yawRad), sy = sinf(yawRad);
+
+	XMFLOAT3 axisX = { cy, 0, sy };
+	XMFLOAT3 axisY = { 0, 1, 0 };
+	XMFLOAT3 axisZ = { -sy, 0, cy };
+
+	XMFLOAT3 d = point - boxC;
+	float projX = Clamp(Dot(d, axisX), -boxH.x, boxH.x);
+	float projY = Clamp(Dot(d, axisY), -boxH.y, boxH.y);
+	float projZ = Clamp(Dot(d, axisZ), -boxH.z, boxH.z);
+
+	return boxC + axisX * projX + axisY * projY + axisZ * projZ;
+}
+
+static float SegmentToOBB_Closest(
+	const XMFLOAT3& segA, const XMFLOAT3& segB,
+	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYawDeg,
+	XMFLOAT3* outSegPoint, XMFLOAT3* outBoxPoint)
+{
+	XMFLOAT3 segDir = segB - segA;
+
+	float t = 0.5f;
+	XMFLOAT3 bestSeg, bestBox;
+	float bestDistSq = FLT_MAX;
+
+	for (int iter = 0; iter < 8; ++iter)
+	{
+		XMFLOAT3 segPt = segA + segDir * t;
+		XMFLOAT3 boxPt = ClosestPointOnOBB_Full(segPt, boxC, boxH, boxYawDeg);
+		float tNew = ClosestParamOnSegment(boxPt, segA, segB);
+		XMFLOAT3 segPtNew = segA + segDir * tNew;
+
+		XMFLOAT3 diff = segPtNew - boxPt;
+		float distSq = Dot(diff, diff);
+
+		if (distSq < bestDistSq)
+		{
+			bestDistSq = distSq;
+			bestSeg = segPtNew;
+			bestBox = boxPt;
+		}
+
+		if (fabsf(tNew - t) < 1e-5f) break;
+		t = tNew;
+	}
+
+	for (int e = 0; e < 2; ++e)
+	{
+		XMFLOAT3 segPt = (e == 0) ? segA : segB;
+		XMFLOAT3 boxPt = ClosestPointOnOBB_Full(segPt, boxC, boxH, boxYawDeg);
+		XMFLOAT3 diff = segPt - boxPt;
+		float distSq = Dot(diff, diff);
+		if (distSq < bestDistSq)
+		{
+			bestDistSq = distSq;
+			bestSeg = segPt;
+			bestBox = boxPt;
+		}
+	}
+
+	if (outSegPoint) *outSegPoint = bestSeg;
+	if (outBoxPoint) *outBoxPoint = bestBox;
+	return sqrtf(bestDistSq);
+}
+
+static XMFLOAT3 GetOBBEscapeNormal(
+	const XMFLOAT3& point,
+	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYawDeg,
+	float* outPenetration)
+{
+	float yawRad = XMConvertToRadians(boxYawDeg);
+	float cy = cosf(yawRad), sy = sinf(yawRad);
+
+	XMFLOAT3 axes[3] = {
+		{ cy, 0, sy },
+		{ 0, 1, 0 },
+		{ -sy, 0, cy }
+	};
+	float halfs[3] = { boxH.x, boxH.y, boxH.z };
+
+	XMFLOAT3 d = point - boxC;
+	float minPen = FLT_MAX;
+	XMFLOAT3 bestNormal = { 0, 1, 0 };
+
+	for (int i = 0; i < 3; ++i)
+	{
+		float proj = Dot(d, axes[i]);
+		float pen = halfs[i] - fabsf(proj);
+		if (pen < minPen)
+		{
+			minPen = pen;
+			bestNormal = axes[i] * ((proj >= 0) ? 1.0f : -1.0f);
+		}
+	}
+
+	if (outPenetration) *outPenetration = minPen;
+	return bestNormal;
+}
+
+static void ClosestPointsOnSegments(
+	const XMFLOAT3& a0, const XMFLOAT3& a1,
+	const XMFLOAT3& b0, const XMFLOAT3& b1,
+	XMFLOAT3& closestA, XMFLOAT3& closestB)
+{
+	XMFLOAT3 d1 = a1 - a0;
+	XMFLOAT3 d2 = b1 - b0;
+	XMFLOAT3 r = a0 - b0;
+
+	float a = Dot(d1, d1);
+	float e = Dot(d2, d2);
+	float f = Dot(d2, r);
+
+	float s, t;
+
+	if (a < 1e-8f && e < 1e-8f)
+	{
+		s = t = 0.0f;
+	}
+	else if (a < 1e-8f)
+	{
+		s = 0.0f;
+		t = Clamp(f / e, 0.0f, 1.0f);
+	}
+	else
+	{
+		float c = Dot(d1, r);
+		if (e < 1e-8f)
+		{
+			t = 0.0f;
+			s = Clamp(-c / a, 0.0f, 1.0f);
+		}
+		else
+		{
+			float b = Dot(d1, d2);
+			float denom = a * e - b * b;
+
+			if (denom != 0.0f)
+				s = Clamp((b * f - c * e) / denom, 0.0f, 1.0f);
+			else
+				s = 0.0f;
+
+			t = (b * s + f) / e;
+
+			if (t < 0.0f)
+			{
+				t = 0.0f;
+				s = Clamp(-c / a, 0.0f, 1.0f);
+			}
+			else if (t > 1.0f)
+			{
+				t = 1.0f;
+				s = Clamp((b - c) / a, 0.0f, 1.0f);
+			}
+		}
+	}
+
+	closestA = a0 + d1 * s;
+	closestB = b0 + d2 * t;
+}
+
+static XMFLOAT3 ClosestPointOnOBB(
+	const XMFLOAT3& point,
+	const XMFLOAT3& boxC, const XMFLOAT3& boxH, float boxYawDeg)
+{
+	float yawRad = XMConvertToRadians(boxYawDeg);
+	float cosY = cosf(yawRad);
+	float sinY = sinf(yawRad);
+
+	XMFLOAT3 d = point - boxC;
+	XMFLOAT3 localP = {
+		d.x * cosY + d.z * sinY,
+		d.y,
+		-d.x * sinY + d.z * cosY
+	};
+
+	XMFLOAT3 clamped = {
+		Clamp(localP.x, -boxH.x, boxH.x),
+		Clamp(localP.y, -boxH.y, boxH.y),
+		Clamp(localP.z, -boxH.z, boxH.z)
+	};
+
+	return XMFLOAT3{
+		boxC.x + clamped.x * cosY - clamped.z * sinY,
+		boxC.y + clamped.y,
+		boxC.z + clamped.x * sinY + clamped.z * cosY
+	};
+}
+
+
+bool Resolve_Capsule2D_OBB(
+	const Capsule2D& capsule,
+	const XMFLOAT3& boxCenter, const XMFLOAT3& boxHalf, float boxYawDeg,
+	XMFLOAT3* outPush, XMFLOAT3* outNormal)
+{
+	if (outPush) *outPush = { 0, 0, 0 };
+	if (outNormal) *outNormal = { 0, 1, 0 };
+
+	XMFLOAT3 capTop = capsule.GetTop();
+	XMFLOAT3 capBottom = capsule.GetBottom();
+
+	XMFLOAT3 boundHalf = capsule.GetBoundingHalfSize();
+	float dx = fabsf(capsule.center.x - boxCenter.x);
+	float dy = fabsf(capsule.center.y - boxCenter.y);
+	float dz = fabsf(capsule.center.z - boxCenter.z);
+	if (dx > boundHalf.x + boxHalf.x + 0.1f ||
+		dy > boundHalf.y + boxHalf.y + 0.1f ||
+		dz > boundHalf.z + boxHalf.z + 0.1f)
+		return false;
+
+	XMFLOAT3 closestSeg, closestBox;
+	float dist = SegmentToOBB_Closest(capTop, capBottom, boxCenter, boxHalf, boxYawDeg,
+		&closestSeg, &closestBox);
+
+	if (dist >= capsule.radius)
+		return false;
+
+	float penetration;
+	XMFLOAT3 normal;
+
+	if (dist > 1e-5f)
+	{
+		normal = Normalize(closestSeg - closestBox);
+		penetration = capsule.radius - dist;
+	}
+	else
+	{
+		normal = GetOBBEscapeNormal(closestSeg, boxCenter, boxHalf, boxYawDeg, &penetration);
+		penetration += capsule.radius;
+	}
+
+	if (outPush) *outPush = normal * penetration;
+	if (outNormal) *outNormal = normal;
+	return true;
+}
+
+bool Capsule2D_Intersect_OBB(
+	const Capsule2D& capsule,
+	const XMFLOAT3& boxCenter, const XMFLOAT3& boxHalf, float boxYawDeg)
+{
+	XMFLOAT3 push, normal;
+	return Resolve_Capsule2D_OBB(capsule, boxCenter, boxHalf, boxYawDeg, &push, &normal);
+}
+
 //=========================================================================================================
 // 3Dプレイヤーの当たり判定
 //=========================================================================================================
@@ -618,70 +894,62 @@ int Player2DField_Collision()
 	if (!player || map.empty()) return hit;
 
 	player->isGround = false;
-	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
+	Capsule2D capsule = Player2D_GetCapsule();
+	const int MAX_ITERATIONS = 4;
 
-	// 2Dプレイヤーの当たり判定用コライダーの中心座標を計算
-	XMFLOAT3 colliderCenter = XMFLOAT3(
-		player->Position.x,
-		player->Position.y + halfSize.y,
-		player->Position.z
-	);
-
-	// 2DプレイヤーのZ回転をラジアンに変換
-	float playerZRot = XMConvertToRadians(player->Rotation.z);
-
-	for (size_t i = 0; i < map.size(); ++i)
+	for (int iter = 0; iter < MAX_ITERATIONS; ++iter)
 	{
-		if (!Field_IsSolid(map[i].no)) continue;
+		bool hitThisIter = false;
 
-		XMFLOAT3 push, norm;
-
-		// 2DプレイヤーのコライダーとフィールドのOBBの当たり判定を行い、衝突している場合は押し出しベクトルと法線を取得
-		if (!Resolve_OBB_OBB_ZY(
-			colliderCenter, halfSize, playerZRot,
-			map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,
-			&push, &norm))
-			continue;
-
-		colliderCenter = XMFLOAT3(
-			colliderCenter.x + push.x,
-			colliderCenter.y + push.y,
-			colliderCenter.z + push.z
-		);
-
-		float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
-
-		if (ay >= ax && ay >= az)
+		for (size_t i = 0; i < map.size(); ++i)
 		{
-			
-			if (norm.y > 0)
+			if (!Field_IsSolid(map[i].no)) continue;
+
+			XMFLOAT3 push, norm;
+
+			if (!Resolve_Capsule2D_OBB(
+				capsule,
+				map[i].pos, Field_GetHalfSize(map[i]), map[i].rotate.y,
+				&push, &norm))
+				continue;
+
+			capsule.center = capsule.center + push;
+			hitThisIter = true;
+
+			float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
+
+			if (ay >= ax && ay >= az)
 			{
-				player->isGround = true;
-				player->Velocity.y = 0;
-				hit = HIT_GROUND;
+				if (norm.y > 0)
+				{
+					player->isGround = true;
+					player->Velocity.y = 0;
+					hit = HIT_GROUND;
+				}
+				else if (player->Velocity.y > 0)
+				{
+					player->Velocity.y = 0;
+				}
 			}
-			else if (player->Velocity.y > 0)
+			else if (ax >= az)
 			{
-				player->Velocity.y = 0;
+				player->Velocity.x = 0;
+				hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
+			}
+			else
+			{
+				player->Velocity.z = 0;
+				hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
 			}
 		}
-		else if (ax >= az)
-		{
-			
-			player->Velocity.x = 0;
-			hit = (norm.x > 0) ? HIT_WALL_PlusX : HIT_WALL_NegX;
-		}
-		else
-		{
-			
-			player->Velocity.z = 0;
-			hit = (norm.z > 0) ? HIT_WALL_PlusZ : HIT_WALL_NegZ;
-		}
+
+		if (!hitThisIter) break;
 	}
 
-	player->Position.x = colliderCenter.x;
-	player->Position.y = colliderCenter.y - halfSize.y;
-	player->Position.z = colliderCenter.z;
+	float totalHeight = PLAYER2D_CAPSULE_HEIGHT + PLAYER2D_CAPSULE_RADIUS * 2.0f;
+	player->Position.x = capsule.center.x;
+	player->Position.y = capsule.center.y - totalHeight * 0.5f;
+	player->Position.z = capsule.center.z;
 
 	return hit;
 }
@@ -750,18 +1018,10 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 	auto& map = GetFieldMap();
 	if (map.empty()) return false;
 
-	XMFLOAT3 pHalf = Player2D_GetSolidHalfSize();
-	pHalf.x += extraRange;
-	pHalf.y += extraRange;
-	pHalf.z += extraRange;
+	Capsule2D capsule = Player2D_GetCapsule();
 
-	XMFLOAT3 pC = XMFLOAT3(
-		p->Position.x,
-		p->Position.y + Player2D_GetSolidHalfSize().y,
-		p->Position.z
-	);
-
-	float pZRot = XMConvertToRadians(p->Rotation.z);
+	Capsule2D expandedCapsule = capsule;
+	expandedCapsule.radius += extraRange;
 
 	bool found = false;
 	float bestD2 = 1e30f;
@@ -772,17 +1032,12 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 		if (!Field_IsTrigger(map[i].no)) continue;
 
 		XMFLOAT3 tHalf = Field_GetHalfSize(map[i]);
-		tHalf.x += extraRange;
-		tHalf.y += extraRange;
-		tHalf.z += extraRange;
 
-		// OBB vs OBB ????????
-		if (!OBB_Intersect_ZY(pC, pHalf, pZRot,
-			map[i].pos, tHalf, map[i].rotate.y))
+		if (!Capsule2D_Intersect_OBB(expandedCapsule, map[i].pos, tHalf, map[i].rotate.y))
 			continue;
 
-		float dx = map[i].pos.x - pC.x;
-		float dy = map[i].pos.y - pC.y;
+		float dx = map[i].pos.x - capsule.center.x;
+		float dy = map[i].pos.y - capsule.center.y;
 		float d2 = dx * dx + dy * dy;
 
 		if (!found || d2 < bestD2)
@@ -792,7 +1047,7 @@ bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange)
 			best.hit = true;
 			best.mapIndex = (int)i;
 			best.type = map[i].no;
-			best.side = CalcTriggerSide2D(pC, p->Rotation.z, map[i].pos);
+			best.side = CalcTriggerSide2D(capsule.center, p->Rotation.z, map[i].pos);
 		}
 	}
 
@@ -845,6 +1100,102 @@ static float ProjectRadiusOnAxis_Yaw(const XMFLOAT3& axis, const XMFLOAT3& half,
 		+ fabsf(Dot(axis, fwd)) * half.z;
 }
 
+static float PointToPolygonEdgeDist2D(
+	const XMFLOAT2& p, const std::vector<XMFLOAT2>& poly,
+	XMFLOAT2* outClosest, XMFLOAT2* outEdgeNormal)
+{
+	float bestDistSq = FLT_MAX;
+	XMFLOAT2 bestClosest = p;
+	XMFLOAT2 bestNormal = { 0, 1 };
+	int n = (int)poly.size();
+
+	for (int i = 0; i < n; ++i)
+	{
+		XMFLOAT2 a = poly[i];
+		XMFLOAT2 b = poly[(i + 1) % n];
+
+		XMFLOAT2 ab = { b.x - a.x, b.y - a.y };
+		XMFLOAT2 ap = { p.x - a.x, p.y - a.y };
+
+		float abLenSq = ab.x * ab.x + ab.y * ab.y;
+		float t = 0.0f;
+		if (abLenSq > 1e-8f)
+			t = Clamp((ap.x * ab.x + ap.y * ab.y) / abLenSq, 0.0f, 1.0f);
+
+		XMFLOAT2 closest = { a.x + ab.x * t, a.y + ab.y * t };
+		float dx = p.x - closest.x;
+		float dy = p.y - closest.y;
+		float distSq = dx * dx + dy * dy;
+
+		if (distSq < bestDistSq)
+		{
+			bestDistSq = distSq;
+			bestClosest = closest;
+
+			float eLen = sqrtf(abLenSq);
+			if (eLen > 1e-6f)
+			{
+				bestNormal = { -ab.y / eLen, ab.x / eLen };
+			}
+		}
+	}
+
+	if (outClosest) *outClosest = bestClosest;
+	if (outEdgeNormal) *outEdgeNormal = bestNormal;
+	return sqrtf(bestDistSq);
+}
+
+static float SignedDistToPolygon2D(
+	const XMFLOAT2& p, const std::vector<XMFLOAT2>& poly,
+	XMFLOAT2* outNormal)
+{
+	int n = (int)poly.size();
+	if (n < 3) return FLT_MAX;
+
+	float maxSignedDist = -FLT_MAX;
+	int closestEdge = 0;
+
+	for (int i = 0; i < n; ++i)
+	{
+		XMFLOAT2 a = poly[i];
+		XMFLOAT2 b = poly[(i + 1) % n];
+		XMFLOAT2 e = { b.x - a.x, b.y - a.y };
+		float eLen = sqrtf(e.x * e.x + e.y * e.y);
+		if (eLen < 1e-6f) continue;
+
+		XMFLOAT2 nIn = { -e.y / eLen, e.x / eLen };
+		XMFLOAT2 ap = { p.x - a.x, p.y - a.y };
+		float dist = ap.x * nIn.x + ap.y * nIn.y;
+
+		if (-dist > maxSignedDist)
+		{
+			maxSignedDist = -dist;
+			closestEdge = i;
+		}
+	}
+
+	XMFLOAT2 a = poly[closestEdge];
+	XMFLOAT2 b = poly[(closestEdge + 1) % n];
+	XMFLOAT2 e = { b.x - a.x, b.y - a.y };
+	float eLen = sqrtf(e.x * e.x + e.y * e.y);
+	if (eLen > 1e-6f && outNormal)
+	{
+		*outNormal = { -e.y / eLen, e.x / eLen };
+	}
+
+	if (maxSignedDist <= 0.0f)
+	{
+		XMFLOAT2 dummy;
+		float dist = PointToPolygonEdgeDist2D(p, poly, &dummy, outNormal);
+		return -dist;
+	}
+	else
+	{
+		XMFLOAT2 dummy;
+		return PointToPolygonEdgeDist2D(p, poly, &dummy, outNormal);
+	}
+}
+
 // 2Dプレイヤーとシャドウの当たり判定
 bool Player2DShadow_Collision()
 {
@@ -854,85 +1205,34 @@ bool Player2DShadow_Collision()
 	const std::vector<const ShadowPrism*>& prisms = Collision_GetShadowPrisms();
 	if (prisms.empty()) return false;
 
-	const XMFLOAT3 half = Player2D_GetSolidHalfSize();
+	Capsule2D capsule = Player2D_GetCapsule();
 
 	const float skin = 0.01f;
 	const float eps = 1e-6f;
-	const float hitEps = 1e-4f;
 
 	XMFLOAT3 dXZ = { player->Velocity.x, 0.0f, player->Velocity.z };
-
 	bool hitAny = false;
 
-	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float
-		{
-			float a = 0.0f;
-			const int n = (int)p.size();
-			for (int i = 0, j = n - 1; i < n; j = i++)
-				a += p[j].x * p[i].y - p[i].x * p[j].y;
-			return a;
+	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float {
+		float a = 0.0f;
+		int n = (int)p.size();
+		for (int i = 0, j = n - 1; i < n; j = i++)
+			a += p[j].x * p[i].y - p[i].x * p[j].y;
+		return a;
 		};
-
-	auto Dot2 = [](const XMFLOAT2& a, const XMFLOAT2& b) -> float { return a.x * b.x + a.y * b.y; };
+	auto Dot2 = [](const XMFLOAT2& a, const XMFLOAT2& b) { return a.x * b.x + a.y * b.y; };
 	auto Sub2 = [](const XMFLOAT2& a, const XMFLOAT2& b) -> XMFLOAT2 { return { a.x - b.x, a.y - b.y }; };
-	auto Len2 = [](const XMFLOAT2& v) -> float { return sqrtf(v.x * v.x + v.y * v.y); };
+	auto Len2 = [](const XMFLOAT2& v) { return sqrtf(v.x * v.x + v.y * v.y); };
 
-	auto SweepEnterExpanded = [&](const ShadowPrism* prism,
-		const std::vector<XMFLOAT2>& polyCCW,
-		const XMFLOAT2& p0,
-		const XMFLOAT2& dp,
-		float yawDeg,
-		float* outEnterT) -> bool
-		{
-			const int n = (int)polyCCW.size();
-			float tEnter = 0.0f;
-			float tExit = 1.0f;
-
-			for (int i = 0; i < n; ++i)
-			{
-				const XMFLOAT2 a = polyCCW[i];
-				const XMFLOAT2 b = polyCCW[(i + 1) % n];
-				const XMFLOAT2 e = { b.x - a.x, b.y - a.y };
-
-				XMFLOAT2 nIn = { -e.y, e.x };
-				float nl = Len2(nIn);
-				if (nl < 1e-6f) continue;
-				nIn.x /= nl; nIn.y /= nl;
-
-				const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
-				const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, yawDeg) + skin;
-
-				const float s0 = Dot2(nIn, Sub2(p0, a));
-				const float sv = Dot2(nIn, dp);
-
-				if (fabsf(sv) < 1e-6f)
-				{
-					if (s0 < -rEdge) return false;
-					continue;
-				}
-
-				const float t = (-rEdge - s0) / sv;
-
-				if (sv > 0.0f)
-				{
-					if (t > tEnter) tEnter = t;
-				}
-				else
-				{
-					if (t < tExit) tExit = t;
-				}
-
-				if (tEnter > tExit) return false;
-			}
-
-			if (outEnterT) *outEnterT = tEnter;
-			return true;
+	auto CapsuleProjection = [&](const XMFLOAT3& axis) -> float {
+		XMFLOAT3 capAxis = {
+			-sinf(capsule.rotationZ),
+			cosf(capsule.rotationZ),
+			0.0f
+		};
+		return capsule.radius + fabsf(Dot(axis, capAxis)) * capsule.halfHeight;
 		};
 
-	auto GetCenter = [&]() -> XMFLOAT3
-		{
-			return { player->Position.x, player->Position.y + half.y, player->Position.z };
-		};
 
 	for (const ShadowPrism* prism : prisms)
 	{
@@ -940,42 +1240,42 @@ bool Player2DShadow_Collision()
 		if (prism->poly.size() < 3) continue;
 
 		const float moveLen = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
-		const float gate = half.x + half.z + moveLen + 0.10f;
-		const XMFLOAT3 cW0 = GetCenter();
-		if (cW0.x < prism->aabbMin.x - gate || cW0.x > prism->aabbMax.x + gate ||
-			cW0.z < prism->aabbMin.z - gate || cW0.z > prism->aabbMax.z + gate)
-		{
+		const float gate = capsule.radius + capsule.halfHeight + moveLen + 0.3f;
+
+		if (capsule.center.x < prism->aabbMin.x - gate || capsule.center.x > prism->aabbMax.x + gate ||
+			capsule.center.z < prism->aabbMin.z - gate || capsule.center.z > prism->aabbMax.z + gate)
 			continue;
-		}
 
 		std::vector<XMFLOAT2> poly = prism->poly;
 		if (Area2(poly) < 0.0f)
 			std::reverse(poly.begin(), poly.end());
 
-		const XMFLOAT3 cW = GetCenter();
-		const XMFLOAT3 rel = cW - prism->origin;
+		const XMFLOAT3 rel = capsule.center - prism->origin;
 		const float u0 = Dot(rel, prism->u);
 		const float v0 = Dot(rel, prism->v);
 		const float n0 = Dot(rel, prism->n);
 		const XMFLOAT2 p0 = { u0, v0 };
 
-		const float rN = ProjectRadiusOnAxis_Yaw(prism->n, half, player->Rotation.y);
+		const float rN = CapsuleProjection(prism->n);
 		const bool overlapN = (n0 >= -rN) && (n0 <= prism->thickness + rN);
 
 		if (prism->n.y > 0.7f)
 		{
-			const bool insideFoot = PointInPolygon2D(p0.x, p0.y, poly);
-
+			const bool insidePoly = PointInPolygon2D(p0.x, p0.y, poly);
 			const float bottomN = n0 - rN;
 
-			if (insideFoot && player->Velocity.y <= 0.0f)
+			if (insidePoly && player->Velocity.y <= 0.0f)
 			{
 				const float targetBottomN = prism->thickness;
 				const float distToTop = bottomN - targetBottomN;
 
-				if (distToTop <= 0.05f && distToTop >= -0.25f)
+				if (distToTop <= 0.10f && distToTop >= -0.35f)
 				{
-					player->Position = player->Position - prism->n * distToTop;
+					float snapStrength = 1.0f;
+					if (distToTop > 0.0f)
+						snapStrength = Clamp(1.0f - distToTop / 0.10f, 0.2f, 1.0f);
+
+					player->Position = player->Position - prism->n * (distToTop * snapStrength);
 
 					const float vN = Dot(player->Velocity, prism->n);
 					if (vN < 0.0f)
@@ -1013,32 +1313,15 @@ bool Player2DShadow_Collision()
 			nIn.x /= nl; nIn.y /= nl;
 
 			const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
-			const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, player->Rotation.y) + skin;
+			const float rEdge = CapsuleProjection(axisW) + skin;
 
 			const float s0 = Dot2(nIn, Sub2(p0, a));
 			if (s0 < -rEdge) { insideExp0 = false; break; }
 		}
 
-		if (!insideExp0)
+		if (insideExp0)
 		{
-			float tEnter = 0.0f;
-			if (SweepEnterExpanded(prism, poly, p0, dp, player->Rotation.y, &tEnter))
-			{
-				if (tEnter <= 1.0f && tEnter >= 0.0f)
-				{
-					if (tEnter < 1.0f)
-					{
-						const float tStop = (std::max)(0.0f, (std::min)(1.0f, tEnter - hitEps));
-						dXZ.x *= tStop;
-						dXZ.z *= tStop;
-						hitAny = true;
-					}
-				}
-			}
-		}
-		else
-		{
-			for (int pass = 0; pass < 2; ++pass)
+			for (int pass = 0; pass < 3; ++pass)
 			{
 				XMFLOAT2 dpNow = { DotXZ(dXZ, prism->u), DotXZ(dXZ, prism->v) };
 				if (fabsf(dpNow.x) + fabsf(dpNow.y) < 1e-7f) break;
@@ -1056,12 +1339,12 @@ bool Player2DShadow_Collision()
 					nIn.x /= nl; nIn.y /= nl;
 
 					const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
-					const float rEdge = ProjectRadiusOnAxis_Yaw(axisW, half, player->Rotation.y) + skin;
+					const float rEdge = CapsuleProjection(axisW) + skin;
 
 					const float s0 = Dot2(nIn, Sub2(p0, a));
 					const float slack = s0 + rEdge;
 
-					if (slack > 0.03f) continue;
+					if (slack > 0.05f) continue;
 
 					const float vIn = Dot2(nIn, dpNow);
 					if (vIn <= 0.0f) continue;
@@ -1073,13 +1356,71 @@ bool Player2DShadow_Collision()
 					const float proj = (dXZ.x * axisXZ.x + dXZ.z * axisXZ.z) / len2xz;
 					if (proj > 0.0f)
 					{
-						dXZ.x -= axisXZ.x * proj;
-						dXZ.z -= axisXZ.z * proj;
+						float clipAmount = proj;
+						if (slack > 0.0f)
+						{
+							float blend = 1.0f - (slack / 0.05f);
+							clipAmount *= Clamp(blend, 0.0f, 1.0f);
+						}
+
+						dXZ.x -= axisXZ.x * clipAmount;
+						dXZ.z -= axisXZ.z * clipAmount;
 						changed = true;
 						hitAny = true;
 					}
 				}
 				if (!changed) break;
+			}
+		}
+		else
+		{
+			float tEnter = 0.0f;
+			float tExit = 1.0f;
+			bool canEnter = true;
+
+			for (int i = 0; i < (int)poly.size(); ++i)
+			{
+				const XMFLOAT2 a = poly[i];
+				const XMFLOAT2 b = poly[(i + 1) % (int)poly.size()];
+				const XMFLOAT2 e = { b.x - a.x, b.y - a.y };
+
+				XMFLOAT2 nIn = { -e.y, e.x };
+				float nl = Len2(nIn);
+				if (nl < 1e-6f) continue;
+				nIn.x /= nl; nIn.y /= nl;
+
+				const XMFLOAT3 axisW = prism->u * nIn.x + prism->v * nIn.y;
+				const float rEdge = CapsuleProjection(axisW) + skin;
+
+				const float s0 = Dot2(nIn, Sub2(p0, a));
+				const float sv = Dot2(nIn, dp);
+
+				if (fabsf(sv) < 1e-6f)
+				{
+					if (s0 < -rEdge) { canEnter = false; break; }
+					continue;
+				}
+
+				float t = (-rEdge - s0) / sv;
+
+				if (sv > 0.0f)
+				{
+					if (t > tEnter) tEnter = t;
+				}
+				else
+				{
+					if (t < tExit) tExit = t;
+				}
+
+				if (tEnter > tExit) { canEnter = false; break; }
+			}
+
+			if (canEnter && tEnter >= 0.0f && tEnter <= 1.0f)
+			{
+				const float tStop = (std::max)(0.0f, tEnter - 1e-4f);
+				dXZ.x *= tStop;
+				dXZ.z *= tStop;
+				hitAny = true;
 			}
 		}
 	}
@@ -1099,27 +1440,32 @@ bool Player2DShadow_TopContact()
 	const std::vector<const ShadowPrism*>& prisms = Collision_GetShadowPrisms();
 	if (prisms.empty()) return false;
 
-	XMFLOAT3 halfSize = Player2D_GetSolidHalfSize();
+	Capsule2D capsule = Player2D_GetCapsule();
+	XMFLOAT3 capBottom = capsule.GetBottom();
+	float footY = capBottom.y - capsule.radius;
 
 	bool hitAny = false;
 	const int maxIterations = 4;
-
 	int currentStandingPrism = -1;
 	float bestContactDist = FLT_MAX;
 
 	const float kJumpEscapeVelocity = 0.01f;
 	bool isRising = (player->Velocity.y > kJumpEscapeVelocity);
 
+	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float {
+		float a = 0.0f;
+		int n = (int)p.size();
+		for (int i = 0, j = n - 1; i < n; j = i++)
+			a += p[j].x * p[i].y - p[i].x * p[j].y;
+		return a;
+		};
+
 	for (int iter = 0; iter < maxIterations; iter++)
 	{
 		bool hitThisIter = false;
-		float footY = player->Position.y;
-
-		XMFLOAT3 playerCenter = XMFLOAT3(
-			player->Position.x,
-			player->Position.y + halfSize.y,
-			player->Position.z
-		);
+		capsule = Player2D_GetCapsule();
+		capBottom = capsule.GetBottom();
+		footY = capBottom.y - capsule.radius;
 
 		for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
 		{
@@ -1127,92 +1473,107 @@ bool Player2DShadow_TopContact()
 			if (!prism || !prism->isValid) continue;
 			if (prism->poly.size() < 3) continue;
 
-			float verticalMargin = halfSize.y + 0.5f;
+			float verticalMargin = capsule.GetTotalHeight() + 0.5f;
 			if (footY > prism->aabbMax.y + verticalMargin ||
-				footY + halfSize.y * 2.0f < prism->aabbMin.y - verticalMargin)
-			{
+				footY + capsule.GetTotalHeight() < prism->aabbMin.y - verticalMargin)
 				continue;
-			}
+
+			float horizontalMargin = capsule.radius + capsule.halfHeight + 0.2f;
+			if (capsule.center.x < prism->aabbMin.x - horizontalMargin ||
+				capsule.center.x > prism->aabbMax.x + horizontalMargin ||
+				capsule.center.z < prism->aabbMin.z - capsule.halfZ - 0.2f ||
+				capsule.center.z > prism->aabbMax.z + capsule.halfZ + 0.2f)
+				continue;
+
+			std::vector<XMFLOAT2> poly = prism->poly;
+			if (Area2(poly) < 0.0f)
+				std::reverse(poly.begin(), poly.end());
+
+			XMFLOAT3 rel = capsule.center - prism->origin;
+			float u0 = Dot(rel, prism->u);
+			float v0 = Dot(rel, prism->v);
+			float n0 = Dot(rel, prism->n);
+			XMFLOAT2 p2d = { u0, v0 };
 
 			float shadowTopY = prism->aabbMax.y;
 
-			float horizontalMargin = halfSize.x + 0.15f;
-			bool inXZRange = (playerCenter.x >= prism->aabbMin.x - horizontalMargin &&
-				playerCenter.x <= prism->aabbMax.x + horizontalMargin &&
-				playerCenter.z >= prism->aabbMin.z - halfSize.z &&
-				playerCenter.z <= prism->aabbMax.z + halfSize.z);
+			bool insidePoly = PointInPolygon2D(p2d.x, p2d.y, poly);
 
-			if (!inXZRange) continue;
-
-			float footToShadowTop = footY - shadowTopY;
-
-			float contactToleranceDown = -halfSize.y - 0.3f;
-			float contactToleranceUp = 0.25f;
-
-			if (footToShadowTop >= contactToleranceDown && footToShadowTop <= contactToleranceUp)
+			if (insidePoly)
 			{
-				if (player->Velocity.y <= 0.05f && !isRising)
+				float footToShadowTop = footY - shadowTopY;
+
+				float contactDown = -capsule.radius - 0.40f;
+				float contactUp = 0.35f;
+
+				if (footToShadowTop >= contactDown && footToShadowTop <= contactUp)
 				{
-					float targetY = shadowTopY;
-					float currentY = player->Position.y;
-					float deltaY = targetY - currentY;
-
-					const float maxAdjustPerFrame = 0.15f;
-					if (fabsf(deltaY) > maxAdjustPerFrame)
+					if (player->Velocity.y <= 0.05f && !isRising)
 					{
-						deltaY = (deltaY > 0) ? maxAdjustPerFrame : -maxAdjustPerFrame;
+						float targetY = shadowTopY;
+						float deltaY = targetY - footY;
+
+						float absDelta = fabsf(deltaY);
+						float maxAdj;
+						if (absDelta < 0.01f)
+							maxAdj = absDelta; 
+						else if (absDelta < 0.05f)
+							maxAdj = 0.03f;
+						else if (absDelta < 0.15f)
+							maxAdj = 0.08f;
+						else
+							maxAdj = 0.15f;
+
+						if (absDelta > maxAdj)
+							deltaY = (deltaY > 0) ? maxAdj : -maxAdj;
+
+						player->Position.y += deltaY;
+						player->Velocity.y = 0.0f;
+						player->isGround = true;
+
+						float dist = fabsf(footToShadowTop);
+						if (dist < bestContactDist)
+						{
+							bestContactDist = dist;
+							currentStandingPrism = prismIdx;
+						}
+
+						hitThisIter = true;
+						hitAny = true;
+						continue;
 					}
-
-					player->Position.y += deltaY;
-					player->Velocity.y = 0.0f;
-					player->isGround = true;
-
-					float dist = fabsf(footToShadowTop);
-					if (dist < bestContactDist)
-					{
-						bestContactDist = dist;
-						currentStandingPrism = prismIdx;
-					}
-
-					hitThisIter = true;
-					hitAny = true;
-					continue;
 				}
 			}
 
 			if (isRising) continue;
 
-			XMFLOAT3 rel = playerCenter - prism->origin;
-			float localV = Dot(rel, prism->v);
+			float capAxisProj = fabsf(Dot({ -sinf(capsule.rotationZ), cosf(capsule.rotationZ), 0 }, prism->v));
+			float playerRadiusV = capsule.radius + capsule.halfHeight * capAxisProj;
 
-			float minV = FLT_MAX, maxV = -FLT_MAX;
+			float minV = FLT_MAX;
 			for (const auto& p : prism->poly)
-			{
 				minV = (std::min)(minV, p.y);
-				maxV = (std::max)(maxV, p.y);
-			}
 
-			float playerRadiusV = halfSize.y;
+			float localV = Dot(rel, prism->v);
 			float penV_neg = localV - (minV - playerRadiusV);
 
 			if (penV_neg <= 0.001f) continue;
 
+			XMFLOAT2 edgeNormal;
+			float signedDist = SignedDistToPolygon2D(p2d, poly, &edgeNormal);
+			if (signedDist > capsule.radius + 0.1f) continue; 
+
 			float targetLocalV = minV - playerRadiusV;
 			float deltaV = targetLocalV - localV;
-
 			float pushAmount = prism->v.y * deltaV;
+
 			const float maxPush = 0.1f;
 			if (fabsf(pushAmount) > maxPush)
-			{
 				pushAmount = (pushAmount > 0) ? maxPush : -maxPush;
-			}
 
 			player->Position.y += pushAmount;
-
 			if (player->Velocity.y > 0)
-			{
 				player->Velocity.y = 0.0f;
-			}
 
 			hitThisIter = true;
 			hitAny = true;
@@ -1221,7 +1582,7 @@ bool Player2DShadow_TopContact()
 		if (!hitThisIter) break;
 	}
 
-	const int GRACE_FRAME_COUNT = 5;
+	const int GRACE_FRAME_COUNT = 6;
 
 	if (s_LastStandingPrismIndex >= 0 && !hitAny)
 	{
@@ -1271,6 +1632,91 @@ bool Player2DShadow_TopContact()
 	}
 
 	return hitAny;
+}
+
+static void DebugDrawCapsule2D(const Capsule2D& capsule, ImU32 col, int segments = 20)
+{
+	XMFLOAT3 top = capsule.GetTop();
+	XMFLOAT3 bottom = capsule.GetBottom();
+
+	XMFLOAT3 axis = top - bottom;
+	float axisLen = Length(axis);
+	if (axisLen < 1e-6f)
+	{
+		DrawPoint3D(capsule.center, col, capsule.radius * 10.0f);
+		return;
+	}
+	XMFLOAT3 axisDir = axis * (1.0f / axisLen);
+
+	float cosZ = cosf(capsule.rotationZ);
+	float sinZ = sinf(capsule.rotationZ);
+
+	XMFLOAT3 right = { cosZ, sinZ, 0.0f };
+	XMFLOAT3 forward = { 0.0f, 0.0f, 1.0f };
+
+	const float PI = 3.14159265358979f;
+
+	XMFLOAT3 topL = top - right * capsule.radius;
+	XMFLOAT3 topR = top + right * capsule.radius;
+	XMFLOAT3 botL = bottom - right * capsule.radius;
+	XMFLOAT3 botR = bottom + right * capsule.radius;
+	DrawLine3D(topL, botL, col, 2.0f);
+	DrawLine3D(topR, botR, col, 2.0f);
+
+	{
+		XMFLOAT3 prev = topR;
+		for (int i = 1; i <= segments; ++i)
+		{
+			float angle = PI * (float)i / (float)segments;
+			float c = cosf(angle);
+			float s = sinf(angle);
+			XMFLOAT3 p = top + right * (c * capsule.radius) + axisDir * (s * capsule.radius);
+			DrawLine3D(prev, p, col, 2.0f);
+			prev = p;
+		}
+	}
+
+	{
+		XMFLOAT3 prev = botL;
+		for (int i = 1; i <= segments; ++i)
+		{
+			float angle = PI * (float)i / (float)segments;
+			float c = cosf(angle);
+			float s = sinf(angle);
+			XMFLOAT3 p = bottom - right * (c * capsule.radius) - axisDir * (s * capsule.radius);
+			DrawLine3D(prev, p, col, 2.0f);
+			prev = p;
+		}
+	}
+
+	auto drawZRing = [&](const XMFLOAT3& center, float r, ImU32 c2) {
+		const float PI2 = PI * 2.0f;
+		XMFLOAT3 prev;
+		for (int i = 0; i <= segments; ++i)
+		{
+			float a = PI2 * (float)i / (float)segments;
+			XMFLOAT3 p = center + right * (cosf(a) * r) + forward * (sinf(a) * r);
+			if (i > 0) DrawLine3D(prev, p, c2, 1.0f);
+			prev = p;
+		}
+		};
+
+	ImU32 colFaded = (col & 0x00FFFFFF) | 0x80000000;
+	drawZRing(top, capsule.radius, colFaded);
+	drawZRing(bottom, capsule.radius, colFaded);
+	drawZRing(capsule.center, capsule.radius, colFaded);
+
+	XMFLOAT3 topF = top + forward * capsule.radius;
+	XMFLOAT3 topB = top - forward * capsule.radius;
+	XMFLOAT3 botF = bottom + forward * capsule.radius;
+	XMFLOAT3 botB = bottom - forward * capsule.radius;
+	DrawLine3D(topF, botF, colFaded, 1.0f);
+	DrawLine3D(topB, botB, colFaded, 1.0f);
+
+	DrawLine3D(top, bottom, col, 1.0f);
+	DrawPoint3D(capsule.center, col, 3.0f);
+	DrawPoint3D(top, col, 2.0f);
+	DrawPoint3D(bottom, col, 2.0f);
 }
 
 // シャドウプリズムのデバッグ描画関数
@@ -1337,11 +1783,10 @@ void Collision_DebugDraw()
 	
 	// 2Dプレイヤーの当たり判定ボックスのデバッグ描画
 	PLAYER* player2D = GetPlayer2D();
-	if (player2D)
+	if (player2D && player2D->Active)
 	{
-		XMFLOAT3 pC = GetPlayer2DSolidCollider();
-		XMFLOAT3 pH = Player2D_GetSolidHalfSize();
-		DebugDrawOBB_Yaw(pC, pH, player2D->Rotation.y, IM_COL32(0, 255, 0, 255));// 緑のOBBで2Dプレイヤーの当たり判定を描画
+		Capsule2D capsule = Player2D_GetCapsule();
+		DebugDrawCapsule2D(capsule, IM_COL32(0, 255, 0, 255));
 	}
 
 	// フィールドのトリガーの当たり判定ボックスのデバッグ描画

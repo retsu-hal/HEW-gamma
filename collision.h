@@ -9,6 +9,7 @@
 #include"field.h"
 #include"player3D.h"
 #include "ShadowColliderBox.h"
+#include "Player2DCapsule.h"
 //=========================================================================================================
 // マクロ定義
 //=========================================================================================================
@@ -54,8 +55,8 @@ struct TRIGGER_HIT//トリガーヒット情報
 void Collision_ResetShadowContactState();
 
 int Player3DField_Collision();
-
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
+
 
 int Player2DField_Collision();
 bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
@@ -71,19 +72,27 @@ bool OBB_Intersect_ZY(
     const XMFLOAT3& posB, const XMFLOAT3& halfB, float rotYDegB);
 
 
+bool Resolve_Capsule2D_OBB(
+    const Capsule2D& capsule,
+    const XMFLOAT3& boxCenter, const XMFLOAT3& boxHalf, float boxYawDeg,
+    XMFLOAT3* outPush, XMFLOAT3* outNormal);
+
+bool Capsule2D_Intersect_OBB(
+    const Capsule2D& capsule,
+    const XMFLOAT3& boxCenter, const XMFLOAT3& boxHalf, float boxYawDeg);
+
+
 void Collision_SetShadowPrisms(const std::vector<const ShadowPrism*>& prisms);
 const std::vector<const ShadowPrism*>& Collision_GetShadowPrisms();
-
-
 void Collision_SetShadowPrism(const ShadowPrism* prism);
 const ShadowPrism* Collision_GetShadowPrism();
 
+bool Player2DShadow_Collision();
+bool Player2DShadow_TopContact();
+
 void Collision_DebugClearExtraBoxes();
-
-
 void Collision_DebugAddExtraAABB(const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& half,
     unsigned char r = 255, unsigned char g = 255, unsigned char b = 0, unsigned char a = 255);
-
 void Collision_DebugAddExtraOBB(const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& half, const DirectX::XMFLOAT3& rotDeg,
     unsigned char r = 255, unsigned char g = 255, unsigned char b = 0, unsigned char a = 255);
 
@@ -106,9 +115,17 @@ struct ShadowDebugOptions//シャドウの当たり判定のデバッグ描画オプション
 
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options);
 
-bool Player2DShadow_Collision();
-bool Player2DShadow_TopContact();
 
+
+
+struct OptionRect
+{
+	float x, y, width, height;
+	bool contains(float mousex, float mousey)const
+	{
+		return mousex >= x && mousex <= x + width && mousey >= y && mousey <= y + height;
+	}
+};
 
 
 

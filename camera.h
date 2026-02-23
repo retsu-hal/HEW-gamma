@@ -9,21 +9,21 @@ using namespace DirectX;
 class CAMERA
 {
 public:
-	XMFLOAT3 Position;			// ƒJƒƒ‰‚ÌˆÊ’u
-	XMFLOAT3 AtPosition;		// ƒJƒƒ‰‚Ì’‹“_
-	XMFLOAT3 UpVector;		// ƒJƒƒ‰‚Ìã•ûŒüƒxƒNƒgƒ‹	
+	XMFLOAT3 Position;			// ã‚«ãƒ¡ãƒ©ã®ä½ç½®
+	XMFLOAT3 AtPosition;		// ã‚«ãƒ¡ãƒ©ã®æ³¨è¦–ç‚¹
+	XMFLOAT3 UpVector;		// ã‚«ãƒ¡ãƒ©ã®ä¸Šæ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«	
 	
-	XMMATRIX View;				//ƒrƒ…[s—ñ
-	XMMATRIX Projection;		//ƒvƒƒWƒFƒbƒNƒVƒ‡ƒ“s—ñ	
+	XMMATRIX View;				//ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—
+	XMMATRIX Projection;		//ãƒ—ãƒ­ã‚¸ã‚§ãƒƒã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—	
 
-	float Fov;							//‹–ìŠp
-	float Aspect;						//ƒAƒXƒyƒNƒg”ä
-	float NearClip;					//‹ß–ÊƒNƒŠƒbƒv
-	float FarClip;						//‰“–ÊƒNƒŠƒbƒv
+	float Fov;							//è¦–é‡è§’
+	float Aspect;						//ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
+	float NearClip;					//è¿‘é¢ã‚¯ãƒªãƒƒãƒ—
+	float FarClip;						//é é¢ã‚¯ãƒªãƒƒãƒ—
 };
 
 //=========================================================================================================
-// ƒvƒƒgƒ^ƒCƒvéŒ¾
+// ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€
 //=========================================================================================================
 void Camera_Initialize();
 void Camera_Finalize();
@@ -45,3 +45,9 @@ XMFLOAT3 GetCameraPosition();
 void Camera_Reset2DState();
 
 void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3& outCamPos);
+
+void Player2DCamera_DebugUpdate();
+// æ—¢å­˜å®£è¨€ã®æœ«å°¾ä»˜è¿‘ã«è¿½è¨˜
+void SetCameraMouseSensitivity(float yaw, float pitch);
+float GetMouseSensYaw();
+float GetMouseSensPitch();
