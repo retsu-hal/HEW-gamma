@@ -110,6 +110,15 @@ bool Player2DShadow_Collision();
 bool Player2DShadow_TopContact();
 
 
+struct OptionRect
+{
+	float x, y, width, height;
+	bool contains(float mousex, float mousey)const
+	{
+		return mousex >= x && mousex <= x + width && mousey >= y && mousey <= y + height;
+	}
+};
+
 
 
 

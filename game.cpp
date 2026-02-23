@@ -27,6 +27,7 @@
 
 
 static bool debugMode;
+static bool g_OptionMenu = false;
 
 //static	int	g_BgmID = NULL;
 LIGHTOBJECT g_BallLight;
@@ -52,6 +53,8 @@ static std::vector<const ShadowPrism*> g_ActiveShadowPrisms;
 
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
+	
+
 	g_pDevice = pDevice;
 	g_pContext = pContext;
 
@@ -196,7 +199,6 @@ void Game_Finalize()
 
 void Game_Update()
 {
-
 	// BGM更新（フェード処理）
 	UpdateAudio();
 
@@ -423,6 +425,5 @@ void Game_Draw()
 	
 
 	SetDepthTest(FALSE);
-
 }
 

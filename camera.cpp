@@ -45,6 +45,10 @@ static const float kCam2D_FollowLerp = 0.12f;
 static bool  g_Cam2D_Initialized = false;
 static float g_Cam2D_YawDeg = 0.0f;
 
+// ファイル先頭付近の既存のカメラ関連のstatic変数定義の近くに追記
+static float g_MouseSensYaw = 1.0f;
+static float g_MouseSensPitch = 1.0f;
+
 static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
 {// 3Dベクトルの線形補間
 	return {
@@ -93,7 +97,7 @@ void Player3DCamera_Update()
 	Mouse_State ms{};
 	Mouse_GetState(&ms);
 
-	static bool relativeMode = true;
+	/*static bool relativeMode = true;
 	bool suppressDelta = false;
 	{
 		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
@@ -101,12 +105,13 @@ void Player3DCamera_Update()
 			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
 				: MOUSE_POSITION_MODE_ABSOLUTE);
 		}
-	}
+	}*/
 
+	
 	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
 	{
-		const float sensYaw = 1.0f;
-		const float sensPitch = 1.0f;
+		const float sensYaw = 1.0f * g_MouseSensYaw;
+		const float sensPitch = 1.0f * g_MouseSensPitch;
 		gYawDeg += ms.x * sensYaw;
 		gPitchDeg -= ms.y * sensPitch;
 
@@ -180,12 +185,12 @@ void Player2DCamera_Update()
 
 void Title_Camera_Update()
 {
-	static bool relativeMode = true;
+	/*static bool relativeMode = true;
 	if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
 			relativeMode = !relativeMode;
 			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
 				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}
+		}*/
 
 	//XMFLOAT3 playerPos = GetPlayer3DPosition();
 
@@ -224,6 +229,8 @@ void Camera_Draw()
 			ImGui::Text("PosX: %.2f", CameraObject.Position.x);
 			ImGui::Text("PosY: %.2f", CameraObject.Position.y);
 			ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
+			ImGui::Text("Pitch: %.2f", g_MouseSensPitch);
+			ImGui::Text("Yaw: %.2f", g_MouseSensYaw);
 			ImGui::TreePop();
 		}
 		ImGui::End();
@@ -331,3 +338,20 @@ void Camera_Reset2DState()
 	g_Cam2D_Initialized = false;
 	g_Cam2D_YawDeg = 0.0f;
 }
+
+void SetCameraMouseSensitivity(float yaw, float pitch)
+{
+	g_MouseSensYaw = yaw;
+	g_MouseSensPitch = pitch;
+}
+
+float GetMouseSensYaw()
+{
+	return g_MouseSensYaw;
+}
+
+float GetMouseSensPitch()
+{
+	return g_MouseSensPitch;
+}
+

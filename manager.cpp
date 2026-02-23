@@ -7,6 +7,9 @@
 #include "Result.h"
 #include "fade.h"
 #include "Input.h"
+#include "Option.h"
+#include "newKeyBind.h"
+#include "mouse.h"
 
 #include "debug.h"
 #include <string>
@@ -16,6 +19,10 @@
 //=========================================================================================================
 static	SCENE	g_Scene = SCENE_NONE;	//現在のシーン番号
 static std::string sceneText = "NULL";
+static bool g_OptionMenu = false;
+
+
+
 
 extern Controller gPad; // コントローラー
 
@@ -24,8 +31,7 @@ extern Controller gPad; // コントローラー
 //=========================================================================================================
 void	Manager_Initialize()
 { 
-	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
-
+	Option_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
 	////本来はtitleの初期化でフェードインをセットする
 	//XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
@@ -33,7 +39,7 @@ void	Manager_Initialize()
 
 	//本来の形
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
-	SetScene(SCENE_GAME);	//最初に動かすシーンに切り替える
+	SetScene(SCENE_TITLE);	//最初に動かすシーンに切り替える
 
 }
 
@@ -41,7 +47,8 @@ void	Manager_Initialize()
 // 終了処理
 //=========================================================================================================
 void	Manager_Finalize()
-{ 
+{
+	Option_Finalize();
 	Fade_Finalize();
 	SetScene(SCENE_NONE);
 }
@@ -53,13 +60,32 @@ void	Manager_Update()
 {
 
 	gPad.Update();
-	switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
+
+	//ESCキーでオプションメニューを開く
+	if (IsInputTrigger(MenuKey,gPad))
 	{
+		g_OptionMenu = !g_OptionMenu; // トグルで切り替え
+	}
+
+	if (g_OptionMenu)
+	{
+		Mouse_SetMode(MOUSE_POSITION_MODE_ABSOLUTE);
+		Option_Update();
+	}
+	else
+	{
+		Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+	}
+
+	if (!g_OptionMenu)
+	{
+		switch (g_Scene)	//現在シーンのアップデート関数を呼び出す
+		{
 		case SCENE_NONE:
 			break;
 		case SCENE_TITLE:
 			sceneText = "TITLE";
-			Title_Update();	
+			Title_Update();
 			break;
 		case SCENE_GAME:
 			sceneText = "GAME";
@@ -71,7 +97,10 @@ void	Manager_Update()
 			break;
 		default:
 			break;
+		}
 	}
+	
+	
 
 	ImGui::Begin("Debug - han");
 	ImGui::Text("SCENE: %s", sceneText.c_str());
@@ -104,6 +133,11 @@ void	Manager_Draw()
 			break;
 	}
 
+	if (g_OptionMenu)
+	{
+		Option_Draw();
+	}
+
 	Fade_Draw();
 }
 
@@ -112,6 +146,8 @@ void	Manager_Draw()
 //=========================================================================================================
 void	SetScene(SCENE scene) //シーンを切り替える
 {
+	g_OptionMenu = false; // シーン切り替え時にオプションメニューを閉じる
+
 	//実行中のシーンを終了させる
 	switch (g_Scene)	//現在シーンの終了関数を呼び出す
 	{

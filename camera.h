@@ -43,3 +43,8 @@ XMFLOAT3 GetCameraAtPosition();
 XMFLOAT3 GetCameraPosition();
 
 void Camera_Reset2DState();
+
+// Šù‘¶éŒ¾‚Ì––”ö•t‹ß‚É’Ç‹L
+void SetCameraMouseSensitivity(float yaw, float pitch);
+float GetMouseSensYaw();
+float GetMouseSensPitch();

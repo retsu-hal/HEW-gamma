@@ -138,6 +138,9 @@
     <ClCompile Include="newKeyBind.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="Option.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h">
@@ -263,10 +266,17 @@
     <ClInclude Include="FieldSeesaw.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Option.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="DirectXTex_Debug.lib" />
-    <Library Include="DirectXTex_Release.lib" />
+    <Library Include="DirectXTex_Debug.lib">
+      <Filter>ライブラリーファイル</Filter>
+    </Library>
+    <Library Include="DirectXTex_Release.lib">
+      <Filter>ライブラリーファイル</Filter>
+    </Library>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -285,6 +295,9 @@
     </Filter>
     <Filter Include="ヘッダーファイル">
       <UniqueIdentifier>{63322dcb-5d8c-491e-909a-fe4d540c305a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ライブラリーファイル">
+      <UniqueIdentifier>{c1bf5a08-57fd-4a11-83d6-8c8fac2b8f95}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
