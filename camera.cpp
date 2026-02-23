@@ -231,7 +231,6 @@ void Player3DCamera_Update()
     CameraObject.AtPosition = gCamTarget;
     CameraObject.Position = gCamPos;
     CameraObject.UpVector = { 0, 1, 0 };
-
 }
 
 void Player2DCamera_Update()
@@ -267,6 +266,60 @@ void Player2DCamera_Update()
     CameraObject.Position = Lerp3(CameraObject.Position, targetPos, kCam2D_FollowLerp);
     CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
 
+}
+
+void Player2DCamera_DebugUpdate()
+{
+    Mouse_State ms{};
+    Mouse_GetState(&ms);
+
+    static bool relativeMode = true;
+    bool suppressDelta = false;
+    {
+        if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+            relativeMode = !relativeMode;
+            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+                : MOUSE_POSITION_MODE_ABSOLUTE);
+        }
+    }
+
+    if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
+    {
+        const float sensYaw = 1.0f;
+        const float sensPitch = 1.0f;
+        gYawDeg += ms.x * sensYaw;
+        gPitchDeg -= ms.y * sensPitch;
+
+        if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+        if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+    }
+
+    XMFLOAT3 playerPos = GetPlayer2DPosition();
+    XMFLOAT3 desiredTarget = {
+        playerPos.x + gTargetOffset.x,
+        playerPos.y + gTargetOffset.y,
+        playerPos.z + gTargetOffset.z
+    };
+
+    float yaw = XMConvertToRadians(gYawDeg);
+    float pitch = XMConvertToRadians(gPitchDeg);
+
+    float cp = cosf(pitch), sp = sinf(pitch);
+    float cy = cosf(yaw), sy = sinf(yaw);
+
+    XMFLOAT3 back = { sy * cp, sp, cy * cp };
+    XMFLOAT3 desiredPos = {
+        desiredTarget.x - back.x * gDistance,
+        desiredTarget.y - back.y * gDistance,
+        desiredTarget.z - back.z * gDistance
+    };
+
+    gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+    gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
+
+    CameraObject.AtPosition = gCamTarget;
+    CameraObject.Position = gCamPos;
+    CameraObject.UpVector = { 0, 1, 0 };
 }
 
 void Title_Camera_Update()

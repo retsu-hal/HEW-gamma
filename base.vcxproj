@@ -215,6 +215,7 @@
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="newKeyBind.h" />
+    <ClInclude Include="Player2DCapsule.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
     <ClInclude Include="PlayerModeSwitchManager.h" />

@@ -24,6 +24,10 @@ static float g_StopTime = 0.0f;
 static Player2DAnimeDef g_AnimDefs[PLAYER2D_ANIME_MAX] = {
 	//                  texturePath                               cols rows start count speed loop
 	/* IDLE */ { L"asset\\Texture\\Player2D\\Taiki_2D.png",        5,   5,    0,    25,  1.5f, true  },
+	
+	/* WALK */ { NULL,                                              5,   5,    0,    25,  1.5f, true  },
+	/* JUMP */ { NULL,                                              5,   5,    0,    25,  1.5f, false },
+	/* FALL */ { NULL,                                              5,   5,    0,    25,  1.5f, false },
 
 };
 
@@ -266,6 +270,7 @@ void Player2D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	g_pDevice->CreateBuffer(&bd, NULL, &g_VertexBuffer);
+	if (!g_VertexBuffer) return;
 	// 頂点バッファに初期データを書き込む
 	D3D11_MAPPED_SUBRESOURCE msr;
 	g_pContext->Map(g_VertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &msr);
@@ -288,6 +293,7 @@ void Player2D_Finalize(void)
 			{
 				if (g_AnimTextures[j] == g_AnimTextures[i])
 				{
+					g_AnimTextures[j]->Release();
 					g_AnimTextures[j] = NULL;
 				}
 			}
@@ -334,10 +340,31 @@ PLAYER * GetPlayer2D()
 {
 	return &g_Player2D;
 }
-// プレイヤーの当たり判定の半分のサイズを取得する
+
+
+Capsule2D Player2D_GetCapsule()
+{
+	Capsule2D cap;
+
+	float totalHeight = PLAYER2D_CAPSULE_HEIGHT + PLAYER2D_CAPSULE_RADIUS * 2.0f;
+	cap.center = XMFLOAT3(
+		g_Player2D.Position.x,
+		g_Player2D.Position.y + totalHeight * 0.5f,
+		g_Player2D.Position.z
+	);
+
+	cap.radius = PLAYER2D_CAPSULE_RADIUS;
+	cap.halfHeight = PLAYER2D_CAPSULE_HEIGHT * 0.5f;
+	cap.halfZ = PLAYER2D_CAPSULE_HALF_Z;
+	cap.rotationZ = XMConvertToRadians(g_Player2D.Rotation.z);
+
+	return cap;
+}
+
 XMFLOAT3 Player2D_GetSolidHalfSize()
 {
-	return g_SolidHalfSize_2d;
+	Capsule2D cap = Player2D_GetCapsule();
+	return cap.GetBoundingHalfSize();
 }
 
 

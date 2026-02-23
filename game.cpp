@@ -48,6 +48,8 @@ static ShadowBuildConfig g_ShadowConfig;
 
 static std::vector<const ShadowPrism*> g_ActiveShadowPrisms;
 
+static bool g_2DPlayerDebugMode = false;
+
 void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 {
 	g_pDevice = pDevice;
@@ -283,6 +285,16 @@ void Game_Update()
 
 	Collision_SetShadowPrisms(g_ActiveShadowPrisms);
 	
+
+#ifdef _DEBUG
+	if (Keyboard_IsKeyDownTrigger(KK_LEFTALT))// F1キーでデバッグモードのオンオフ切り替え
+	{
+		g_2DPlayerDebugMode = !g_2DPlayerDebugMode;
+	}
+#endif // _DEBUG
+
+
+
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{// 3Dモードの更新
 		Player3D_Update();
@@ -293,6 +305,14 @@ void Game_Update()
 	{// 2Dモードの更新
 		Player2D_Update();
 		Player2DCamera_Update();
+		
+
+#ifdef _DEBUG
+		if (g_2DPlayerDebugMode)
+		{
+			Player2DCamera_DebugUpdate();
+		}
+#endif // _DEBUG
 	}
 	//Player3DCamera_Update();
 
