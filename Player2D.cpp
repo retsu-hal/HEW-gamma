@@ -104,33 +104,39 @@ static void Player2D_UpdateAnime()
 		g_CurrentAnim = PLAYER2D_ANIME_IDLE;
 	}
 
+	if (g_Player2D.state == PLAYER_STATE_FALL && !g_Player2D.isGround)
+	{
+		Player2D_SetAnime((g_Player2D.Velocity.y > 0.0f) ? PLAYER2D_ANIME_JUMP : PLAYER2D_ANIME_FALL);
+	}
+	else if (g_Player2D.isGround)
+	{
+		float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
+			g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+
+		Player2D_SetAnime((speedSq > 0.0001f) ? PLAYER2D_ANIME_WALK : PLAYER2D_ANIME_IDLE);
+	}
+
 	const Player2DAnimeDef& def = g_AnimDefs[g_CurrentAnim];
 
-	int frameCount = def.frameCount;
-	if (frameCount <= 0) frameCount = 1;
-
-	if (g_AnimFinished) return;
-
-	g_AnimTimer += 1.0f;
-
-	float speed = def.frameSpeed;
-	if (speed <= 0.0f) speed = 1.0f;
-
-	if (g_AnimTimer >= speed)
+	if (!(g_AnimFinished && !def.loop))
 	{
-		g_AnimTimer = 0.0f;
-		g_AnimFrame++;
+		int frameCount = (def.frameCount > 0) ? def.frameCount : 1;
+		float speed = (def.frameSpeed > 0.0f) ? def.frameSpeed : 1.0f;
 
-		if (g_AnimFrame >= frameCount)
+		g_AnimTimer += 1.0f;
+		if (g_AnimTimer >= speed)
 		{
-			if (def.loop)
+			g_AnimTimer = 0.0f;
+			g_AnimFrame++;
+
+			if (g_AnimFrame >= frameCount)
 			{
-				g_AnimFrame = 0;
-			}
-			else
-			{
-				g_AnimFrame = frameCount - 1;
-				g_AnimFinished = true;
+				if (def.loop) g_AnimFrame = 0;
+				else
+				{
+					g_AnimFrame = frameCount - 1;
+					g_AnimFinished = true;
+				}
 			}
 		}
 	}
@@ -731,6 +737,13 @@ void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot)
 	g_StopTime = 0.0f;
 
 	g_Player2D.Quaternion = XMQuaternionIdentity();
+
+	g_Player2D.FirstScaling = g_Player2D.Scaling;
+	g_Player2D.FirstVelocity = g_Player2D.Velocity;
+	g_Player2D.FirstAcceleration = g_Player2D.Acceleration;
+	g_Player2D.FirstState = g_Player2D.state;
+	g_Player2D.FirstStopTime = g_StopTime;
+	g_Player2D.FirstQuaternion = g_Player2D.Quaternion;
 
 	g_Player2D.Active = true;
 }
