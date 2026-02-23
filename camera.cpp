@@ -10,27 +10,27 @@
 #include "MathUtil.h"
 
 //=========================================================================================================
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
 static CAMERA CameraObject;
 XMFLOAT3 g_PlayerPosOld;
 
 
-//ƒ}ƒEƒX‘€ì—p•Ï”
+//ãƒã‚¦ã‚¹æ“ä½œç”¨å¤‰æ•°
 Mouse_State ms{};
-float cSize = 1.0f;//ƒJƒƒ‰‚ÌŠ´“x’²®—p
+float cSize = 1.0f;//ã‚«ãƒ¡ãƒ©ã®æ„Ÿåº¦èª¿æ•´ç”¨
 
-//ƒJƒƒ‰‘€ì—p•Ï”
-static bool   gCamAnglesInit = false;//ƒJƒƒ‰Šp“x‰Šú‰»ƒtƒ‰ƒO
-static XMFLOAT3 gCamTarget = { 0, 0, 0 };//ƒJƒƒ‰’‹“_
-static XMFLOAT3 gCamPos = { 0, 0, 0 };//ƒJƒƒ‰ˆÊ’u
-static float gYawDeg = 180.0f;//ƒJƒƒ‰‚Ì…•½‰ñ“]Šp“x
-static float gPitchDeg = 15.0f;//ƒJƒƒ‰‚Ìã‰º‰ñ“]Šp“x
-static float gDistance = 8.0f;//ƒJƒƒ‰‚Æ’‹“_‚Ì‹——£
-static const float kPitchMin = -75.0f;//ƒJƒƒ‰‚Ìã‰ºŒÀ“xŠp“x
+//ã‚«ãƒ¡ãƒ©æ“ä½œç”¨å¤‰æ•°
+static bool   gCamAnglesInit = false;//ã‚«ãƒ¡ãƒ©è§’åº¦åˆæœŸåŒ–ãƒ•ãƒ©ã‚°
+static XMFLOAT3 gCamTarget = { 0, 0, 0 };//ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹
+static XMFLOAT3 gCamPos = { 0, 0, 0 };//ã‚«ãƒ¡ãƒ©ä½ç½®
+static float gYawDeg = 180.0f;//ã‚«ãƒ¡ãƒ©ã®æ°´å¹³å›è»¢è§’åº¦
+static float gPitchDeg = 15.0f;//ã‚«ãƒ¡ãƒ©ã®ä¸Šä¸‹å›è»¢è§’åº¦
+static float gDistance = 8.0f;//ã‚«ãƒ¡ãƒ©ã¨æ³¨è¦–ç‚¹ã®è·é›¢
+static const float kPitchMin = -75.0f;//ã‚«ãƒ¡ãƒ©ã®ä¸Šä¸‹é™åº¦è§’åº¦
 static const float kPitchMax = 75.0f;
-static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//ƒJƒƒ‰’‹“_ƒIƒtƒZƒbƒg
-static float gFollowLerp = 0.15f;//ƒJƒƒ‰’Ç]‚Ì‘¬‚³
+static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹ã‚ªãƒ•ã‚»ãƒƒãƒˆ
+static float gFollowLerp = 0.15f;//ã‚«ãƒ¡ãƒ©è¿½å¾“ã®é€Ÿã•
 
 
 static const float kCam2D_Distance = 8.0f;
@@ -41,8 +41,12 @@ static const float kCam2D_FollowLerp = 0.12f;
 static bool  g_Cam2D_Initialized = false;
 static float g_Cam2D_YawDeg = 0.0f;
 
+// ãƒ•ã‚¡ã‚¤ãƒ«å…ˆé ­ä»˜è¿‘ã®æ—¢å­˜ã®ã‚«ãƒ¡ãƒ©é–¢é€£ã®staticå¤‰æ•°å®šç¾©ã®è¿‘ãã«è¿½è¨˜
+static float g_MouseSensYaw = 1.0f;
+static float g_MouseSensPitch = 1.0f;
+
 static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
-{// 3DƒxƒNƒgƒ‹‚ÌüŒ`•âŠÔ
+{// 3Dãƒ™ã‚¯ãƒˆãƒ«ã®ç·šå½¢è£œé–“
     return {
         a.x + (b.x - a.x) * t,
         a.y + (b.y - a.y) * t,
@@ -146,7 +150,7 @@ static bool RaycastOBB(
 }
 
 //=========================================================================================================
-// ‰Šú‰»
+// åˆæœŸåŒ–
 //=========================================================================================================
 void Camera_Initialize()
 {
@@ -168,7 +172,7 @@ void Camera_Initialize()
 
 
 //=========================================================================================================
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 //=========================================================================================================
 void Camera_Finalize()
 {
@@ -177,60 +181,61 @@ void Camera_Finalize()
 
 
 //=========================================================================================================
-// XVˆ—
+// æ›´æ–°å‡¦ç†
 //=========================================================================================================
 void Player3DCamera_Update()
 {
-    Mouse_State ms{};
-    Mouse_GetState(&ms);
+	Mouse_State ms{};
+	Mouse_GetState(&ms);
 
-    static bool relativeMode = true;
-    bool suppressDelta = false;
-    {
-        if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-            relativeMode = !relativeMode;
-            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-                : MOUSE_POSITION_MODE_ABSOLUTE);
-        }
-    }
+	/*static bool relativeMode = true;
+	bool suppressDelta = false;
+	{
+		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+			relativeMode = !relativeMode;
+			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+				: MOUSE_POSITION_MODE_ABSOLUTE);
+		}
+	}*/
 
-    if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
-    {
-        const float sensYaw = 1.0f;
-        const float sensPitch = 1.0f;
-        gYawDeg += ms.x * sensYaw;
-        gPitchDeg -= ms.y * sensPitch;
+	
+	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
+	{
+		const float sensYaw = 1.0f * g_MouseSensYaw;
+		const float sensPitch = 1.0f * g_MouseSensPitch;
+		gYawDeg += ms.x * sensYaw;
+		gPitchDeg -= ms.y * sensPitch;
 
-        if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
-        if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
-    }
+		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+	}
 
-    XMFLOAT3 playerPos = GetPlayer3DPosition();
-    XMFLOAT3 desiredTarget = {
-        playerPos.x + gTargetOffset.x,
-        playerPos.y + gTargetOffset.y,
-        playerPos.z + gTargetOffset.z
-    };
+	XMFLOAT3 playerPos = GetPlayer3DPosition();
+	XMFLOAT3 desiredTarget = {
+		playerPos.x + gTargetOffset.x,
+		playerPos.y + gTargetOffset.y,
+		playerPos.z + gTargetOffset.z
+	};
 
-    float yaw = XMConvertToRadians(gYawDeg);
-    float pitch = XMConvertToRadians(gPitchDeg);
+	float yaw = XMConvertToRadians(gYawDeg);
+	float pitch = XMConvertToRadians(gPitchDeg);
 
-    float cp = cosf(pitch), sp = sinf(pitch);
-    float cy = cosf(yaw), sy = sinf(yaw);
+	float cp = cosf(pitch), sp = sinf(pitch);
+	float cy = cosf(yaw), sy = sinf(yaw);
 
-    XMFLOAT3 back = { sy * cp, sp, cy * cp };
-    XMFLOAT3 desiredPos = {
-        desiredTarget.x - back.x * gDistance,
-        desiredTarget.y - back.y * gDistance,
-        desiredTarget.z - back.z * gDistance
-    };
+	XMFLOAT3 back = { sy * cp, sp, cy * cp };
+	XMFLOAT3 desiredPos = {
+		desiredTarget.x - back.x * gDistance,
+		desiredTarget.y - back.y * gDistance,
+		desiredTarget.z - back.z * gDistance
+	};
 
-    gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-    gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
+	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+	gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
 
-    CameraObject.AtPosition = gCamTarget;
-    CameraObject.Position = gCamPos;
-    CameraObject.UpVector = { 0, 1, 0 };
+	CameraObject.AtPosition = gCamTarget;
+	CameraObject.Position = gCamPos;
+	CameraObject.UpVector = { 0, 1, 0 };
 
 }
 
@@ -271,12 +276,12 @@ void Player2DCamera_Update()
 
 void Title_Camera_Update()
 {
-    static bool relativeMode = true;
-    if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-            relativeMode = !relativeMode;
-            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-                : MOUSE_POSITION_MODE_ABSOLUTE);
-        }
+	/*static bool relativeMode = true;
+	if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
+			relativeMode = !relativeMode;
+			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+				: MOUSE_POSITION_MODE_ABSOLUTE);
+		}*/
 
     //XMFLOAT3 playerPos = GetPlayer3DPosition();
 
@@ -302,24 +307,25 @@ void Title_Camera_Update()
 }
 
 //=========================================================================================================
-// •`‰æˆ—
+// æç”»å‡¦ç†
 //=========================================================================================================
 void Camera_Draw()
 {
 
-    DEBUG_IMGUI_BEGIN({
-        ImGui::Begin("Debug - han");
-                if (ImGui::TreeNode("camera.cpp"))
-                {
-                    ImGui::Text("PosX: %.2f", CameraObject.Position.x);
-                    ImGui::Text("PosY: %.2f", CameraObject.Position.y);
-                    ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
-                    ImGui::TreePop();
-                }
-                ImGui::End();
-
-        });
-
+	if (debugMode)
+	{
+		ImGui::Begin("Debug - han");
+		if (ImGui::TreeNode("camera.cpp"))
+		{
+			ImGui::Text("PosX: %.2f", CameraObject.Position.x);
+			ImGui::Text("PosY: %.2f", CameraObject.Position.y);
+			ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
+			ImGui::Text("Pitch: %.2f", g_MouseSensPitch);
+			ImGui::Text("Yaw: %.2f", g_MouseSensYaw);
+			ImGui::TreePop();
+		}
+		ImGui::End();
+	}
 
     float w = (float)Direct3D_GetBackBufferWidth();
     float h = (float)Direct3D_GetBackBufferHeight();
@@ -337,7 +343,7 @@ void Camera_Draw()
 }
 
 //=========================================================================================================
-// ‹–ìŠp
+// è¦–é‡è§’
 //=========================================================================================================
 void SetCameraFov(float fov)
 {
@@ -346,7 +352,7 @@ void SetCameraFov(float fov)
 
 
 //=========================================================================================================
-// ƒAƒXƒyƒNƒg”ä
+// ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
 //=========================================================================================================
 void SetCameraAspect(float asp)
 {
@@ -354,7 +360,7 @@ void SetCameraAspect(float asp)
 }
 
 //=========================================================================================================
-// ƒNƒŠƒbƒv‹——£
+// ã‚¯ãƒªãƒƒãƒ—è·é›¢
 //=========================================================================================================
 void SetCameraClip(float n, float f)
 {
@@ -363,7 +369,7 @@ void SetCameraClip(float n, float f)
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ˆÊ’u
+// ã‚«ãƒ¡ãƒ©ä½ç½®
 //=========================================================================================================
 void SetCameraPosition(XMFLOAT3 pos)
 {
@@ -371,7 +377,7 @@ void SetCameraPosition(XMFLOAT3 pos)
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰’‹“_
+// ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹
 //=========================================================================================================
 void SetCameraAtPosition(XMFLOAT3 atpos )
 {
@@ -379,7 +385,7 @@ void SetCameraAtPosition(XMFLOAT3 atpos )
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ã•ûŒüƒxƒNƒgƒ‹
+// ã‚«ãƒ¡ãƒ©ä¸Šæ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«
 //=========================================================================================================
 void SetCameraUpVector(XMFLOAT3 up)
 {
@@ -387,7 +393,7 @@ void SetCameraUpVector(XMFLOAT3 up)
 }
 
 //=========================================================================================================
-// ƒrƒ…[s—ñæ“¾
+// ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—å–å¾—
 //=========================================================================================================
 XMMATRIX GetViewMatrix()
 {
@@ -395,7 +401,7 @@ XMMATRIX GetViewMatrix()
 }
 
 //=========================================================================================================
-// ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñæ“¾
+// ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—å–å¾—
 //=========================================================================================================
 XMMATRIX GetProjectionMatrix()
 {
@@ -403,7 +409,7 @@ XMMATRIX GetProjectionMatrix()
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰’‹“_æ“¾
+// ã‚«ãƒ¡ãƒ©æ³¨è¦–ç‚¹å–å¾—
 //=========================================================================================================
 XMFLOAT3 GetCameraAtPosition()
 {
@@ -411,7 +417,7 @@ XMFLOAT3 GetCameraAtPosition()
 }
 
 //=========================================================================================================
-// ƒJƒƒ‰ˆÊ’uæ“¾
+// ã‚«ãƒ¡ãƒ©ä½ç½®å–å¾—
 //=========================================================================================================
 XMFLOAT3 GetCameraPosition()
 {
@@ -422,6 +428,22 @@ void Camera_Reset2DState()
 {
 	g_Cam2D_Initialized = false;
 	g_Cam2D_YawDeg = 0.0f;
+}
+
+void SetCameraMouseSensitivity(float yaw, float pitch)
+{
+	g_MouseSensYaw = yaw;
+	g_MouseSensPitch = pitch;
+}
+
+float GetMouseSensYaw()
+{
+	return g_MouseSensYaw;
+}
+
+float GetMouseSensPitch()
+{
+	return g_MouseSensPitch;
 }
 
 // Camera collision configuration

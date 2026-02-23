@@ -173,6 +173,7 @@
     <ClCompile Include="model.cpp" />
     <ClCompile Include="mouse.cpp" />
     <ClCompile Include="newKeyBind.cpp" />
+    <ClCompile Include="Option.cpp" />
     <ClCompile Include="Player2D.cpp" />
     <ClCompile Include="Player3D.cpp" />
     <ClCompile Include="PlayerModeSwitchManager.cpp" />
@@ -215,6 +216,7 @@
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="newKeyBind.h" />
+    <ClInclude Include="Option.h" />
     <ClInclude Include="Player3D.h" />
     <ClInclude Include="Player2D.h" />
     <ClInclude Include="PlayerModeSwitchManager.h" />
@@ -225,7 +227,6 @@
     <ClInclude Include="score.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="ShadowColliderBox.h" />
-    <ClInclude Include="SkyBall.h" />
     <ClInclude Include="SkyDome.h" />
     <ClInclude Include="sprite.h" />
     <ClInclude Include="title.h" />
