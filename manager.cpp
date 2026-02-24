@@ -7,59 +7,67 @@
 #include "Result.h"
 #include "fade.h"
 #include "Input.h"
+#include "Option.h"
+#include "newKeyBind.h"
+#include "mouse.h"
 
 #include <string>
 
 #include "debug.h"
 #ifdef _DEBUG
-bool g_DebugMode = true;
+bool g_DebugMode = false;
 #else
 bool g_DebugMode = false;
 #endif
 
+
 //=========================================================================================================
-// ƒOƒ[ƒoƒ‹•Ï”
+// ã‚°ãƒ­ãƒ¼ãƒãƒ«å¤‰æ•°
 //=========================================================================================================
-static	SCENE	g_Scene = SCENE_NONE;	//Œ»İ‚ÌƒV[ƒ“”Ô†
+static	SCENE	g_Scene = SCENE_NONE;	//ç¾åœ¨ã®ã‚·ãƒ¼ãƒ³ç•ªå·
 static std::string sceneText = "NULL";
+static bool g_OptionMenu = false;
 
-extern Controller gPad; // ƒRƒ“ƒgƒ[ƒ‰[
+
+
+
+extern Controller gPad; // ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼
 
 //=========================================================================================================
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 //=========================================================================================================
 void	Manager_Initialize()
 { 
-	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
-
-	////–{—ˆ‚Ítitle‚Ì‰Šú‰»‚ÅƒtƒF[ƒhƒCƒ“‚ğƒZƒbƒg‚·‚é
+	Option_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
+	////æœ¬æ¥ã¯titleã®åˆæœŸåŒ–ã§ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¤ãƒ³ã‚’ã‚»ãƒƒãƒˆã™ã‚‹
 	//XMFLOAT4 color = XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	//SetFade(60.0f, color, FADE_STATE::FADE_IN, SCENE_GAME);
-	//SetScene(SCENE_GAME);	//Å‰‚É“®‚©‚·ƒV[ƒ“‚ÉØ‚è‘Ö‚¦‚é
+	//SetScene(SCENE_GAME);	//æœ€åˆã«å‹•ã‹ã™ã‚·ãƒ¼ãƒ³ã«åˆ‡ã‚Šæ›¿ãˆã‚‹
 
-	//–{—ˆ‚ÌŒ`
+	//æœ¬æ¥ã®å½¢
 	Fade_Initialize(Direct3D_GetDevice(), Direct3D_GetDeviceContext());
-	SetScene(SCENE_GAME);	//Å‰‚É“®‚©‚·ƒV[ƒ“‚ÉØ‚è‘Ö‚¦‚é
+	SetScene(SCENE_TITLE);	//æœ€åˆã«å‹•ã‹ã™ã‚·ãƒ¼ãƒ³ã«åˆ‡ã‚Šæ›¿ãˆã‚‹
 
 }
 
 //=========================================================================================================
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 //=========================================================================================================
 void	Manager_Finalize()
-{ 
+{
+	Option_Finalize();
 	Fade_Finalize();
 	SetScene(SCENE_NONE);
 }
 
 //=========================================================================================================
-// XVˆ—
+// æ›´æ–°å‡¦ç†
 //=========================================================================================================
 void	Manager_Update()
 {
 
 #ifdef _DEBUG
-	if (Keyboard_IsKeyDownTrigger(KK_F1))
+	if (Keyboard_IsKeyDownTrigger(KK_F1))// F1ã‚­ãƒ¼ã§ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰ã®ã‚ªãƒ³ã‚ªãƒ•åˆ‡ã‚Šæ›¿ãˆ
 	{
 		g_DebugMode = !g_DebugMode;
 	}
@@ -67,13 +75,32 @@ void	Manager_Update()
 
 
 	gPad.Update();
-	switch (g_Scene)	//Œ»İƒV[ƒ“‚ÌƒAƒbƒvƒf[ƒgŠÖ”‚ğŒÄ‚Ño‚·
+
+	//ESCã‚­ãƒ¼ã§ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’é–‹ã
+	if (IsInputTrigger(MenuKey,gPad))
 	{
+		g_OptionMenu = !g_OptionMenu; // ãƒˆã‚°ãƒ«ã§åˆ‡ã‚Šæ›¿ãˆ
+	}
+
+	if (g_OptionMenu)
+	{
+		Mouse_SetMode(MOUSE_POSITION_MODE_ABSOLUTE);
+		Option_Update();
+	}
+	else
+	{
+		Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+	}
+
+	if (!g_OptionMenu)
+	{
+		switch (g_Scene)	//ç¾åœ¨ã‚·ãƒ¼ãƒ³ã®ã‚¢ãƒƒãƒ—ãƒ‡ãƒ¼ãƒˆé–¢æ•°ã‚’å‘¼ã³å‡ºã™
+		{
 		case SCENE_NONE:
 			break;
 		case SCENE_TITLE:
 			sceneText = "TITLE";
-			Title_Update();	
+			Title_Update();
 			break;
 		case SCENE_GAME:
 			sceneText = "GAME";
@@ -85,7 +112,10 @@ void	Manager_Update()
 			break;
 		default:
 			break;
+		}
 	}
+	
+	
 
 	DEBUG_IMGUI_BEGIN({
 		ImGui::Begin("Debug - han");
@@ -99,11 +129,11 @@ void	Manager_Update()
 }
 
 //=========================================================================================================
-// •`‰æˆ—
+// æç”»å‡¦ç†
 //=========================================================================================================
 void	Manager_Draw()
 { 
-	switch (g_Scene)	//Œ»İƒV[ƒ“‚Ì•`‰æŠÖ”‚ğŒÄ‚Ño‚·
+	switch (g_Scene)	//ç¾åœ¨ã‚·ãƒ¼ãƒ³ã®æç”»é–¢æ•°ã‚’å‘¼ã³å‡ºã™
 	{
 		case SCENE_NONE:
 			break;
@@ -120,16 +150,23 @@ void	Manager_Draw()
 			break;
 	}
 
+	if (g_OptionMenu)
+	{
+		Option_Draw();
+	}
+
 	Fade_Draw();
 }
 
 //=========================================================================================================
-// ƒV[ƒ“ó‘ÔƒZƒbƒgˆ—
+// ã‚·ãƒ¼ãƒ³çŠ¶æ…‹ã‚»ãƒƒãƒˆå‡¦ç†
 //=========================================================================================================
-void	SetScene(SCENE scene) //ƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
+void	SetScene(SCENE scene) //ã‚·ãƒ¼ãƒ³ã‚’åˆ‡ã‚Šæ›¿ãˆã‚‹
 {
-	//Às’†‚ÌƒV[ƒ“‚ğI—¹‚³‚¹‚é
-	switch (g_Scene)	//Œ»İƒV[ƒ“‚ÌI—¹ŠÖ”‚ğŒÄ‚Ño‚·
+	g_OptionMenu = false; // ã‚·ãƒ¼ãƒ³åˆ‡ã‚Šæ›¿ãˆæ™‚ã«ã‚ªãƒ—ã‚·ãƒ§ãƒ³ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã‚’é–‰ã˜ã‚‹
+
+	//å®Ÿè¡Œä¸­ã®ã‚·ãƒ¼ãƒ³ã‚’çµ‚äº†ã•ã›ã‚‹
+	switch (g_Scene)	//ç¾åœ¨ã‚·ãƒ¼ãƒ³ã®çµ‚äº†é–¢æ•°ã‚’å‘¼ã³å‡ºã™
 	{
 		case SCENE_NONE:
 			break;
@@ -146,10 +183,10 @@ void	SetScene(SCENE scene) //ƒV[ƒ“‚ğØ‚è‘Ö‚¦‚é
 			break;
 	}
 
-	g_Scene = scene;	//w’è‚ÌƒV[ƒ“‚ÖØ‚è‘Ö‚¦‚é
+	g_Scene = scene;	//æŒ‡å®šã®ã‚·ãƒ¼ãƒ³ã¸åˆ‡ã‚Šæ›¿ãˆã‚‹
 
-	//Ÿ‚ÌƒV[ƒ“‚ğ‰Šú‰»‚·‚é
-	switch (g_Scene)	//Œ»İƒV[ƒ“‚Ì‰Šú‰»ŠÖ”‚ğŒÄ‚Ño‚·
+	//æ¬¡ã®ã‚·ãƒ¼ãƒ³ã‚’åˆæœŸåŒ–ã™ã‚‹
+	switch (g_Scene)	//ç¾åœ¨ã‚·ãƒ¼ãƒ³ã®åˆæœŸåŒ–é–¢æ•°ã‚’å‘¼ã³å‡ºã™
 	{
 		case SCENE_NONE:
 			break;

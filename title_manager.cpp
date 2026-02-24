@@ -31,7 +31,7 @@ static bool g_TitleActionStarted = false;
 static int  g_TitleActionTimer = 0;
 
 static const int kTitleTurnDuration = 30;    // ~0.5 seconds to turn left
-static const int kTitleWalkDuration = 450;   // ~3 seconds walking before transition
+static const int kTitleWalkDuration = 240;   // ~3 seconds walking before transition
 
 static float g_TitleTargetYaw = 0.0f;        // target yaw after turning left
 static float g_TitleStartYaw = 0.0f;         // yaw when action started
@@ -113,7 +113,7 @@ static void TitleAction_Update()
 		float fwdZ = cosf(yawRad);
 
 		// Apply walk velocity
-		float walkSpeed = p->moveSpeed * 2.0f;
+		float walkSpeed = p->moveSpeed * 6.0f;
 		p->Velocity.x = fwdX * walkSpeed;
 		p->Velocity.z = fwdZ * walkSpeed;
 
@@ -360,6 +360,9 @@ void Title_Manager_Draw()
 	{
 		Light_Draw();
 	}
+	{
+		SkyDome_Draw();
+	}
 
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
@@ -372,8 +375,6 @@ void Title_Manager_Draw()
 
 	g_TitleLight.SetEnable(FALSE);
 	Shader_SetLight(g_TitleLight.Light);
-
-	SkyDome_Draw();
 
 	SetDepthTest(FALSE);
 }

@@ -17,7 +17,7 @@ using namespace mu;
 
 // Constants
 static const float kPushMaxDist = 5.0f;     // Maximum distance to detect pushable object
-static const float kPushSpeed = 0.02f;      // Speed at which objects are pushed
+static const float kPushSpeed = 0.05f;      // Speed at which objects are pushed
 
 // State
 static PUSH_STATE g_PushState = PUSH_STATE_NONE;

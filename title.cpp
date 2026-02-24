@@ -110,7 +110,7 @@ void Title_Draw()
 	//XMFLOAT2 pos = { SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2) / 2 };
 	//XMFLOAT2 size = { SCREEN_WIDTH / 5, SCREEN_HEIGHT / 5};
 
-	XMFLOAT2 pos = { SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2 - 150)};
+	XMFLOAT2 pos = { SCREEN_WIDTH / 2, (SCREEN_HEIGHT / 2 - 300)};
 	XMFLOAT2 size = { SCREEN_WIDTH /4, SCREEN_HEIGHT /4};
 	DrawSprite(pos, size, col);//1–‡ŠG‚ð•\Ž¦
 
