@@ -15,20 +15,25 @@ XMMATRIX AiToXM(const aiMatrix4x4& m)
 	);
 }
 
-MODEL* ModelLoad(const char* FileName)
+MODEL* ModelLoad(const char* FileName, bool preTransformVertices)
 {
 	MODEL* model = new MODEL;
 
-
-	const std::string modelPath(FileName);
-
-	model->AiScene = aiImportFile(FileName,
+	unsigned int flags =
 		aiProcessPreset_TargetRealtime_MaxQuality |
 		aiProcess_ConvertToLeftHanded |
-		aiProcess_GenSmoothNormals |           // Generate smooth normals
-		aiProcess_LimitBoneWeights |           // Limit bone weights to 4 per vertex
-		aiProcess_CalcTangentSpace |          // Calculate tangents and bitangents
-		aiProcess_Triangulate);               // Ensure triangles
+		aiProcess_GenSmoothNormals |
+		aiProcess_LimitBoneWeights |
+		aiProcess_CalcTangentSpace |
+		aiProcess_Triangulate;
+
+	// For static models (walls, objects), bake transforms from Maya
+	if (preTransformVertices)
+	{
+		flags |= aiProcess_PreTransformVertices;
+	}
+
+	model->AiScene = aiImportFile(FileName, flags);
 
 	hal::dout << "Loading model: " << FileName << std::endl;
 
@@ -138,8 +143,6 @@ MODEL* ModelLoad(const char* FileName)
 
 			delete[] vertex;
 		}
-
-
 
 		// インデックスバッファ生成
 		{
