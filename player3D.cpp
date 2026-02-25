@@ -57,13 +57,22 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player3D.FirstAnim = g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 
-	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
+	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
+	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx");
+	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_03.fbx");
+	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx",true);
+
+
 	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\Walking.fbx");
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
 
 	g_Player3D.Firstposition = g_Player3D.Position;
 	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 180.0f, 0.0f);
+	//g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
 	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
+	//g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
+
+
 	g_Player3D.FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 	g_Player3D.FirstAcceleration = g_Player3D.Acceleration = XMFLOAT3(0.0f, -9.8f / 600.0f * 0.5f, 0.0f);
 	g_Player3D.FirstState = g_Player3D.state = PLAYER_STATE_IDLE;
