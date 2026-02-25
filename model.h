@@ -36,7 +36,9 @@ struct MODEL
 	XMMATRIX GlobalInverse;
 };
 
-MODEL* ModelLoad(const char* FileName);
+MODEL* ModelLoad(const char* FileName, bool preTransformVertices = false);
+//if use true mean it will follow maya stats
+//if use false mean it become defult in maya
 void ModelRelease(MODEL* model);
 
 void ModelDraw(MODEL* model);

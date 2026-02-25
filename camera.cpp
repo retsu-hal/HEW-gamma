@@ -9,6 +9,9 @@
 #include "field.h"
 #include "MathUtil.h"
 
+#include "field.h"
+#include "MathUtil.h"
+using namespace mu;
 //=========================================================================================================
 // ƒOƒ[ƒoƒ‹•Ï”
 //=========================================================================================================
@@ -210,12 +213,21 @@ void Player3DCamera_Update()
 		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
 	}
 
-	XMFLOAT3 playerPos = GetPlayer3DPosition();
-	XMFLOAT3 desiredTarget = {
-		playerPos.x + gTargetOffset.x,
-		playerPos.y + gTargetOffset.y,
-		playerPos.z + gTargetOffset.z
-	};
+	// Mouse wheel zoom control
+	const float zoomSpeed = 0.06f;      // How much to zoom per wheel tick
+	const float minDistance = 2.5f;    // Minimum camera distance
+	const float maxDistance = 12.0f;   // Maximum camera distance
+
+	gDistance -= ms.scrollWheelValue * zoomSpeed;
+	if (gDistance < minDistance) gDistance = minDistance;
+	if (gDistance > maxDistance) gDistance = maxDistance;
+
+    XMFLOAT3 playerPos = GetPlayer3DPosition();
+    XMFLOAT3 desiredTarget = {
+        playerPos.x + gTargetOffset.x,
+        playerPos.y + gTargetOffset.y,
+        playerPos.z + gTargetOffset.z
+    };
 
 	float yaw = XMConvertToRadians(gYawDeg);
 	float pitch = XMConvertToRadians(gPitchDeg);
@@ -230,8 +242,11 @@ void Player3DCamera_Update()
 		desiredTarget.z - back.z * gDistance
 	};
 
-	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-	gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
+	XMFLOAT3 finalPos;
+	Camera_CheckCollision(desiredTarget, desiredPos, finalPos);
+
+    gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+	gCamPos = Lerp3(gCamPos, finalPos, gFollowLerp);
 
     CameraObject.AtPosition = gCamTarget;
     CameraObject.Position = gCamPos;
@@ -354,9 +369,8 @@ void Title_Camera_Update()
 
     // Fixed cinematic camera
     CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
-    CameraObject.AtPosition = XMFLOAT3(4.0f, 0.0f, 0.0f);
+    CameraObject.AtPosition = XMFLOAT3(4.0f, 1.0f, 0.0f);
     CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
-
 }
 
 //=========================================================================================================
@@ -364,6 +378,7 @@ void Title_Camera_Update()
 //=========================================================================================================
 void Camera_Draw()
 {
+<<<<<<< HEAD
 	DEBUG_IMGUI_BEGIN({
 		ImGui::Begin("Debug - han");
 		if (ImGui::TreeNode("camera.cpp"))
@@ -377,6 +392,9 @@ void Camera_Draw()
 		}
 		ImGui::End();
 	});
+=======
+
+>>>>>>> 36ecb9a5c9cf76a86940184c20c21d06a9fb6aa6
 	
 
     float w = (float)Direct3D_GetBackBufferWidth();
@@ -547,7 +565,7 @@ static void DrawRayDebug(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col = IM_CO
 
 void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3& outCamPos)
 {
-	DrawRayDebug(targetPos, desiredCamPos, IM_COL32(255, 0, 0, 255));
+	//DrawRayDebug(targetPos, desiredCamPos, IM_COL32(255, 0, 0, 255));
 	outCamPos = desiredCamPos;
 
 	// Calculate ray from target to desired camera position
@@ -577,8 +595,8 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 
 	for (size_t i = 0; i < map.size(); i++)
 	{
-		if (map[i].pos.y < targetPos.y )
-			continue;
+		//if (map[i].pos.y < targetPos.y )
+		//	continue;
 		if (!CameraShouldCollide(map[i].no))
 			continue;
 
@@ -606,16 +624,6 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 		XMFLOAT3 hitNormal{};
 		if (RaycastOBB(targetPos, rayDir, map[i].pos, boxHalf, map[i].rotate, rayLength, &hitNormal, &hitDist))
 		{
-			if (map[i].no == FIELD_EMPTY_BOX)
-			{
-				OutputDebugStringA("Camera hit FIELD_EMPTY_BOX\n");
-			}
-
-			char buf[128];
-			sprintf_s(buf, "Camera hit type=%d at (%.2f, %.2f, %.2f)\n",
-				(int)map[i].no, map[i].pos.x, map[i].pos.y, map[i].pos.z);
-			OutputDebugStringA(buf);
-
 			if (hitDist < closestHit)
 			{
 				closestHit = hitDist;

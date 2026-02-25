@@ -17,7 +17,7 @@ using namespace mu;
 
 // Constants
 static const float kPushMaxDist = 5.0f;     // Maximum distance to detect pushable object
-static const float kPushSpeed = 0.02f;      // Speed at which objects are pushed
+static const float kPushSpeed = 0.05f;      // Speed at which objects are pushed
 
 // State
 static PUSH_STATE g_PushState = PUSH_STATE_NONE;
@@ -396,7 +396,7 @@ void PlayerPushManager_Draw()
 
         g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 
-        XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
+        XMFLOAT2 size = { 2.0f, 2.0f };  // Billboard size
         XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);
