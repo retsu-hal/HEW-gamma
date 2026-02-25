@@ -75,11 +75,13 @@ public:
 
 	// プレイヤー変身フラグ
 	bool isChange = false;
+	//  true: 2D状態
+	//  false:3D状態
 
 	bool blockMovement = false; // 移動禁止フラグ
 
-	//  true: 2D状態
-	//  false:3D状態
+	bool ControllerMode = false;
+
 };
 
 struct InputKey
