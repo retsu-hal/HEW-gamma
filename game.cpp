@@ -33,11 +33,11 @@ static bool g_OptionMenu = false;
 LIGHTOBJECT g_BallLight;
 static XMFLOAT3 LightPos;
 
-// BGM管理
-static int g_Bgm3D = -1;  // 3DモードのBGM
-static int g_Bgm2D = -1;  // 2DモードのBGM
-static PLAYER_MODE g_PrevMode = MODE_3D;  // 前フレームのモード
-static const float CROSSFADE_DURATION = 2.0f;  // クロスフェード時間（秒）
+// BGM管琁E
+static int g_Bgm3D = -1;  // 3Dモード�EBGM
+static int g_Bgm2D = -1;  // 2Dモード�EBGM
+static PLAYER_MODE g_PrevMode = MODE_3D;  // 前フレームのモーチE
+static const float CROSSFADE_DURATION = 2.0f;  // クロスフェード時間（秒！E
 
 
 static ID3D11Device* g_pDevice = nullptr;
@@ -126,21 +126,21 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		LoadMapFromFile("asset\\MapData\\stage_select.txt");
 	}
 
-	// BGM初期化
-	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3DモードのBGMファイル名を指定
-	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2DモードのBGMファイル名を指定
+	// BGM初期匁E
+	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3Dモード�EBGMファイル名を持E��E
+	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2Dモード�EBGMファイル名を持E��E
 
-	// 初期状態は3DモードなのでBGM3Dを再生
+	// 初期状態�E3DモードなのでBGM3Dを�E甁E
 	if (g_Bgm3D >= 0)
 	{
-		PlayAudio(g_Bgm3D, true);  // ループ再生
+		PlayAudio(g_Bgm3D, true);  // ループ�E甁E
 		SetAudioVolume(g_Bgm3D, 1.0f);
 	}
 
-	// 2DモードのBGMは無音で待機
+	// 2Dモード�EBGMは無音で征E��E
 	if (g_Bgm2D >= 0)
 	{
-		PlayAudio(g_Bgm2D, true);  // ループ再生
+		PlayAudio(g_Bgm2D, true);  // ループ�E甁E
 		SetAudioVolume(g_Bgm2D, 0.0f);  // 無音
 	}
 
@@ -201,18 +201,18 @@ void Game_Finalize()
 
 void Game_Update()
 {
-	// BGM更新（フェード処理）
+	// BGM更新�E�フェード�E琁E��E
 	UpdateAudio();
 
-	// モード切り替え検出とクロスフェード
+	// モード�Eり替え検�EとクロスフェーチE
 	PLAYER_MODE currentMode = PlayerModeSwitchManager_GetMode();
 
 	if (currentMode != g_PrevMode)
 	{
-		// モードが切り替わった
+		// モードが刁E��替わっぁE
 		if (currentMode == MODE_3D)
 		{
-			// 2D→3D切り替え：3DのBGMをフェードイン、2DのBGMをフェードアウト
+			// 2DↁED刁E��替え！EDのBGMをフェードイン、EDのBGMをフェードアウチE
 			if (g_Bgm3D >= 0)
 			{
 				FadeInAudio(g_Bgm3D, CROSSFADE_DURATION, 1.0f);
@@ -224,7 +224,7 @@ void Game_Update()
 		}
 		else if (currentMode == MODE_2D)
 		{
-			// 3D→2D切り替え：2DのBGMをフェードイン、3DのBGMをフェードアウト
+			// 3DↁED刁E��替え！EDのBGMをフェードイン、EDのBGMをフェードアウチE
 			if (g_Bgm2D >= 0)
 			{
 				FadeInAudio(g_Bgm2D, CROSSFADE_DURATION, 1.0f);
@@ -245,7 +245,7 @@ void Game_Update()
 	field_Update();
 	SkyDome_Update();
 
-	// モード切り替えの更新は常に行う
+	// モード�Eり替え�E更新は常に行う
 	PlayerModeSwitchManager_Update();
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
@@ -300,13 +300,13 @@ void Game_Update()
 
 
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
-	{// 3Dモードの更新
+	{// 3Dモード�E更新
 		Player3D_Update();
 		Player3DCamera_Update();
 
 	}
 	else
-	{// 2Dモードの更新
+	{// 2Dモード�E更新
 		Player2D_Update();
 		Player2DCamera_Update();
 		
