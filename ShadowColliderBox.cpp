@@ -23,6 +23,7 @@ static bool Field_IsShadows(FIELD t)// 影を落とすオブジェクトか
     switch (t)
     {
     case FIELD_OBJ_2:
+    case FIELD_OBJ_BOX:
     case FIELD_SEESAW_1:
     case FIELD_SEESAW_2:
     case FIELD_MANHOLE:

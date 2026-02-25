@@ -207,7 +207,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	if (!Model[FIELD_OBJ_BOX])
 	{
-		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Wooden_Box.fbx");
+		Model[FIELD_OBJ_BOX] = ModelLoad("asset\\model\\Box_test_08.fbx",true);
 	}
 	if (!Model[FIELD_OBJ_1])
 	{
