@@ -1196,7 +1196,6 @@ static float SignedDistToPolygon2D(
 	}
 }
 
-// 2Dプレイヤーとシャドウの当たり判定
 bool Player2DShadow_Collision()
 {
 	PLAYER* player = GetPlayer2D();
@@ -1239,6 +1238,8 @@ bool Player2DShadow_Collision()
 		if (!prism || !prism->isValid) continue;
 		if (prism->poly.size() < 3) continue;
 
+		if (prism->n.y > 0.70f) continue;
+
 		const float moveLen = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
 		const float gate = capsule.radius + capsule.halfHeight + moveLen + 0.3f;
 
@@ -1259,6 +1260,8 @@ bool Player2DShadow_Collision()
 		const float rN = CapsuleProjection(prism->n);
 		const bool overlapN = (n0 >= -rN) && (n0 <= prism->thickness + rN);
 
+		// Ground-like prisms are handled by Player2DShadow_TopContact().
+		// Avoid treating them as walls here, or ground movement can be blocked.
 		if (prism->n.y > 0.7f)
 		{
 			const bool insidePoly = PointInPolygon2D(p0.x, p0.y, poly);
@@ -1431,7 +1434,6 @@ bool Player2DShadow_Collision()
 	return hitAny;
 }
 
-// 2Dプレイヤーとシャドウの接触判定（上から乗っているか）
 bool Player2DShadow_TopContact()
 {
 	PLAYER* player = GetPlayer2D();
@@ -1441,150 +1443,121 @@ bool Player2DShadow_TopContact()
 	if (prisms.empty()) return false;
 
 	Capsule2D capsule = Player2D_GetCapsule();
-	XMFLOAT3 capBottom = capsule.GetBottom();
-	float footY = capBottom.y - capsule.radius;
-
+	const float kGroundNyMin = 0.65f;
+	const float kContactUp = 0.35f;       
+	const float kContactDownExtra = 0.40f;
+	const float kSkin = 0.01f;
+	const float kJumpEscapeVel = 0.02f;
+	const bool isRising = (player->Velocity.y > kJumpEscapeVel);
 	bool hitAny = false;
-	const int maxIterations = 4;
-	int currentStandingPrism = -1;
-	float bestContactDist = FLT_MAX;
 
-	const float kJumpEscapeVelocity = 0.01f;
-	bool isRising = (player->Velocity.y > kJumpEscapeVelocity);
-
-	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float {
-		float a = 0.0f;
-		int n = (int)p.size();
-		for (int i = 0, j = n - 1; i < n; j = i++)
-			a += p[j].x * p[i].y - p[i].x * p[j].y;
-		return a;
+	auto CapsuleProjection = [&](const XMFLOAT3& axisW) -> float
+		{
+			XMFLOAT3 capAxis = { -sinf(capsule.rotationZ), cosf(capsule.rotationZ), 0.0f };
+			float axisDot = fabsf(Dot(axisW, capAxis));
+			return capsule.radius + axisDot * capsule.halfHeight;
 		};
 
-	for (int iter = 0; iter < maxIterations; iter++)
-	{
-		bool hitThisIter = false;
-		capsule = Player2D_GetCapsule();
-		capBottom = capsule.GetBottom();
-		footY = capBottom.y - capsule.radius;
+	XMFLOAT3 capHalf = capsule.GetBoundingHalfSize();
+	const float aabbPad = 0.25f;
+	XMFLOAT3 capMin = capsule.center - (capHalf + XMFLOAT3(aabbPad, aabbPad, aabbPad));
+	XMFLOAT3 capMax = capsule.center + (capHalf + XMFLOAT3(aabbPad, aabbPad, aabbPad));
 
-		for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
+	auto AABBOverlap = [](const XMFLOAT3& aMin, const XMFLOAT3& aMax, const XMFLOAT3& bMin, const XMFLOAT3& bMax) -> bool
 		{
-			const ShadowPrism* prism = prisms[prismIdx];
-			if (!prism || !prism->isValid) continue;
-			if (prism->poly.size() < 3) continue;
+			return (aMin.x <= bMax.x && aMax.x >= bMin.x) &&
+				(aMin.y <= bMax.y && aMax.y >= bMin.y) &&
+				(aMin.z <= bMax.z && aMax.z >= bMin.z);
+		};
+	
+	int bestIdx = -1;
+	float bestDistToTop = 0.0f;
+	float bestAbsDist = FLT_MAX;
 
-			float verticalMargin = capsule.GetTotalHeight() + 0.5f;
-			if (footY > prism->aabbMax.y + verticalMargin ||
-				footY + capsule.GetTotalHeight() < prism->aabbMin.y - verticalMargin)
+	for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
+	{
+		const ShadowPrism* prism = prisms[prismIdx];
+		if (!prism || !prism->isValid) continue;
+		if (prism->poly.size() < 3) continue;
+
+		if (prism->n.y < kGroundNyMin) continue;
+
+		XMFLOAT3 pMin = prism->aabbMin - XMFLOAT3(aabbPad, aabbPad, aabbPad);
+		XMFLOAT3 pMax = prism->aabbMax + XMFLOAT3(aabbPad, aabbPad, aabbPad);
+		if (!AABBOverlap(capMin, capMax, pMin, pMax)) continue;
+
+		XMFLOAT3 rel = capsule.center - prism->origin;
+		float u0 = Dot(rel, prism->u);
+		float v0 = Dot(rel, prism->v);
+		float n0 = Dot(rel, prism->n);
+		XMFLOAT2 p2d = { u0, v0 };
+
+		XMFLOAT2 edgeNormal2D;
+		float signedDist = SignedDistToPolygon2D(p2d, prism->poly, &edgeNormal2D);
+
+		if (signedDist > 0.0f)
+		{
+			XMFLOAT3 axisW = prism->u * edgeNormal2D.x + prism->v * edgeNormal2D.y;
+			float rEdge = CapsuleProjection(axisW) + 0.02f;
+			if (signedDist > rEdge)
 				continue;
-
-			float horizontalMargin = capsule.radius + capsule.halfHeight + 0.2f;
-			if (capsule.center.x < prism->aabbMin.x - horizontalMargin ||
-				capsule.center.x > prism->aabbMax.x + horizontalMargin ||
-				capsule.center.z < prism->aabbMin.z - capsule.halfZ - 0.2f ||
-				capsule.center.z > prism->aabbMax.z + capsule.halfZ + 0.2f)
-				continue;
-
-			std::vector<XMFLOAT2> poly = prism->poly;
-			if (Area2(poly) < 0.0f)
-				std::reverse(poly.begin(), poly.end());
-
-			XMFLOAT3 rel = capsule.center - prism->origin;
-			float u0 = Dot(rel, prism->u);
-			float v0 = Dot(rel, prism->v);
-			float n0 = Dot(rel, prism->n);
-			XMFLOAT2 p2d = { u0, v0 };
-
-			float shadowTopY = prism->aabbMax.y;
-
-			bool insidePoly = PointInPolygon2D(p2d.x, p2d.y, poly);
-
-			if (insidePoly)
-			{
-				float footToShadowTop = footY - shadowTopY;
-
-				float contactDown = -capsule.radius - 0.40f;
-				float contactUp = 0.35f;
-
-				if (footToShadowTop >= contactDown && footToShadowTop <= contactUp)
-				{
-					if (player->Velocity.y <= 0.05f && !isRising)
-					{
-						float targetY = shadowTopY;
-						float deltaY = targetY - footY;
-
-						float absDelta = fabsf(deltaY);
-						float maxAdj;
-						if (absDelta < 0.01f)
-							maxAdj = absDelta; 
-						else if (absDelta < 0.05f)
-							maxAdj = 0.03f;
-						else if (absDelta < 0.15f)
-							maxAdj = 0.08f;
-						else
-							maxAdj = 0.15f;
-
-						if (absDelta > maxAdj)
-							deltaY = (deltaY > 0) ? maxAdj : -maxAdj;
-
-						player->Position.y += deltaY;
-						player->Velocity.y = 0.0f;
-						player->isGround = true;
-
-						float dist = fabsf(footToShadowTop);
-						if (dist < bestContactDist)
-						{
-							bestContactDist = dist;
-							currentStandingPrism = prismIdx;
-						}
-
-						hitThisIter = true;
-						hitAny = true;
-						continue;
-					}
-				}
-			}
-
-			if (isRising) continue;
-
-			float capAxisProj = fabsf(Dot({ -sinf(capsule.rotationZ), cosf(capsule.rotationZ), 0 }, prism->v));
-			float playerRadiusV = capsule.radius + capsule.halfHeight * capAxisProj;
-
-			float minV = FLT_MAX;
-			for (const auto& p : prism->poly)
-				minV = (std::min)(minV, p.y);
-
-			float localV = Dot(rel, prism->v);
-			float penV_neg = localV - (minV - playerRadiusV);
-
-			if (penV_neg <= 0.001f) continue;
-
-			XMFLOAT2 edgeNormal;
-			float signedDist = SignedDistToPolygon2D(p2d, poly, &edgeNormal);
-			if (signedDist > capsule.radius + 0.1f) continue; 
-
-			float targetLocalV = minV - playerRadiusV;
-			float deltaV = targetLocalV - localV;
-			float pushAmount = prism->v.y * deltaV;
-
-			const float maxPush = 0.1f;
-			if (fabsf(pushAmount) > maxPush)
-				pushAmount = (pushAmount > 0) ? maxPush : -maxPush;
-
-			player->Position.y += pushAmount;
-			if (player->Velocity.y > 0)
-				player->Velocity.y = 0.0f;
-
-			hitThisIter = true;
-			hitAny = true;
 		}
 
-		if (!hitThisIter) break;
+		float rN = CapsuleProjection(prism->n);
+		float bottomN = n0 - rN;
+
+		float distToTop = bottomN - prism->thickness;
+
+		if (isRising && distToTop > 0.0f)
+			continue;
+
+		const float contactDown = -(capsule.radius + kContactDownExtra);
+		if (distToTop < contactDown || distToTop > kContactUp)
+			continue;
+
+		float absDist = fabsf(distToTop);
+		if (absDist < bestAbsDist)
+		{
+			bestAbsDist = absDist;
+			bestDistToTop = distToTop;
+			bestIdx = prismIdx;
+		}
+	}
+
+	int currentStandingPrism = -1;
+
+
+	if (bestIdx >= 0)
+	{
+		const ShadowPrism* prism = prisms[bestIdx];
+
+		float delta = bestDistToTop - kSkin;
+		float absDelta = fabsf(delta);
+
+		float maxAdj;
+		if (absDelta < 0.01f)      maxAdj = absDelta;
+		else if (absDelta < 0.05f) maxAdj = 0.03f;
+		else if (absDelta < 0.15f) maxAdj = 0.08f;
+		else                       maxAdj = 0.15f;
+
+		if (absDelta > maxAdj)
+			delta = (delta > 0.0f) ? maxAdj : -maxAdj;
+
+		player->Position = player->Position - prism->n * delta;
+
+		float vN = Dot(player->Velocity, prism->n);
+		if (vN < 0.0f)
+			player->Velocity = player->Velocity - prism->n * vN;
+
+		player->isGround = true;
+		hitAny = true;
+
+		currentStandingPrism = bestIdx;
 	}
 
 	const int GRACE_FRAME_COUNT = 6;
 
-	if (s_LastStandingPrismIndex >= 0 && !hitAny)
+	if (!hitAny && s_LastStandingPrismIndex >= 0)
 	{
 		if (isRising)
 		{
@@ -1594,22 +1567,52 @@ bool Player2DShadow_TopContact()
 		else
 		{
 			s_GraceFrames++;
-			if (s_GraceFrames <= GRACE_FRAME_COUNT)
+			if (s_GraceFrames <= GRACE_FRAME_COUNT && s_LastStandingPrismIndex < (int)prisms.size())
 			{
-				if (s_LastStandingPrismIndex < (int)prisms.size())
+				const ShadowPrism* last = prisms[s_LastStandingPrismIndex];
+				if (last && last->isValid && last->poly.size() >= 3 && last->n.y >= kGroundNyMin)
 				{
-					const ShadowPrism* lastPrism = prisms[s_LastStandingPrismIndex];
-					if (lastPrism && lastPrism->isValid)
+					XMFLOAT3 newTopPos = last->origin + last->n * last->thickness;
+					XMFLOAT3 followDelta = newTopPos - s_LastShadowTopPos;
+					player->Position = player->Position + followDelta;
+					s_LastShadowTopPos = newTopPos;
+
+					capsule = Player2D_GetCapsule();
+					XMFLOAT3 rel = capsule.center - last->origin;
+					float u0 = Dot(rel, last->u);
+					float v0 = Dot(rel, last->v);
+					float n0 = Dot(rel, last->n);
+					XMFLOAT2 p2d = { u0, v0 };
+
+					XMFLOAT2 edgeNormal2D;
+					float signedDist = SignedDistToPolygon2D(p2d, last->poly, &edgeNormal2D);
+					bool insideOK = true;
+
+					if (signedDist > 0.0f)
 					{
-						float newShadowTopY = lastPrism->aabbMax.y;
-						float deltaY = newShadowTopY - s_LastShadowTopPos.y;
+						XMFLOAT3 axisW = last->u * edgeNormal2D.x + last->v * edgeNormal2D.y;
+						float rEdge = CapsuleProjection(axisW) + 0.02f;
+						if (signedDist > rEdge) insideOK = false;
+					}
 
-						player->Position.y += deltaY;
-						player->isGround = true;
-						player->Velocity.y = 0.0f;
-						hitAny = true;
+					if (insideOK)
+					{
+						float rN = CapsuleProjection(last->n);
+						float bottomN = n0 - rN;
+						float distToTop = bottomN - last->thickness;
 
-						s_LastShadowTopPos.y = newShadowTopY;
+						const float contactDown = -(capsule.radius + kContactDownExtra);
+						if (distToTop >= contactDown && distToTop <= kContactUp)
+						{
+							player->Position = player->Position - last->n * (distToTop - kSkin);
+
+							float vN = Dot(player->Velocity, last->n);
+							if (vN < 0.0f)
+								player->Velocity = player->Velocity - last->n * vN;
+
+							player->isGround = true;
+							hitAny = true;
+						}
 					}
 				}
 			}
@@ -1628,11 +1631,32 @@ bool Player2DShadow_TopContact()
 	if (currentStandingPrism >= 0)
 	{
 		s_LastStandingPrismIndex = currentStandingPrism;
-		s_LastShadowTopPos.y = prisms[currentStandingPrism]->aabbMax.y;
+		const ShadowPrism* p = prisms[currentStandingPrism];
+		s_LastShadowTopPos = p->origin + p->n * p->thickness;
 	}
 
 	return hitAny;
 }
+
+int Collision_Player2D_MoveAndCollision()
+{
+	PLAYER* player = GetPlayer2D();
+	if(!player) return HIT_NONE;
+
+	Player2DShadow_Collision();
+
+	player->Position.x += player->Velocity.x;
+	player->Position.y += player->Velocity.y;
+	player->Position.z += player->Velocity.z;
+
+	int hit = Player2DField_Collision();
+
+	Player2DShadow_TopContact();
+
+	return hit;
+}
+
+
 
 static void DebugDrawCapsule2D(const Capsule2D& capsule, ImU32 col, int segments = 20)
 {
