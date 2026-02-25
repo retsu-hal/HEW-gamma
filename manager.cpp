@@ -27,7 +27,7 @@ bool g_DebugMode = false;
 static	SCENE	g_Scene = SCENE_NONE;	//現在のシーン番号
 static std::string sceneText = "NULL";
 static bool g_OptionMenu = false;
-
+static bool s_PrevOptionMenu = false;
 
 
 
@@ -82,14 +82,20 @@ void	Manager_Update()
 		g_OptionMenu = !g_OptionMenu; // トグルで切り替え
 	}
 
+	// 変更点：状態が変化したフレームだけモード切替
+	if (g_OptionMenu != s_PrevOptionMenu)
+	{
+		if (g_OptionMenu)
+			Mouse_SetMode(MOUSE_POSITION_MODE_ABSOLUTE);
+		else
+			Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+
+		s_PrevOptionMenu = g_OptionMenu;
+	}
+
 	if (g_OptionMenu)
 	{
-		Mouse_SetMode(MOUSE_POSITION_MODE_ABSOLUTE);
 		Option_Update();
-	}
-	else
-	{
-		Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 	}
 
 	if (!g_OptionMenu)

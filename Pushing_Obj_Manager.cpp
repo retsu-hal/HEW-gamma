@@ -396,7 +396,7 @@ void PlayerPushManager_Draw()
 
         g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 
-        XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
+        XMFLOAT2 size = { 2.0f, 2.0f };  // Billboard size
         XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);

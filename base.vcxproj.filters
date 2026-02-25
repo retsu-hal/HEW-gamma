@@ -39,16 +39,13 @@
     <ClCompile Include="field.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="FieldManhole.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldSeesaw.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
     <ClCompile Include="game.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Input.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="keyboard.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="LightSource.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
     <ClCompile Include="imgui-docking\imgui.cpp">
@@ -72,6 +69,15 @@
     <ClCompile Include="imgui-docking\imgui_widgets.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="keyboard.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="LightSource.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -85,6 +91,12 @@
       <Filter>ソースファイル</Filter>
     </ClCompile>
     <ClCompile Include="mouse.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="newKeyBind.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Option.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
     <ClCompile Include="Player2D.cpp">
@@ -114,6 +126,9 @@
     <ClCompile Include="ShadowColliderBox.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="SkyDome.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
     <ClCompile Include="sprite.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -126,27 +141,12 @@
     <ClCompile Include="Trail.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="SkyDome.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="FieldSeesaw.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="FieldManhole.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="newKeyBind.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Option.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Audio.h">
+    <ClInclude Include="Bill_Board.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Bill_Board.h">
+    <ClInclude Include="Audio.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="camera.h">
@@ -170,6 +170,24 @@
     <ClInclude Include="DirectXTex.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="effect.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldSeesaw.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldManhole.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="field.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="fade.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
     <ClInclude Include="imgui-docking\imgui.h">
       <Filter>imgui</Filter>
     </ClInclude>
@@ -178,6 +196,15 @@
     </ClInclude>
     <ClInclude Include="imgui-docking\backends\imgui_impl_win32.h">
       <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="keyboard.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="LightSource.h">
+      <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="manager.h">
       <Filter>ヘッダーファイル</Filter>
@@ -194,37 +221,40 @@
     <ClInclude Include="newKeyBind.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Option.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
     <ClInclude Include="Player2D.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Player2DCapsule.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
     <ClInclude Include="Player3D.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Trail.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowColliderBox.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyDome.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="sprite.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="title.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="title_manager.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="PlayerModeSwitchManager.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="PlayerStatus.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="field.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="LightSource.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="keyboard.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Input.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="game.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="fade.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="effect.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="Polygon3D.h">
@@ -242,46 +272,9 @@
     <ClInclude Include="shader.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowColliderBox.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="sprite.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="title.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="title_manager.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Trail.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SkyDome.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldManhole.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldSeesaw.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Option.h">
-    <ClInclude Include="SkyBall.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Player2DCapsule.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="DirectXTex_Debug.lib" />
-    <Library Include="DirectXTex_Debug.lib">
-      <Filter>ライブラリーファイル</Filter>
-    </Library>
-    <Library Include="DirectXTex_Release.lib">
-      <Filter>ライブラリーファイル</Filter>
-    </Library>
+    <Library Include="DirectXTex_Release.lib" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -289,20 +282,17 @@
     <None Include="DirectXTex.inl" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="ソースファイル">
-      <UniqueIdentifier>{37d31349-5751-4c8c-9b42-adb27f5e263e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{d2de2805-e2cf-4850-974a-2899392c48a8}</UniqueIdentifier>
+    <Filter Include="ヘッダーファイル">
+      <UniqueIdentifier>{67fa0ed0-8948-413a-aafa-74f868b30902}</UniqueIdentifier>
     </Filter>
     <Filter Include="シェーダーファイル">
-      <UniqueIdentifier>{e9485879-eff8-44d6-9ba5-0b2c6308d825}</UniqueIdentifier>
+      <UniqueIdentifier>{89f2fe8c-660f-44f0-8dde-49676f496120}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダーファイル">
-      <UniqueIdentifier>{63322dcb-5d8c-491e-909a-fe4d540c305a}</UniqueIdentifier>
+    <Filter Include="ソースファイル">
+      <UniqueIdentifier>{7120c180-ff45-4108-9493-a14f0ec4a901}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ライブラリーファイル">
-      <UniqueIdentifier>{c1bf5a08-57fd-4a11-83d6-8c8fac2b8f95}</UniqueIdentifier>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{85f59d8d-c508-40b6-a4f9-71d635ecb74e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
