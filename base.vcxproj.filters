@@ -276,16 +276,14 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="Option.h">
-<<<<<<< HEAD
-  	<Filter>ヘッダーファイル</Filter>
-=======
       <Filter>ヘッダーファイル</Filter>
->>>>>>> 36ecb9a5c9cf76a86940184c20c21d06a9fb6aa6
     </ClInclude>
     <ClInclude Include="SkyBall.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="Player2DCapsule.h">
+	 <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
     <ClInclude Include="ShadowColliderBox.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>

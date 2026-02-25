@@ -378,24 +378,6 @@ void Title_Camera_Update()
 //=========================================================================================================
 void Camera_Draw()
 {
-<<<<<<< HEAD
-	DEBUG_IMGUI_BEGIN({
-		ImGui::Begin("Debug - han");
-		if (ImGui::TreeNode("camera.cpp"))
-		{
-			ImGui::Text("PosX: %.2f", CameraObject.Position.x);
-			ImGui::Text("PosY: %.2f", CameraObject.Position.y);
-			ImGui::Text("PosZ: %.2f", CameraObject.Position.z);
-			ImGui::Text("Pitch: %.2f", g_MouseSensPitch);
-			ImGui::Text("Yaw: %.2f", g_MouseSensYaw);
-			ImGui::TreePop();
-		}
-		ImGui::End();
-	});
-=======
-
->>>>>>> 36ecb9a5c9cf76a86940184c20c21d06a9fb6aa6
-	
 
     float w = (float)Direct3D_GetBackBufferWidth();
     float h = (float)Direct3D_GetBackBufferHeight();
