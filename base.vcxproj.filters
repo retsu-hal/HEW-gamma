@@ -269,6 +269,19 @@
     <ClInclude Include="SkyDome.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="FieldManhole.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldSeesaw.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Option.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyBall.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="Player2DCapsule.h">
     <ClInclude Include="ShadowColliderBox.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
