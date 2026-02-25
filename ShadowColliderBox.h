@@ -1,11 +1,18 @@
 #pragma once
 #include <vector>
+#include <cstdint>
 #include <DirectXMath.h>
 #include "field.h"
 
 // ============================================================
 // 影生成用プリズムデータ
 // ============================================================
+struct ShadowEdgeSegment
+{
+    DirectX::XMFLOAT3 a{};
+    DirectX::XMFLOAT3 b{};
+};
+
 struct ShadowPrism
 {
 	// プリズムの基準情報
@@ -25,6 +32,11 @@ struct ShadowPrism
     DirectX::XMFLOAT3 aabbMin{};
     DirectX::XMFLOAT3 aabbMax{};
 
+    float groundMaxY = 0.0f;
+    float groundBandY = 0.25f;
+    std::vector<DirectX::XMFLOAT2> groundPoly;
+    std::vector<ShadowEdgeSegment> standSegments;
+
 	// キャッシュ情報
     bool isValid = false;
     int casterIndex = -1;
@@ -43,6 +55,7 @@ struct ShadowBuildConfig
     float samePlaneDot = 0.95f;
     float thickness = 0.15f;   
     float mergeEpsilon = 0.01f;
+    float groundBandY = 0.25f;
     float rebuildThreshold = 0.01f;
 };
 

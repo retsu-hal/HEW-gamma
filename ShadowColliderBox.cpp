@@ -1,6 +1,7 @@
 #include "ShadowColliderBox.h"
 #include <algorithm>
 #include <cmath>
+#include <cfloat>
 #include "MathUtil.h"
 using namespace mu;
 using namespace DirectX;
@@ -438,8 +439,13 @@ void Shadow_Clear(ShadowPrism& prism)
 	prism.poly.clear();
 	prism.baseWorld.clear();
 	prism.topWorld.clear();
+	prism.groundPoly.clear();
+	prism.standSegments.clear();
+	prism.groundMaxY = 0.0f;
+	prism.groundBandY = 0.25f;
 	prism.isValid = false;
 	prism.lightDir = { 0, 0, 0 };
+
 }
 
 bool Shadow_NeedsRebuild(
@@ -500,54 +506,21 @@ bool Shadow_Build(
 
 	if (hits.size() < 3) return false;
 
-	struct Cluster { XMFLOAT3 n; std::vector<XMFLOAT3> pts; };
-	std::vector<Cluster> clusters;
-	clusters.reserve(4);
+	XMFLOAT3 planeN = Normalize(hits[0].normal);
+	std::vector<XMFLOAT3> basePts;
 
 	for (const auto& h : hits)
 	{
-		XMFLOAT3 hn = Normalize(h.normal);
-		bool added = false;
-		for (auto& c : clusters)
-		{
-			if (Dot(hn, c.n) > config.samePlaneDot)
-			{
-				c.pts.push_back(h.point);
-				c.n = Normalize(c.n + hn);
-				added = true;
-				break;
-			}
-		}
-		if (!added)
-		{
-			Cluster c;
-			c.n = hn;
-			c.pts.push_back(h.point);
-			clusters.push_back(c);
-		}
+		if (Dot(Normalize(h.normal), planeN) > config.samePlaneDot)
+			basePts.push_back(h.point);
 	}
-
-	int bestCi = -1;
-	size_t bestCount = 0;
-	for (int i = 0; i < (int)clusters.size(); ++i)
-	{
-		if (clusters[i].pts.size() > bestCount)
-		{
-			bestCount = clusters[i].pts.size();
-			bestCi = i;
-		}
-	}
-	if (bestCi < 0 || bestCount < 3) return false;
-
-	XMFLOAT3 planeN = Normalize(clusters[bestCi].n);
-	std::vector<XMFLOAT3> basePts = clusters[bestCi].pts;
 
 	RemoveDuplicates(basePts, config.mergeEpsilon);
 	if (basePts.size() < 3) return false;
 
 	XMFLOAT3 centroid = ComputeCentroid(basePts);
 
-	XMFLOAT3 toLight = Normalize(lightPos - centroid);
+	XMFLOAT3 toLight = lightPos - centroid;
 	if (Dot(planeN, toLight) < 0.0f)
 		planeN = planeN * -1.0f;
 
@@ -570,7 +543,7 @@ bool Shadow_Build(
 	out.v = v;
 	out.thickness = config.thickness;
 
-	out.lightDir = toLight;
+	out.lightDir = Normalize(toLight);
 	XMFLOAT3 extrude = planeN * (config.thickness);
 
 	for (int idx : hullIdx)
@@ -583,24 +556,54 @@ bool Shadow_Build(
 		out.poly.push_back({ Dot(d, u), Dot(d, v) });
 	}
 
-	auto SignedArea2 = [](const std::vector<XMFLOAT2>& p) -> float
-		{
-			float a = 0.0f;
-			int n = (int)p.size();
-			for (int i = 0; i < n; ++i)
-			{
-				const XMFLOAT2& A = p[i];
-				const XMFLOAT2& B = p[(i + 1) % n];
-				a += (A.x * B.y - B.x * A.y);
-			}
-			return 0.5f * a;
-	};
+	out.groundBandY = config.groundBandY;
+	out.groundMaxY = -FLT_MAX;
+	for (const auto& p : out.baseWorld)
+		out.groundMaxY = (std::max)(out.groundMaxY, p.y);
+	float yBandMin = out.groundMaxY - out.groundBandY;
 
-	if (SignedArea2(out.poly) < 0.0f)
+	out.standSegments.clear();
+	auto AddStandSeg = [&](const XMFLOAT3& A, const XMFLOAT3& B)
+		{
+			XMFLOAT3 d = B - A;
+			float len2 = LengthSq(d);
+			if (len2 < 1e-6f) return;
+
+			XMFLOAT3 dn = Normalize(d, { 1,0,0 });
+			if (std::fabs(dn.y) > 0.85f) return;
+
+			ShadowEdgeSegment s;
+			s.a = A;
+			s.b = B;
+			out.standSegments.push_back(s);
+		};
+
+	const int bn = (int)out.baseWorld.size();
+	for (int i = 0; i < bn; ++i)
 	{
-		std::reverse(out.poly.begin(), out.poly.end());
-		std::reverse(out.baseWorld.begin(), out.baseWorld.end());
-		std::reverse(out.topWorld.begin(), out.topWorld.end());
+		const XMFLOAT3 p0 = out.baseWorld[i];
+		const XMFLOAT3 p1 = out.baseWorld[(i + 1) % bn];
+
+		const bool aIn = (p0.y >= yBandMin);
+		const bool bIn = (p1.y >= yBandMin);
+
+		if (aIn && bIn)
+		{
+			AddStandSeg(p0, p1);
+		}
+		else if (aIn ^ bIn)
+		{
+			float dy = (p1.y - p0.y);
+			if (std::fabs(dy) > 1e-6f)
+			{
+				float t = (yBandMin - p0.y) / dy;
+				t = Clamp(t, 0.0f, 1.0f);
+				XMFLOAT3 pi = p0 + (p1 - p0) * t;
+
+				if (aIn) AddStandSeg(p0, pi);
+				else    AddStandSeg(pi, p1);
+			}
+		}
 	}
 
 	std::vector<XMFLOAT3> allPts = out.baseWorld;
@@ -647,7 +650,6 @@ void ShadowManager::UpdateAllShadows(
 	const std::vector<MAPDATA>& map,
 	const ShadowBuildConfig& config)
 {
-
 	std::vector<int> newCasterIndices;
 	for (int i = 0; i < (int)map.size(); ++i)
 	{

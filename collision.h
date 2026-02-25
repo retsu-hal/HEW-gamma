@@ -109,11 +109,15 @@ struct ShadowDebugOptions//シャドウの当たり判定のデバッグ描画オプション
     bool drawAABB = false; 
     bool drawNormal = true;   
     bool drawVertices = false;
+    bool drawStandSegments = true;
+    bool drawGround = true;
 
-    unsigned int prismColor = 0xFF0000FF; 
+    unsigned int prismColor = 0xFF0000FF;
     unsigned int aabbColor = 0x80FFFF00;
     unsigned int normalColor = 0xFFFFFF00;
     unsigned int vertexColor = 0xFF00FF00;
+    unsigned int standSegColor = 0xFFFF00FF;
+    unsigned int groundColor = 0xFFFF00FF;
 };
 
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options);
