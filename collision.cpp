@@ -35,6 +35,9 @@ static int    s_LastStandingPrismIndex = -1;
 static XMFLOAT3 s_LastShadowTopPos = { 0, 0, 0 };
 static int    s_GraceFrames = 0;
 
+static XMFLOAT3 s_LastStandDirXZ = { 1, 0, 0 };
+static bool     s_HasStandDir = false;
+
 
 // シャドウの当たり判定の状態をリセット（プレイヤーが地面から離れたときなどに呼び出す）
 void Collision_ResetShadowContactState()
@@ -1214,6 +1217,17 @@ bool Player2DShadow_Collision()
 	XMFLOAT3 dXZ = { player->Velocity.x, 0.0f, player->Velocity.z };
 	bool hitAny = false;
 
+	if (s_HasStandDir && s_LastStandingPrismIndex >= 0 && player->Velocity.y <= 0.02f)
+	{
+		float dl = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
+		if (dl > 1e-6f)
+		{
+			float d = dXZ.x * s_LastStandDirXZ.x + dXZ.z * s_LastStandDirXZ.z;
+			dXZ.x = s_LastStandDirXZ.x * d;
+			dXZ.z = s_LastStandDirXZ.z * d;
+		}
+	}
+
 	auto Area2 = [](const std::vector<XMFLOAT2>& p) -> float {
 		float a = 0.0f;
 		int n = (int)p.size();
@@ -1240,7 +1254,6 @@ bool Player2DShadow_Collision()
 		if (!prism || !prism->isValid) continue;
 		if (prism->poly.size() < 3) continue;
 
-		if (prism->n.y > 0.70f) continue;
 
 		const float moveLen = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
 		const float gate = capsule.radius + capsule.halfHeight + moveLen + 0.3f;
@@ -1445,186 +1458,249 @@ bool Player2DShadow_TopContact()
 	if (prisms.empty()) return false;
 
 	Capsule2D capsule = Player2D_GetCapsule();
-	const XMFLOAT3 capBottom = capsule.GetBottom();
-	float footY = capBottom.y - capsule.radius;
 
-	const float kJumpEscapeVelocity = 0.01f;
-	const bool isRising = (player->Velocity.y > kJumpEscapeVelocity);
-	const float footYPrev = footY - player->Velocity.y;
+	const float kSkin = 0.01f;
 
-	// How close (within the receiver plane) you must be to a ledge segment to be considered "standing on it".
-	const float standWidth = capsule.radius + 0.10f;
+	const float kStandWidth = capsule.radius + 0.12f; // (XZ) max distance to ledge to be considered landing
+	const float kContactUp = 0.25f;                   // allow slight gap above
+	const float kContactDown = -(capsule.radius + 0.45f); // allow some penetration / fall
+	const float kJumpEscapeVel = 0.02f;
+	const bool  isRising = (player->Velocity.y > kJumpEscapeVel);
 
-	// How far you can be away from the receiver plane along prism normal and still be snapped.
-	const float depthTol = capsule.halfZ + 0.10f;
+	const float kFaceNY = 0.85f;
 
-	// Vertical acceptance window (same spirit as your old TopContact).
-	const float contactDown = -capsule.radius - 0.40f;
-	const float contactUp = 0.35f;
+	auto Dot3 = [](const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; };
+	auto LenSqXZ = [](const XMFLOAT3& v) { return v.x * v.x + v.z * v.z; };
 
-	auto ClosestPointOnSeg = [](const XMFLOAT3& p, const XMFLOAT3& a, const XMFLOAT3& b, float* outT) -> XMFLOAT3
+	// Capsule projection radius onto an arbitrary axis (same as your wall-collision helper).
+	auto CapsuleProjection = [&](const XMFLOAT3& axisW) -> float
 		{
-			XMFLOAT3 ab = b - a;
-			float ab2 = Dot(ab, ab);
-			float t = 0.0f;
-			if (ab2 > 1e-8f)
-			{
-				t = Dot(p - a, ab) / ab2;
-				t = Clamp(t, 0.0f, 1.0f);
-			}
-			if (outT) *outT = t;
-			return a + ab * t;
+			XMFLOAT3 capAxis = { -sinf(capsule.rotationZ), cosf(capsule.rotationZ), 0.0f };
+			float axisDot = fabsf(Dot(axisW, capAxis));
+			return capsule.radius + axisDot * capsule.halfHeight;
 		};
 
-	auto FindGroundOnPrism = [&](const ShadowPrism* prism, const Capsule2D& cap, float width, float* outGroundY) -> bool
+	// Broadphase AABB around capsule
+	XMFLOAT3 capHalf = capsule.GetBoundingHalfSize();
+	const float aabbPad = 0.30f;
+	XMFLOAT3 capMin = capsule.center - (capHalf + XMFLOAT3(aabbPad, aabbPad, aabbPad));
+	XMFLOAT3 capMax = capsule.center + (capHalf + XMFLOAT3(aabbPad, aabbPad, aabbPad));
+
+	auto AABBOverlap = [](const XMFLOAT3& aMin, const XMFLOAT3& aMax, const XMFLOAT3& bMin, const XMFLOAT3& bMax) -> bool
 		{
-			if (!prism || !prism->isValid) return false;
-			if (prism->standSegments.empty()) return false;
-
-			// Quick broadphase using AABB.
-			XMFLOAT3 h = cap.GetBoundingHalfSize();
-			XMFLOAT3 aMin = cap.center - h - XMFLOAT3(width, width, width);
-			XMFLOAT3 aMax = cap.center + h + XMFLOAT3(width, width, width);
-
-			if (aMax.x < prism->aabbMin.x || aMin.x > prism->aabbMax.x ||
-				aMax.y < prism->aabbMin.y || aMin.y > prism->aabbMax.y ||
-				aMax.z < prism->aabbMin.z || aMin.z > prism->aabbMax.z)
-				return false;
-
-			// Must be near the receiver plane along prism normal (otherwise you might snap from "behind" the wall).
-			XMFLOAT3 rel = cap.center - prism->origin;
-			float n0 = Dot(rel, prism->n);
-
-			XMFLOAT3 capAxis = { -sinf(cap.rotationZ), cosf(cap.rotationZ), 0.0f };
-			float rN = cap.radius + fabsf(Dot(prism->n, capAxis)) * cap.halfHeight;
-
-			const float slabTol = 0.05f;
-			if (n0 < -rN - slabTol || n0 > prism->thickness + rN + slabTol) return false;
-
-			// Project the capsule center onto the receiver plane (n component removed).
-			float sliceN = Clamp(n0, 0.0f, prism->thickness);
-			XMFLOAT3 pSlice = cap.center - prism->n * (n0 - sliceN);
-
-			float bestD2 = FLT_MAX;
-			float bestY = 0.0f;
-
-			for (const auto& seg : prism->standSegments)
+			return (aMin.x <= bMax.x && aMax.x >= bMin.x) &&
+				(aMin.y <= bMax.y && aMax.y >= bMin.y) &&
+				(aMin.z <= bMax.z && aMax.z >= bMin.z);
+		};
+	
+	auto PointInConvexPoly2D = [](const std::vector<XMFLOAT2>& poly, const XMFLOAT2& p, float eps) -> bool
+		{
+			if (poly.size() < 3) return false;
+			float sign = 0.0f;
+			for (int i = 0; i < (int)poly.size(); ++i)
 			{
-				XMFLOAT3 A = seg.a + prism->n * sliceN;
-				XMFLOAT3 B = seg.b + prism->n * sliceN;
-
-				float t;
-				XMFLOAT3 q = ClosestPointOnSeg(pSlice, A, B, &t);
-
-				// In-plane distance (remove any tiny n component).
-				XMFLOAT3 d = pSlice - q;
-				d = d - prism->n * Dot(d, prism->n);
-				float d2 = Dot(d, d);
-
-				if (d2 < bestD2)
-				{
-					bestD2 = d2;
-					bestY = q.y;
-				}
+				const XMFLOAT2 a = poly[i];
+				const XMFLOAT2 b = poly[(i + 1) % (int)poly.size()];
+				const float cx = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+				if (fabsf(cx) <= eps) continue;
+				if (sign == 0.0f) sign = (cx > 0.0f) ? 1.0f : -1.0f;
+				else if ((cx > 0.0f && sign < 0.0f) || (cx < 0.0f && sign > 0.0f)) return false;
 			}
-
-			if (bestD2 > width * width) return false;
-			if (outGroundY) *outGroundY = bestY;
 			return true;
 		};
 
-	bool hitAny = false;
-	int bestPrismIdx = -1;
-	float bestAbs = FLT_MAX;
+	// Player foot Y (your Player2D.Position.y is the capsule bottom-most point)
+	const float footY = player->Position.y;
+	const float footYPrev = footY - player->Velocity.y; // dt==1 in this project
+
+	int bestIdx = -1;
+	float bestAbs = 1e9f;
 	float bestGroundY = 0.0f;
 
-	// Find best ledge contact (closest vertical distance).
-	for (int i = 0; i < (int)prisms.size(); ++i)
+	XMFLOAT3 bestDirXZ = { 1,0,0 };
+	bool bestHasDir = false;
+
+	for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
 	{
-		const ShadowPrism* prism = prisms[i];
-		float groundY;
-		if (!FindGroundOnPrism(prism, capsule, standWidth, &groundY)) continue;
+		const ShadowPrism* prism = prisms[prismIdx];
+		if (!prism || !prism->isValid) continue;
+		if (prism->poly.size() < 3) continue;
 
-		float dyNow = groundY - footY;
-		float dyPrev = groundY - footYPrev;
+		XMFLOAT3 pMin = prism->aabbMin - XMFLOAT3(aabbPad, aabbPad, aabbPad);
+		XMFLOAT3 pMax = prism->aabbMax + XMFLOAT3(aabbPad, aabbPad, aabbPad);
+		if (!AABBOverlap(capMin, capMax, pMin, pMax)) continue;
 
-		// Only land when not moving upward.
-		if (isRising) continue;
-		if (player->Velocity.y > 0.05f) continue;
+		// Slab check along prism thickness axis (n)
+		XMFLOAT3 rel = capsule.center - prism->origin;
+		float n0 = Dot3(rel, prism->n);
+		float rN = CapsuleProjection(prism->n);
+		const float slabTol = 0.05f;
+		if (n0 < -rN - slabTol || n0 > prism->thickness + rN + slabTol)
+			continue;
 
-		// Accept either: (1) within the contact window, or (2) crossed the ledge this frame (prevents tunneling when falling fast).
-		const bool inWindow = (dyNow >= contactDown && dyNow <= contactUp);
-		const bool crossedDown = (footYPrev >= groundY + 0.01f) && (footY <= groundY + contactUp);
-		if (!inWindow && !crossedDown) continue;
+		// Use a depth slice close to where the player currently is.
+		float sliceN = n0;
+		if (sliceN < 0.0f) sliceN = 0.0f;
+		if (sliceN > prism->thickness) sliceN = prism->thickness;
+		// Bias to the outer face if the player is already on the outer half.
+		if (sliceN > prism->thickness * 0.5f)
+			sliceN = prism->thickness;
 
-		float dy = dyNow;
-		float absDy = std::fabs(dy);
-		if (absDy < bestAbs)
+		if (prism->n.y >= kFaceNY)
 		{
-			bestAbs = absDy;
-			bestPrismIdx = i;
-			bestGroundY = groundY;
-			hitAny = true;
+			if (fabsf(prism->n.y) < 1e-6f) continue;
+
+			const XMFLOAT3 originOff = prism->origin + prism->n * sliceN;
+
+			const float x = capsule.center.x;
+			const float z = capsule.center.z;
+
+			const float y = originOff.y - (prism->n.x * (x - originOff.x) + prism->n.z * (z - originOff.z)) / prism->n.y;
+
+			// Convert to prism local (u,v) and check inside polygon.
+			const XMFLOAT3 pOn = { x, y, z };
+			const XMFLOAT3 d = pOn - prism->origin;
+			const XMFLOAT2 uv = { Dot3(d, prism->u), Dot3(d, prism->v) };
+
+			if (!PointInConvexPoly2D(prism->poly, uv, 1e-5f))
+				continue;
+
+			const float groundY = y;
+			const float distToGround = footY - groundY;
+
+			if (isRising && distToGround > 0.0f)
+				continue;
+
+			const bool crossed = (footYPrev >= groundY + kSkin) && (footY <= groundY + kSkin);
+			if (!crossed)
+			{
+				if (distToGround < kContactDown || distToGround > kContactUp)
+					continue;
+			}
+
+			const float absDist = fabsf(distToGround);
+			if (absDist < bestAbs)
+			{
+				bestAbs = absDist;
+				bestIdx = prismIdx;
+				bestGroundY = groundY;
+				bestHasDir = false;
+			}
+			continue;
+		}
+
+		auto EvalSeg = [&](XMFLOAT3 a, XMFLOAT3 b)
+			{
+				a = a + prism->n * sliceN;
+				b = b + prism->n * sliceN;
+
+				XMFLOAT3 e = b - a;
+				if (LenSqXZ(e) < 1e-8f) return;
+
+				// Closest point from capsule center (in XZ) to segment (in XZ)
+				XMFLOAT3 p = capsule.center;
+				XMFLOAT3 ab = b - a;
+				float abxz2 = ab.x * ab.x + ab.z * ab.z;
+				if (abxz2 < 1e-8f) return;
+
+				float t = ((p.x - a.x) * ab.x + (p.z - a.z) * ab.z) / abxz2;
+				t = Clamp(t, 0.0f, 1.0f);
+
+				XMFLOAT3 q = a + ab * t;
+				float dx = p.x - q.x;
+				float dz = p.z - q.z;
+				float distXZ = sqrtf(dx * dx + dz * dz);
+				if (distXZ > kStandWidth) return;
+
+				float groundY = q.y;
+				float distToGround = footY - groundY;
+
+				if (isRising && distToGround > 0.0f)
+					return;
+
+				bool crossed = (footYPrev >= groundY + kSkin) && (footY <= groundY + kSkin);
+				if (!crossed)
+				{
+					if (distToGround < kContactDown || distToGround > kContactUp)
+						return;
+				}
+
+				float absDist = fabsf(distToGround);
+				if (absDist < bestAbs)
+				{
+					bestAbs = absDist;
+					bestIdx = prismIdx;
+					bestGroundY = groundY;
+
+					XMFLOAT3 dir = { ab.x, 0.0f, ab.z };
+					float dl = sqrtf(dir.x * dir.x + dir.z * dir.z);
+					if (dl > 1e-6f) { dir.x /= dl; dir.z /= dl; bestDirXZ = dir; bestHasDir = true; }
+					else { bestHasDir = false; }
+				}
+			};
+
+		if (!prism->standSegments.empty())
+		{
+			for (const auto& s : prism->standSegments)
+				EvalSeg(s.a, s.b);
+		}
+		else if (prism->baseWorld.size() >= 2)
+		{
+			// Fallback: if standSegments weren't built for some reason, approximate using baseWorld edges.
+			const int nV = (int)prism->baseWorld.size();
+			for (int i = 0; i < nV; ++i)
+			{
+				EvalSeg(prism->baseWorld[i], prism->baseWorld[(i + 1) % nV]);
+			}
 		}
 	}
 
-	if (hitAny)
+	bool hitAny = false;
+
+	if (bestIdx >= 0)
 	{
-		float dy = bestGroundY - footY;
-
-		// Clamp adjustment to avoid big pops.
-		float absDy = std::fabs(dy);
-		float maxAdj = 0.15f;
-		if (absDy < 0.01f) maxAdj = absDy;
-		else if (absDy < 0.05f) maxAdj = 0.03f;
-		else if (absDy < 0.15f) maxAdj = 0.08f;
-
-		if (absDy > maxAdj) dy = (dy > 0) ? maxAdj : -maxAdj;
-
-		player->Position.y += dy;
-		player->Velocity.y = 0.0f;
+		// Snap player bottom to groundY.
+		float targetY = bestGroundY + kSkin;
+		player->Position.y = targetY;
+		if (player->Velocity.y < 0.0f)
+			player->Velocity.y = 0.0f;
 		player->isGround = true;
+		hitAny = true;
 
-		s_LastStandingPrismIndex = bestPrismIdx;
-		s_LastShadowTopPos.y = bestGroundY;
+		s_LastStandingPrismIndex = bestIdx;
 		s_GraceFrames = 0;
-		return true;
-	}
+		s_LastShadowTopPos = { player->Position.x, targetY, player->Position.z };
 
-	// --- Grace (coyote time) ---
-	const int GRACE_FRAME_COUNT = 6;
-	if (s_LastStandingPrismIndex >= 0)
+		s_HasStandDir = bestHasDir;
+		if (bestHasDir) s_LastStandDirXZ = bestDirXZ;
+	}
+	else
 	{
-		if (isRising)
+		// Coyote time (no position adjustment): allows 1-2 frames grace when stepping off the ledge.
+		const int GRACE = 6;
+		if (!isRising && s_LastStandingPrismIndex >= 0)
+		{
+			s_GraceFrames++;
+			if (s_GraceFrames <= GRACE)
+			{
+				player->isGround = true;
+				hitAny = true;
+				if (player->Velocity.y < 0.0f) player->Velocity.y = 0.0f;
+			}
+			else
+			{
+				s_LastStandingPrismIndex = -1;
+				s_GraceFrames = 0;
+			}
+		}
+		else
 		{
 			s_LastStandingPrismIndex = -1;
 			s_GraceFrames = 0;
-			return false;
 		}
-
-		s_GraceFrames++;
-		if (s_GraceFrames <= GRACE_FRAME_COUNT && s_LastStandingPrismIndex < (int)prisms.size())
-		{
-			const ShadowPrism* lastPrism = prisms[s_LastStandingPrismIndex];
-			float newGroundY;
-			// Slightly wider during grace to keep contact when you are just barely leaving an edge.
-			if (FindGroundOnPrism(lastPrism, capsule, standWidth * 1.5f, &newGroundY))
-			{
-				float deltaY = newGroundY - s_LastShadowTopPos.y;
-				player->Position.y += deltaY;
-				player->isGround = true;
-				player->Velocity.y = 0.0f;
-				s_LastShadowTopPos.y = newGroundY;
-				return true;
-			}
-		}
-
-		// Grace expired or lost the prism.
-		s_LastStandingPrismIndex = -1;
-		s_GraceFrames = 0;
 	}
 
-	return false;
+	return hitAny;
 }
 
 int Collision_Player2D_MoveAndCollision()

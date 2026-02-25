@@ -560,6 +560,21 @@ bool Shadow_Build(
 	out.groundMaxY = -FLT_MAX;
 	for (const auto& p : out.baseWorld)
 		out.groundMaxY = (std::max)(out.groundMaxY, p.y);
+	
+	const XMFLOAT3 worldUp = { 0.0f, 1.0f, 0.0f };
+	const float upDotN = Dot(worldUp, out.n);
+	XMFLOAT3 upInPlane = worldUp - out.n * upDotN;
+	float upLen = Length(upInPlane);
+	const bool hasUpInPlane = (upLen > 1e-5f);
+	if (hasUpInPlane) upInPlane = upInPlane * (1.0f / upLen);
+
+	float hMax = -FLT_MAX;
+	if (hasUpInPlane)
+	{
+		for (const auto& p : out.baseWorld)
+			hMax = (std::max)(hMax, Dot(p, upInPlane));
+	}
+	float hBandMin = hMax - out.groundBandY;
 	float yBandMin = out.groundMaxY - out.groundBandY;
 
 	out.standSegments.clear();
@@ -569,8 +584,8 @@ bool Shadow_Build(
 			float len2 = LengthSq(d);
 			if (len2 < 1e-6f) return;
 
-			XMFLOAT3 dn = Normalize(d, { 1,0,0 });
-			if (std::fabs(dn.y) > 0.85f) return;
+			float len2xz = d.x * d.x + d.z * d.z;
+			if (len2xz < 1e-8f) return;
 
 			ShadowEdgeSegment s;
 			s.a = A;
@@ -584,8 +599,12 @@ bool Shadow_Build(
 		const XMFLOAT3 p0 = out.baseWorld[i];
 		const XMFLOAT3 p1 = out.baseWorld[(i + 1) % bn];
 
-		const bool aIn = (p0.y >= yBandMin);
-		const bool bIn = (p1.y >= yBandMin);
+		float aH = hasUpInPlane ? Dot(p0, upInPlane) : p0.y;
+		float bH = hasUpInPlane ? Dot(p1, upInPlane) : p1.y;
+		float bandMin = hasUpInPlane ? hBandMin : yBandMin;
+
+		const bool aIn = (aH >= bandMin);
+		const bool bIn = (bH >= bandMin);
 
 		if (aIn && bIn)
 		{
@@ -593,10 +612,10 @@ bool Shadow_Build(
 		}
 		else if (aIn ^ bIn)
 		{
-			float dy = (p1.y - p0.y);
-			if (std::fabs(dy) > 1e-6f)
+			float denom = (bH - aH);
+			if (std::fabs(denom) > 1e-6f)
 			{
-				float t = (yBandMin - p0.y) / dy;
+				float t = (bandMin - aH) / denom;
 				t = Clamp(t, 0.0f, 1.0f);
 				XMFLOAT3 pi = p0 + (p1 - p0) * t;
 

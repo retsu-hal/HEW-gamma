@@ -33,7 +33,7 @@ struct ShadowPrism
     DirectX::XMFLOAT3 aabbMax{};
 
     float groundMaxY = 0.0f;
-    float groundBandY = 0.25f;
+    float groundBandY = 0.4f;
     std::vector<DirectX::XMFLOAT2> groundPoly;
     std::vector<ShadowEdgeSegment> standSegments;
 
@@ -55,7 +55,7 @@ struct ShadowBuildConfig
     float samePlaneDot = 0.95f;
     float thickness = 0.15f;   
     float mergeEpsilon = 0.01f;
-    float groundBandY = 0.25f;
+    float groundBandY = 0.4f;
     float rebuildThreshold = 0.01f;
 };
 

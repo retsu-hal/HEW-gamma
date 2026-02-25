@@ -177,7 +177,8 @@ static XMFLOAT3 Calc2DRotationFromFace(const MAPDATA& box, BOX_FACE face)
 static XMFLOAT3 Calc2DPositionOnWallSurface(
     const MAPDATA& box,
     BOX_FACE face,
-    const XMFLOAT3& p3Pos)
+    const XMFLOAT3& p3Pos,
+    const XMFLOAT3& faceNormalW)
 {
     const XMFLOAT3 half = Field_GetHalfSize(box);
 
@@ -218,7 +219,11 @@ static XMFLOAT3 Calc2DPositionOnWallSurface(
     XMStoreFloat3(&out, Pw);
 
     // 2DのY座標は、3DのY座標をそのまま使用
-    out.y = p3Pos.y;
+    const float kKeepYWhenWallNY = 0.20f;
+    if (fabsf(faceNormalW.y) < kKeepYWhenWallNY)
+    {
+        out.y = p3Pos.y;
+    }
 
     return out;
 }
@@ -320,7 +325,7 @@ static bool TrySwitch3DTo2D()
     PLAYER* p3 = GetPlayer3D();
 
     // 2Dプレイヤーの位置を、3Dプレイヤーの位置をもとに、当たった壁の面に応じて計算
-    XMFLOAT3 p2Pos = Calc2DPositionOnWallSurface(box, tgt.face, p3->Position);
+    XMFLOAT3 p2Pos = Calc2DPositionOnWallSurface(box, tgt.face, p3->Position, tgt.normal);
     XMFLOAT3 p2Rot = Calc2DRotationFromFace(box, tgt.face);
 
     if (debugMode)
