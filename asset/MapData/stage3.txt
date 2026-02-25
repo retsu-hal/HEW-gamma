@@ -1,0 +1,48 @@
+# Layer Y=0
+..................
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+GGGGGGGGGGGGGGGGGG
+..................
+
+# Layer Y=1
+EEEEEEEEEEEEEEEEEE
+G........3.......G
+G................G
+G........R.......G
+G................G 
+G................G
+G................G 
+G................G 
+G........1.......G 
+GGGGGGGGGGGGGGGGGG
+
+
+# Layer Y=2
+EEEEEEEEEEEEEEEEEE
+G................G
+G................G
+G................G
+G................G 
+G................G
+G................G 
+G................G 
+G................G 
+GGGGGGGGGGGGGGGGGG
+
+# Layer Y=3
+EEEEEEEEEEEEEEEEEE
+G................G
+G................G
+G................G
+G................G 
+G................G
+G................G 
+G................G 
+G................G 
+GGGGGGGGGGGGGGGGGG

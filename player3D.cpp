@@ -216,33 +216,41 @@ void Player3D_Move()
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 	bool isMoving = false;
 
-	// 入力ベクトル
-	inputDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_Player3D.ControllerMode = gPad.IsConnected();
 
-	if (!gPad.IsConnected())
+	// キーボードの存在する代表的な操作キーをチェック（押されているならキーボード優先）
+	if (Keyboard_IsKeyDown(KK_W) || Keyboard_IsKeyDown(KK_S) ||
+		Keyboard_IsKeyDown(KK_A) || Keyboard_IsKeyDown(KK_D) ||
+		Keyboard_IsKeyDown(KK_SPACE) || Keyboard_IsKeyDown(KK_F) ||
+		Keyboard_IsKeyDown(KK_LEFTSHIFT) || Keyboard_IsKeyDown(KK_R) ||
+		Keyboard_IsKeyDown(KK_ESCAPE))
 	{
-		if (Keyboard_IsKeyDown(KK_W))
-		{
-			inputDir.z += +1.0f;
-			isMoving = true;
-		}
-		if (Keyboard_IsKeyDown(KK_S))
-		{
-			inputDir.z += -1.0f;
-			isMoving = true;
-		}
-		if (Keyboard_IsKeyDown(KK_D))
-		{
-			inputDir.x += +1.0f;
-			isMoving = true;
-		}
-		if (Keyboard_IsKeyDown(KK_A))
-		{
-			inputDir.x += -1.0f;
-			isMoving = true;
-		}
+		g_Player3D.ControllerMode = false;
 	}
-	else
+
+	// まずキーボード入力を取得（常に取得しておく）
+	XMFLOAT3 kbDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	if (Keyboard_IsKeyDown(KK_W))
+	{
+		kbDir.z += +1.0f;
+	}
+	if (Keyboard_IsKeyDown(KK_S))
+	{
+		kbDir.z += -1.0f;
+	}
+	if (Keyboard_IsKeyDown(KK_D))
+	{
+		kbDir.x += +1.0f;
+	}
+	if (Keyboard_IsKeyDown(KK_A))
+	{
+		kbDir.x += -1.0f;
+	}
+
+	// コントローラー入力（接続されていれば取得）
+	XMFLOAT3 padDir = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	bool padActive = false;
+	if (gPad.IsConnected())
 	{
 		float lx = gPad.GetLeftStickX();
 		float ly = gPad.GetLeftStickY();
@@ -251,9 +259,25 @@ void Player3D_Move()
 		if (fabsf(lx) < deadzone) lx = 0.0f;
 		if (fabsf(ly) < deadzone) ly = 0.0f;
 
-		inputDir.x = -lx;
-		inputDir.y = 0.0f;
-		inputDir.z = -ly;
+		padDir.x = -lx;
+		padDir.y = 0.0f;
+		padDir.z = -ly;
+
+		if (Length2D(padDir) > 1e-6f)
+			padActive = true;
+	}
+
+	// 優先ルール：ControllerMode に応じて入力ソースを決定する
+	// （ControllerMode は上で gPad.IsConnected() を基にしつつ、キーボード入力があれば false にしている）
+	if (g_Player3D.ControllerMode && padActive)
+	{
+		inputDir = padDir;
+		isMoving = true;
+	}
+	else
+	{
+		inputDir = kbDir;
+		if (Length2D(kbDir) > 1e-6f) isMoving = true;
 	}
 
 	// アニメ切替
@@ -321,7 +345,7 @@ void Player3D_Move()
 		g_Player3D.Rotation.y = currentYaw + delta * rotateLerp;
 	}
 
-	// 最大速度クランプ
+	// 最大速度クランプ（既存ロジックをそのまま使用）
 	if (g_Player3D.Velocity.x >= g_Player3D.maxMoveSpeed)
 	{
 		g_Player3D.Velocity.x = g_Player3D.maxMoveSpeed;
@@ -343,12 +367,11 @@ void Player3D_Move()
 	{
 		g_Player3D.state = PLAYER_STATE_JUMP;
 	}
-	
-	// Dash開始（MOVE -> DASH遷移）
+
+	// Dash開始
 	if (IsInputTrigger(DashKey, gPad))
 	{
 		g_Player3D.state = PLAYER_STATE_DASH;
-		// 当フレームからダッシュ速度を適用
 		g_Player3D.isDash = true;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 	}
