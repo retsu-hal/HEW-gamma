@@ -57,9 +57,13 @@ void Collision_ResetShadowContactState();
 int Player3DField_Collision();
 bool Collision_PlayerTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
 
+int Collision_Player2D_MoveAndCollision();
 
 int Player2DField_Collision();
 bool Collision_Player2DTrigger(TRIGGER_HIT* outHit, float extraRange = 0.0f);
+
+bool Player2DShadow_Collision();
+bool Player2DShadow_TopContact();
 
 
 bool Resolve_OBB_OBB_ZY(
@@ -87,8 +91,7 @@ const std::vector<const ShadowPrism*>& Collision_GetShadowPrisms();
 void Collision_SetShadowPrism(const ShadowPrism* prism);
 const ShadowPrism* Collision_GetShadowPrism();
 
-bool Player2DShadow_Collision();
-bool Player2DShadow_TopContact();
+
 
 void Collision_DebugClearExtraBoxes();
 void Collision_DebugAddExtraAABB(const DirectX::XMFLOAT3& center, const DirectX::XMFLOAT3& half,

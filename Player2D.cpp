@@ -22,12 +22,11 @@ static ID3D11Buffer* g_VertexBuffer = NULL;
 static float g_StopTime = 0.0f;
 
 static Player2DAnimeDef g_AnimDefs[PLAYER2D_ANIME_MAX] = {
-	//                  texturePath                               cols rows start count speed loop
-	/* IDLE */ { L"asset\\Texture\\Player2D\\Taiki_2D.png",        5,   5,    0,    25,  1.5f, true  },
-	
-	/* WALK */ { NULL,                                              5,   5,    0,    25,  1.5f, true  },
-	/* JUMP */ { NULL,                                              5,   5,    0,    25,  1.5f, false },
-	/* FALL */ { NULL,                                              5,   5,    0,    25,  1.5f, false },
+	//                  texturePath                           cols rows start count speed loop
+	/* IDLE */ { L"asset\\Texture\\Player2D\\2D_idol.png",     5,   5,    0,    25,  2.0f, true  },
+	/* WALK */ { L"asset\\Texture\\Player2D\\2D_walk.png",     5,   5,    0,    25,  2.0f, true  },
+	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    0,    25,  2.0f, true },
+	/* FALL */ { L"asset\\Texture\\Player2D\\2D_animation.png", 50,  1,   0,    1, 1.5f, false },
 
 };
 
@@ -99,7 +98,7 @@ PLAYER2D_ANIME Player2D_GetAnime()
 // アニメーションを更新する
 static void Player2D_UpdateAnime()
 {
-	if (g_CurrentAnim < 0 || g_CurrentAnim >= PLAYER2D_ANIME_MAX)
+	/*if (g_CurrentAnim < 0 || g_CurrentAnim >= PLAYER2D_ANIME_MAX)
 	{
 		g_CurrentAnim = PLAYER2D_ANIME_IDLE;
 	}
@@ -167,7 +166,40 @@ static void Player2D_UpdateAnime()
 	if (rightDot > 0.001f)
 		g_FacingRight = true;
 	else if (rightDot < -0.001f)
-		g_FacingRight = false;
+		g_FacingRight = false;*/
+
+	const float moveEpsSq = 0.0001f;
+	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
+		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+
+	PLAYER2D_ANIME wanted = (speedSq > moveEpsSq) ? PLAYER2D_ANIME_WALK : PLAYER2D_ANIME_IDLE;
+	Player2D_SetAnime(wanted);
+
+	float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
+	float rightX = cosf(yawRad);
+	float rightZ = -sinf(yawRad);
+	float rightDot = g_Player2D.Velocity.x * rightX + g_Player2D.Velocity.z * rightZ;
+
+	if (rightDot > 0.001f) g_FacingRight = true;
+	else if (rightDot < -0.001f) g_FacingRight = false;
+
+	const Player2DAnimeDef& def = g_AnimDefs[g_CurrentAnim];
+
+	int frameCount = (def.frameCount > 0) ? def.frameCount : 1;
+	float speed = (def.frameSpeed > 0.0f) ? def.frameSpeed : 1.0f;
+
+	g_AnimTimer += 1.0f;
+	if (g_AnimTimer >= speed)
+	{
+		g_AnimTimer = 0.0f;
+		g_AnimFrame++;
+
+		if (g_AnimFrame >= frameCount)
+		{
+			g_AnimFrame = def.loop ? 0 : (frameCount - 1);
+			g_AnimFinished = !def.loop;
+		}
+	}
 }
 // アニメーションを更新する
 static void Player2D_UpdateUV()
@@ -405,14 +437,7 @@ void Player2D_Gravity()
 	g_Player2D.Velocity.z *= 0.925f;
 
 	
-	Player2DShadow_Collision();// シャドウとの衝突判定（XZ方向の速度を修正）
-
-	g_Player2D.Position.x += g_Player2D.Velocity.x;
-	g_Player2D.Position.y += g_Player2D.Velocity.y;
-	g_Player2D.Position.z += g_Player2D.Velocity.z;
-
-	int hit = Player2DField_Collision();// フィールドとの衝突判定（位置を修正）
-	Player2DShadow_TopContact();// シャドウとの接触判定（上から乗っているか）
+	int hit = Collision_Player2D_MoveAndCollision();
 
 	if (g_Player2D.isGround && g_Player2D.Velocity.y < 0.0f)
 	{
