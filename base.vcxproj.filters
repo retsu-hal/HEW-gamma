@@ -276,7 +276,11 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="Option.h">
+<<<<<<< HEAD
       <Filter>ヘッダーファイル</Filter>
+=======
+  	<Filter>ヘッダーファイル</Filter>
+>>>>>>> 80338d33966c3eb9ba2c064ba6aec6c9b3c08367
     </ClInclude>
     <ClInclude Include="SkyBall.h">
       <Filter>ヘッダーファイル</Filter>
