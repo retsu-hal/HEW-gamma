@@ -57,11 +57,12 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player3D.FirstAnim = g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 
+
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx");
-	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_03.fbx");
+	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx",true);
-
+	g_Player3D.Model[PLAYER_ANIM_IDLE]->LoopAnimation = false;
 
 	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\Walking.fbx");
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
@@ -133,6 +134,20 @@ void Player3D_Update()
 	
 	Player3D_Gravity();
 	Player3D_CheckGoal();
+
+	// Check if current (non-looping) animation has finished
+	MODEL* currentModel = g_Player3D.Model[g_Player3D.CurrentAnimIndex];
+	if (currentModel != NULL && currentModel->AnimationFinished)
+	{
+		// Transition to the next animation
+		if (g_Player3D.CurrentAnimIndex == PLAYER_ANIM_IDLE)
+		{
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_PUSH;
+			// Reset the idle animation so it can play again later
+			currentModel->AnimationTime = 0.0f;
+			currentModel->AnimationFinished = false;
+		}
+	}
 
 	switch (g_Player3D.state)
 	{

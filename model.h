@@ -32,6 +32,8 @@ struct MODEL
 	std::vector<BoneInfo> Bones;
 
 	float AnimationTime = 0.0f;
+	bool LoopAnimation = true;       // true = loop, false = play once
+	bool AnimationFinished = false;   // flag to check if done
 
 	XMMATRIX GlobalInverse;
 };

@@ -426,8 +426,29 @@ void ModelUpdateAnimation(MODEL* model, float deltaTime)
 		(float)anim->mTicksPerSecond : 25.0f;
 
 	model->AnimationTime += deltaTime * ticksPerSecond;
-	float time =
-		fmod(model->AnimationTime, (float)anim->mDuration);
+
+	float duration = (float)anim->mDuration;
+	float time;
+
+	if (model->LoopAnimation)
+	{
+		// Loop: wrap time around
+		time = fmod(model->AnimationTime, duration);
+	}
+	else
+	{
+		// Play once: clamp at the end
+		if (model->AnimationTime >= duration)
+		{
+			time = duration;
+			model->AnimationFinished = true;
+		}
+		else
+		{
+			time = model->AnimationTime;
+			model->AnimationFinished = false;
+		}
+	}
 
 	ReadNodeHierarchy(
 		model,
