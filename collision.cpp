@@ -770,8 +770,11 @@ bool Resolve_Capsule2D_OBB(
 	float dist = SegmentToOBB_Closest(capTop, capBottom, boxCenter, boxHalf, boxYawDeg,
 		&closestSeg, &closestBox);
 
-	if (dist >= capsule.radius)
+	const float kContactEps = 0.01f;
+	if (dist > capsule.radius + kContactEps)
 		return false;
+
+	bool isPenetrating = (dist < capsule.radius);
 
 	float penetration;
 	XMFLOAT3 normal;
@@ -779,10 +782,11 @@ bool Resolve_Capsule2D_OBB(
 	if (dist > 1e-5f)
 	{
 		normal = Normalize(closestSeg - closestBox);
-		penetration = capsule.radius - dist;
+		penetration = isPenetrating ? (capsule.radius - dist) : 0.0f;
 	}
 	else
 	{
+
 		normal = GetOBBEscapeNormal(closestSeg, boxCenter, boxHalf, boxYawDeg, &penetration);
 		penetration += capsule.radius;
 	}
@@ -918,8 +922,11 @@ int Player2DField_Collision()
 				&push, &norm))
 				continue;
 
-			capsule.center = capsule.center + push;
-			hitThisIter = true;
+			if (fabsf(push.x) > 1e-8f || fabsf(push.y) > 1e-8f || fabsf(push.z) > 1e-8f)
+			{
+				capsule.center = capsule.center + push;
+				hitThisIter = true;
+			}
 
 			float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
 
