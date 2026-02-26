@@ -6,7 +6,7 @@
 #include "ShadowColliderBox.h"
 
 
-struct ScreenPt
+struct ScreenPt//スクリーン座標の構造体
 {
     ImVec2 pos;
     bool valid;
@@ -14,12 +14,12 @@ struct ScreenPt
 
 struct ShadowDebugOptions//シャドウの当たり判定のデバッグ描画オプション
 {
-    bool drawPrism = true;
-    bool drawAABB = false;
-    bool drawNormal = true;
-    bool drawVertices = false;
-    bool drawStandSegments = true;
-    bool drawGround = true;
+	bool drawPrism = true;//シャドウプリズムを描画するか
+	bool drawAABB = false;//AABBを描画するか
+	bool drawNormal = true;//法線を描画するか
+	bool drawVertices = false;//プリズムの頂点を描画するか
+	bool drawStandSegments = true;//立ちセグメントを描画するか
+	bool drawGround = true;//地面の当たり判定を描画するか
 
     unsigned int prismColor = 0xFF0000FF;
     unsigned int aabbColor = 0x80FFFF00;

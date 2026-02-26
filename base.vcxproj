@@ -147,7 +147,11 @@
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="Bill_Board.cpp" />
     <ClCompile Include="camera.cpp" />
-    <ClCompile Include="Collision.cpp" />
+    <ClCompile Include="Collision2D.cpp" />
+    <ClCompile Include="Collision3D.cpp" />
+    <ClCompile Include="CollisionDebug.cpp" />
+    <ClCompile Include="CollisionGeometry.cpp" />
+    <ClCompile Include="CollisionState.cpp" />
     <ClCompile Include="controller.cpp" />
     <ClCompile Include="UtilDebug.cpp" />
     <ClCompile Include="debug_ostream.cpp" />

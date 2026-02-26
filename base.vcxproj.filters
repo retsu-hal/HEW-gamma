@@ -18,9 +18,6 @@
     <ClCompile Include="camera.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Collision.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
     <ClCompile Include="controller.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -142,6 +139,21 @@
       <Filter>ソースファイル</Filter>
     </ClCompile>
     <ClCompile Include="UtilDebug.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionDebug.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionGeometry.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionState.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision2D.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision3D.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
   </ItemGroup>

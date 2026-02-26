@@ -8,6 +8,7 @@
 using namespace DirectX;
 using namespace mu;
 
+// ワールド座標をスクリーン座標に変換する関数
 ScreenPt WorldToScreen(const XMFLOAT3& p)
 {
     ScreenPt out{};
@@ -36,6 +37,7 @@ ScreenPt WorldToScreen(const XMFLOAT3& p)
     return out;
 }
 
+// 3D空間の線を描画する関数
 void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick)
 {
     ScreenPt sa = WorldToScreen(a);
@@ -44,6 +46,7 @@ void DrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick)
         ImGui::GetBackgroundDrawList()->AddLine(sa.pos, sb.pos, col, thick);
 }
 
+// 3D空間の点を描画する関数
 void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size)
 {
     ScreenPt sp = WorldToScreen(p);
@@ -51,6 +54,7 @@ void DrawPoint3D(const XMFLOAT3& p, ImU32 col, float size)
         ImGui::GetBackgroundDrawList()->AddCircleFilled(sp.pos, size, col);
 }
 
+// 軸に沿った回転を持つOBBを描画する関数
 void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
 {
     XMFLOAT3 corners[8] = {
@@ -66,6 +70,7 @@ void DebugDrawAABB(const XMFLOAT3& c, const XMFLOAT3& h, ImU32 col)
         DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
+// 任意の回転を持つOBBを描画する関数
 void DebugDrawOBB_FullRotation(const XMFLOAT3& center, const XMFLOAT3& half,
     const XMFLOAT3& rotDeg, ImU32 col)
 {
@@ -98,6 +103,7 @@ void DebugDrawOBB_FullRotation(const XMFLOAT3& center, const XMFLOAT3& half,
         DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
+// Yaw回転のみを持つOBBを描画する関数（水平面での回転のみ）
 void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg, ImU32 col)
 {
     float yaw = XMConvertToRadians(yawDeg);
@@ -119,6 +125,7 @@ void DebugDrawOBB_Yaw(const XMFLOAT3& c, const XMFLOAT3& h, float yawDeg, ImU32 
         DrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col);
 }
 
+// 楕円体を描画する関数
 void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, int seg)
 {
     const float PI2 = 6.28318530718f;
@@ -140,7 +147,7 @@ void DebugDrawEllipsoid(const XMFLOAT3& c, const XMFLOAT3& r, ImU32 col, int seg
     drawRing(0); drawRing(1); drawRing(2);
 }
 
-
+// カプセルを描画する関数
 void DebugDrawCapsule2D(const Capsule2D& capsule, ImU32 col, int segments)
 {
     XMFLOAT3 top = capsule.GetTop();
@@ -226,6 +233,8 @@ void DebugDrawCapsule2D(const Capsule2D& capsule, ImU32 col, int segments)
     DrawPoint3D(bottom, col, 2.0f);
 }
 
+
+// シャドウプリズムを描画する関数
 void DebugDrawShadowPrism(const ShadowPrism& prism, const ShadowDebugOptions& opts)
 {
     if (!prism.isValid || prism.poly.size() < 3) return;
