@@ -1,28 +1,35 @@
-//FieldSeesaw.cpp
+// FieldSeesaw.cpp
 #include "FieldSeesaw.h"
+
 #include "player3D.h"
 #include "Collision.h"
-#include <cmath>
-
 #include "debug.h"
 #include "camera.h"
 #include "direct3d.h"
 #include "UtilDebug.h"
 
+#include <cmath>
+
+using namespace DirectX;
+
+//=========================================================================================================
+// 内部設定（部品ごとの配置/当たり）
+//=========================================================================================================
 
 struct SeesawPartConfig
 {
-	FIELD partType;
-	XMFLOAT3 offsetPos;
-	XMFLOAT3 scale;
-	XMFLOAT3 rotate;
-	XMFLOAT3 colliderHalf;
-	float colliderOffsetY;
-	bool useCustomCollider;
+	FIELD   partType;
+	XMFLOAT3 offsetPos;         // シーソー原点からの配置オフセット
+	XMFLOAT3 scale;             // 見た目スケール（BOX_RADIUS基準）
+	XMFLOAT3 rotate;            // 初期回転
+	XMFLOAT3 colliderHalf;      // カスタム当たり半径（useCustomCollider時）
+	float   colliderOffsetY;    // 当たり中心のYオフセット（板のみ）
+	bool    useCustomCollider;
 };
 
 static const SeesawPartConfig SEESAW_PARTS[] =
 {
+	// ベース
 	{
 		FIELD_SEESAW_1,
 		XMFLOAT3(0.0f, -0.2f, 0.0f),
@@ -32,6 +39,7 @@ static const SeesawPartConfig SEESAW_PARTS[] =
 		0.0f,
 		false
 	},
+	// 板（傾く）
 	{
 		FIELD_SEESAW_2,
 		XMFLOAT3(0.0f, -0.22f, 0.0f),
@@ -45,22 +53,22 @@ static const SeesawPartConfig SEESAW_PARTS[] =
 
 static const int SEESAW_PART_COUNT = sizeof(SEESAW_PARTS) / sizeof(SEESAW_PARTS[0]);
 
+//=========================================================================================================
+// 内部状態
+//=========================================================================================================
 static std::vector<SeesawData> g_Seesaws;
 
-void Seesaw_Initialize()
-{
-	g_Seesaws.clear();
-}
+//=========================================================================================================
+// 初期化 / 破棄
+//=========================================================================================================
 
-void Seesaw_Finalize()
-{
-	g_Seesaws.clear();
-}
+void Seesaw_Initialize() { g_Seesaws.clear(); }
+void Seesaw_Finalize() { g_Seesaws.clear(); }
+void Seesaw_ClearAll() { g_Seesaws.clear(); }
 
-void Seesaw_ClearAll()
-{
-	g_Seesaws.clear();
-}
+//=========================================================================================================
+// 生成（ベース/板をMapDataに追加）
+//=========================================================================================================
 
 int Seesaw_Create(float x, float y, float z, std::vector<MAPDATA>& mapData)
 {
@@ -68,6 +76,7 @@ int Seesaw_Create(float x, float y, float z, std::vector<MAPDATA>& mapData)
 	seesaw.pos = XMFLOAT3(x, y, z);
 	seesaw.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 
+	// 板の長さ（正規化用）
 	seesaw.params.boardLength = SEESAW_PARTS[1].colliderHalf.z;
 	seesaw.params.tiltAxis = SEESAW_TILT_X;
 
@@ -96,10 +105,11 @@ int Seesaw_Create(float x, float y, float z, std::vector<MAPDATA>& mapData)
 	return index;
 }
 
-std::vector<SeesawData>& Seesaw_GetAll()
-{
-	return g_Seesaws;
-}
+//=========================================================================================================
+// 参照
+//=========================================================================================================
+
+std::vector<SeesawData>& Seesaw_GetAll() { return g_Seesaws; }
 
 SeesawData* Seesaw_Get(int index)
 {
@@ -108,18 +118,18 @@ SeesawData* Seesaw_Get(int index)
 	return &g_Seesaws[index];
 }
 
-int Seesaw_GetCount()
-{
-	return (int)g_Seesaws.size();
-}
+int Seesaw_GetCount() { return (int)g_Seesaws.size(); }
 
 XMFLOAT3 Seesaw_GetBoardColliderHalf(int seesawIndex)
 {
 	if (seesawIndex < 0 || seesawIndex >= (int)g_Seesaws.size())
 		return XMFLOAT3(0.5f, 0.5f, 0.5f);
-
 	return SEESAW_PARTS[1].colliderHalf;
 }
+
+//=========================================================================================================
+// プレイヤーが板のどの位置にいるか（-1..+1）
+//=========================================================================================================
 
 float Seesaw_GetPlayerPosition(int seesawIndex, const XMFLOAT3& playerPos)
 {
@@ -131,12 +141,14 @@ float Seesaw_GetPlayerPosition(int seesawIndex, const XMFLOAT3& playerPos)
 		return 0.0f;
 
 	int boardIdx = seesaw.partIndices[1];
+
 	std::vector<MAPDATA>& mapData = GetFieldMap();
 	if (boardIdx < 0 || boardIdx >= (int)mapData.size())
 		return 0.0f;
 
 	const MAPDATA& board = mapData[boardIdx];
 
+	// board中心からの相対（Yawのみローカル化）
 	float dx = playerPos.x - board.pos.x;
 	float dz = playerPos.z - board.pos.z;
 
@@ -148,18 +160,13 @@ float Seesaw_GetPlayerPosition(int seesawIndex, const XMFLOAT3& playerPos)
 	if (boardLength < 0.01f) return 0.0f;
 
 	float position = 0.0f;
-	if (seesaw.params.tiltAxis == SEESAW_TILT_X)
-	{
-		position = localZ / boardLength;
-	}
-	else
-	{
-		position = localX / boardLength;
-	}
+	if (seesaw.params.tiltAxis == SEESAW_TILT_X) position = localZ / boardLength;
+	else                                        position = localX / boardLength;
 
 	return fmaxf(-1.0f, fminf(1.0f, position));
 }
 
+// 板表面のY（プレイヤー接地判定用）
 static float GetBoardSurfaceHeightAt(
 	const SeesawData& seesaw,
 	const MAPDATA& board,
@@ -167,22 +174,23 @@ static float GetBoardSurfaceHeightAt(
 	float localZ,
 	const XMFLOAT3& boardHalf)
 {
+	// 当たり中心Y（板は colliderOffsetY を持つ）
 	float baseCenterY = board.pos.y + SEESAW_PARTS[1].colliderOffsetY;
 
 	float tiltRad = XMConvertToRadians(seesaw.params.tiltAngle);
 	float heightOffset = 0.0f;
 
-	if (seesaw.params.tiltAxis == SEESAW_TILT_X)
-	{
-		heightOffset = sinf(tiltRad) * localZ;
-	}
-	else // SEESAW_TILT_Z
-	{
-		heightOffset = sinf(tiltRad) * localX;
-	}
+	// 傾き角により片側が上下する（小角近似でなくsinを使用）
+	if (seesaw.params.tiltAxis == SEESAW_TILT_X) heightOffset = sinf(tiltRad) * localZ;
+	else                                        heightOffset = sinf(tiltRad) * localX;
 
+	// boardHalf.y を足して上面のYへ
 	return baseCenterY + heightOffset + boardHalf.y;
 }
+
+//=========================================================================================================
+// 板の上に乗っている判定（XZ範囲 + 高さ差）
+//=========================================================================================================
 
 bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
 {
@@ -195,12 +203,11 @@ bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
 
 	int boardIdx = seesaw.partIndices[1];
 	std::vector<MAPDATA>& mapData = GetFieldMap();
-
 	if (boardIdx < 0 || boardIdx >= (int)mapData.size())
 		return false;
 
 	const MAPDATA& board = mapData[boardIdx];
-	XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board);
+	XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board); // field.cpp側（整理対象外）
 
 	float dx = playerPos.x - board.pos.x;
 	float dz = playerPos.z - board.pos.z;
@@ -208,9 +215,11 @@ bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
 	float yawRad = XMConvertToRadians(board.rotate.y);
 	float cosYaw = cosf(-yawRad);
 	float sinYaw = sinf(-yawRad);
+
 	float localX = dx * cosYaw - dz * sinYaw;
 	float localZ = dx * sinYaw + dz * cosYaw;
 
+	// 多少の余裕を持たせて搭乗判定
 	const float playerRadius = 0.45f;
 	const float xMargin = boardHalf.x + playerRadius;
 	const float zMargin = boardHalf.z + playerRadius;
@@ -219,16 +228,19 @@ bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
 	if (fabsf(localZ) > zMargin) return false;
 
 	float boardSurfaceY = GetBoardSurfaceHeightAt(seesaw, board, localX, localZ, boardHalf);
-
 	float playerFootY = playerPos.y;
 
 	float heightDiff = playerFootY - boardSurfaceY;
 
-	const float toleranceBelow = -1.2f;
-	const float toleranceAbove = 0.8f; 
+	const float toleranceBelow = -1.2f; // 下方向許容（落下中の貫通を多少許す）
+	const float toleranceAbove = 0.8f;  // 上方向許容
 
 	return (heightDiff >= toleranceBelow && heightDiff <= toleranceAbove);
 }
+
+//=========================================================================================================
+// 更新（角度制御 + mapData反映）
+//=========================================================================================================
 
 static void UpdateSingleSeesaw(int index, float deltaTime)
 {
@@ -257,19 +269,19 @@ static void UpdateSingleSeesaw(int index, float deltaTime)
 	}
 	else
 	{
+		// その場保持
 		targetAngle = params.tiltAngle;
 	}
 
 	float angleDiff = targetAngle - params.tiltAngle;
 	float speed = playerOnBoard ? params.tiltSpeed : params.returnSpeed;
 
+	// 角度追従（最大変化量でクランプ）
 	if (fabsf(angleDiff) > 0.05f && speed > 0.01f)
 	{
 		float maxChange = speed * deltaTime;
-		if (fabsf(angleDiff) <= maxChange)
-			params.tiltAngle = targetAngle;
-		else
-			params.tiltAngle += (angleDiff > 0 ? 1.0f : -1.0f) * maxChange;
+		if (fabsf(angleDiff) <= maxChange) params.tiltAngle = targetAngle;
+		else params.tiltAngle += (angleDiff > 0 ? 1.0f : -1.0f) * maxChange;
 	}
 	else if (fabsf(angleDiff) <= 0.05f)
 	{
@@ -278,6 +290,7 @@ static void UpdateSingleSeesaw(int index, float deltaTime)
 
 	params.tiltAngle = fmaxf(-params.maxTiltAngle, fminf(params.maxTiltAngle, params.tiltAngle));
 
+	// MapDataへ回転反映（板のみ）
 	int boardIdx = seesaw.partIndices[1];
 	std::vector<MAPDATA>& mapData = GetFieldMap();
 	if (boardIdx >= 0 && boardIdx < (int)mapData.size())
@@ -287,7 +300,7 @@ static void UpdateSingleSeesaw(int index, float deltaTime)
 			mapData[boardIdx].rotate.x = params.tiltAngle;
 			mapData[boardIdx].rotate.z = 0.0f;
 		}
-		else // SEESAW_TILT_Z
+		else
 		{
 			mapData[boardIdx].rotate.x = 0.0f;
 			mapData[boardIdx].rotate.z = params.tiltAngle;
@@ -303,11 +316,22 @@ void Seesaw_UpdateAll(float deltaTime)
 	}
 }
 
+//=========================================================================================================
+// プレイヤー衝突（3D：楕円体 vs 回転OBB）
+//=========================================================================================================
+
 static bool Resolve_Ellipsoid_OBB_FullRotation(
 	const XMFLOAT3& ellC, const XMFLOAT3& ellR,
 	const XMFLOAT3& boxC, const XMFLOAT3& boxH, const XMFLOAT3& boxRotDeg,
 	XMFLOAT3* outPush, XMFLOAT3* outNormal)
 {
+	// 既存実装を保持（コメントのみ補強）
+	// 手順：
+	// 1) OBBをローカルへ変換し、最近傍点を求める
+	// 2) 楕円体空間（スケール空間）で距離1未満なら接触/貫通
+	// 3) 押し出しベクトルと法線を返す
+	// ※ dist==0 付近は面法線ベースで脱出方向を決定
+
 	if (outPush) *outPush = { 0, 0, 0 };
 	if (outNormal) *outNormal = { 0, 1, 0 };
 
@@ -318,11 +342,7 @@ static bool Resolve_Ellipsoid_OBB_FullRotation(
 	);
 	XMMATRIX invRotMat = XMMatrixTranspose(rotMat);
 
-	XMFLOAT3 d = {
-		ellC.x - boxC.x,
-		ellC.y - boxC.y,
-		ellC.z - boxC.z
-	};
+	XMFLOAT3 d = { ellC.x - boxC.x, ellC.y - boxC.y, ellC.z - boxC.z };
 
 	XMVECTOR vD = XMLoadFloat3(&d);
 	XMVECTOR vLocal = XMVector3TransformNormal(vD, invRotMat);
@@ -351,7 +371,6 @@ static bool Resolve_Ellipsoid_OBB_FullRotation(
 	};
 
 	float dist = sqrtf(toEll.x * toEll.x + toEll.y * toEll.y + toEll.z * toEll.z);
-
 	if (dist >= 1.0f) return false;
 
 	XMFLOAT3 nS;
@@ -370,21 +389,9 @@ static bool Resolve_Ellipsoid_OBB_FullRotation(
 		float dz = boxH.z - absLocal.z;
 
 		XMFLOAT3 localN = { 0, 1, 0 };
-		if (dx <= dy && dx <= dz)
-		{
-			localN = { (localD.x >= 0) ? 1.0f : -1.0f, 0, 0 };
-			pen = 1.0f + dx;
-		}
-		else if (dy <= dz)
-		{
-			localN = { 0, (localD.y >= 0) ? 1.0f : -1.0f, 0 };
-			pen = 1.0f + dy;
-		}
-		else
-		{
-			localN = { 0, 0, (localD.z >= 0) ? 1.0f : -1.0f };
-			pen = 1.0f + dz;
-		}
+		if (dx <= dy && dx <= dz) { localN = { (localD.x >= 0) ? 1.0f : -1.0f, 0, 0 }; pen = 1.0f + dx; }
+		else if (dy <= dz) { localN = { 0, (localD.y >= 0) ? 1.0f : -1.0f, 0 }; pen = 1.0f + dy; }
+		else { localN = { 0, 0, (localD.z >= 0) ? 1.0f : -1.0f }; pen = 1.0f + dz; }
 
 		XMVECTOR vLocalN = XMLoadFloat3(&localN);
 		XMVECTOR vWorldN = XMVector3TransformNormal(vLocalN, rotMat);
@@ -393,24 +400,17 @@ static bool Resolve_Ellipsoid_OBB_FullRotation(
 
 		nS = { worldN.x * invR.x, worldN.y * invR.y, worldN.z * invR.z };
 		float nLen = sqrtf(nS.x * nS.x + nS.y * nS.y + nS.z * nS.z);
-		if (nLen > 1e-6f)
-		{
-			nS.x /= nLen; nS.y /= nLen; nS.z /= nLen;
-		}
+		if (nLen > 1e-6f) { nS.x /= nLen; nS.y /= nLen; nS.z /= nLen; }
 	}
 
 	XMFLOAT3 pushW = { nS.x * pen * ellR.x, nS.y * pen * ellR.y, nS.z * pen * ellR.z };
 
 	XMFLOAT3 nW = { nS.x * ellR.x, nS.y * ellR.y, nS.z * ellR.z };
 	float nLen = sqrtf(nW.x * nW.x + nW.y * nW.y + nW.z * nW.z);
-	if (nLen > 1e-6f)
-	{
-		nW.x /= nLen; nW.y /= nLen; nW.z /= nLen;
-	}
+	if (nLen > 1e-6f) { nW.x /= nLen; nW.y /= nLen; nW.z /= nLen; }
 
 	if (outPush) *outPush = pushW;
 	if (outNormal) *outNormal = nW;
-
 	return true;
 }
 
@@ -420,7 +420,6 @@ int Seesaw_PlayerCollision()
 
 	PLAYER* player = GetPlayer3D();
 	if (!player) return hit;
-
 	if (g_Seesaws.empty()) return hit;
 
 	std::vector<MAPDATA>& mapData = GetFieldMap();
@@ -440,11 +439,10 @@ int Seesaw_PlayerCollision()
 		if (boardIdx < 0 || boardIdx >= (int)mapData.size()) continue;
 
 		MAPDATA& board = mapData[boardIdx];
-
 		XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board);
 
+		// 板の当たり中心は colliderOffsetY 分だけ上にずれているため、回転込みで中心を求める
 		XMFLOAT3 localOffset = { 0.0f, SEESAW_PARTS[1].colliderOffsetY, 0.0f };
-
 		XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
 			XMConvertToRadians(board.rotate.x),
 			XMConvertToRadians(board.rotate.y),
@@ -463,19 +461,15 @@ int Seesaw_PlayerCollision()
 		};
 
 		XMFLOAT3 push, norm;
-		if (!Resolve_Ellipsoid_OBB_FullRotation(
-			ellC, ellR,
-			boardCenter, boardHalf, board.rotate,
-			&push, &norm))
-		{
+		if (!Resolve_Ellipsoid_OBB_FullRotation(ellC, ellR, boardCenter, boardHalf, board.rotate, &push, &norm))
 			continue;
-		}
 
 		ellC.x += push.x;
 		ellC.y += push.y;
 		ellC.z += push.z;
 		positionUpdated = true;
 
+		// 法線の最大成分でヒット種別を決める（簡易）
 		float ax = fabsf(norm.x), ay = fabsf(norm.y), az = fabsf(norm.z);
 
 		if (ay >= ax && ay >= az)
@@ -483,8 +477,7 @@ int Seesaw_PlayerCollision()
 			if (norm.y > 0)
 			{
 				player->isGround = true;
-				if (player->Velocity.y < 0)
-					player->Velocity.y = 0;
+				if (player->Velocity.y < 0) player->Velocity.y = 0;
 				hit = HIT_GROUND;
 			}
 			else if (player->Velocity.y > 0)
@@ -514,6 +507,10 @@ int Seesaw_PlayerCollision()
 	return hit;
 }
 
+//=========================================================================================================
+// デバッグ描画
+//=========================================================================================================
+
 void Seesaw_DebugDraw()
 {
 	if (g_Seesaws.empty()) return;
@@ -532,14 +529,13 @@ void Seesaw_DebugDraw()
 		const MAPDATA& board = mapData[boardIdx];
 		XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board);
 
+		// collider中心算出（Updateと同様）
 		XMFLOAT3 localOffset = { 0.0f, SEESAW_PARTS[1].colliderOffsetY, 0.0f };
-
 		XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
 			XMConvertToRadians(board.rotate.x),
 			XMConvertToRadians(board.rotate.y),
 			XMConvertToRadians(board.rotate.z)
 		);
-
 		XMVECTOR vOffset = XMLoadFloat3(&localOffset);
 		XMVECTOR vRotatedOffset = XMVector3TransformNormal(vOffset, rotMat);
 		XMFLOAT3 rotatedOffset;
@@ -552,15 +548,12 @@ void Seesaw_DebugDraw()
 		};
 
 		bool playerOnBoard = player && Seesaw_IsPlayerOnBoard(i, player->Position);
-
-		ImU32 boardColor = playerOnBoard ?
-			IM_COL32(255, 100, 100, 255) :
-			IM_COL32(100, 255, 100, 255);
+		ImU32 boardColor = playerOnBoard ? IM_COL32(255, 100, 100, 255) : IM_COL32(100, 255, 100, 255);
 
 		DebugDrawOBB_FullRotation(boardColliderCenter, boardHalf, board.rotate, boardColor);
-
 		DrawPoint3D(boardColliderCenter, IM_COL32(255, 255, 0, 255), 5.0f);
 
+		// プレイヤーと板表面の距離可視化
 		if (player)
 		{
 			float dx = player->Position.x - board.pos.x;
@@ -570,8 +563,7 @@ void Seesaw_DebugDraw()
 			float localZ = dx * sinf(-yawRad) + dz * cosf(-yawRad);
 
 			float tiltRad = XMConvertToRadians(seesaw.params.tiltAngle);
-			float heightOffset = (seesaw.params.tiltAxis == SEESAW_TILT_X) ?
-				sinf(tiltRad) * localZ : sinf(tiltRad) * localX;
+			float heightOffset = (seesaw.params.tiltAxis == SEESAW_TILT_X) ? (sinf(tiltRad) * localZ) : (sinf(tiltRad) * localX);
 
 			float baseCenterY = board.pos.y + SEESAW_PARTS[1].colliderOffsetY;
 			float surfaceY = baseCenterY + heightOffset + boardHalf.y;
@@ -583,33 +575,7 @@ void Seesaw_DebugDraw()
 			DrawLine3D(footPoint, surfacePoint, IM_COL32(255, 0, 255, 200), 2.0f);
 		}
 
-
-		if (seesaw.partIndices.size() >= 1)
-		{
-			int baseIdx = seesaw.partIndices[0];
-			if (baseIdx >= 0 && baseIdx < (int)mapData.size())
-			{
-				const MAPDATA& base = mapData[baseIdx];
-				XMFLOAT3 baseHalf = Field_GetCollisionHalfSize(base);
-				DebugDrawOBB_FullRotation(base.pos, baseHalf, base.rotate,
-					IM_COL32(100, 100, 255, 255));
-			}
-		}
-
-		DrawPoint3D(seesaw.pos, IM_COL32(255, 0, 255, 255), 6.0f);
-
-		XMFLOAT3 axisEnd = board.pos;
-		if (seesaw.params.tiltAxis == SEESAW_TILT_X)
-		{
-			axisEnd.x += 0.5f;
-			DrawLine3D(board.pos, axisEnd, IM_COL32(255, 0, 0, 255), 3.0f);
-		}
-		else
-		{
-			axisEnd.z += 0.5f;
-			DrawLine3D(board.pos, axisEnd, IM_COL32(0, 0, 255, 255), 3.0f);
-		}
-
+		// ベース（部品0）
 		if (seesaw.partIndices.size() >= 1)
 		{
 			int baseIdx = seesaw.partIndices[0];
@@ -621,8 +587,10 @@ void Seesaw_DebugDraw()
 			}
 		}
 
+		DrawPoint3D(seesaw.pos, IM_COL32(255, 0, 255, 255), 6.0f);
 	}
 
+	// ImGui表示（既存維持）
 	ImGui::Begin("Seesaw Debug");
 	ImGui::Text("Seesaw Count: %d", (int)g_Seesaws.size());
 
@@ -631,40 +599,13 @@ void Seesaw_DebugDraw()
 		const SeesawData& seesaw = g_Seesaws[i];
 		if (ImGui::TreeNode((void*)(intptr_t)i, "Seesaw %d", i))
 		{
-			ImGui::Text("Position: (%.2f, %.2f, %.2f)",
-				seesaw.pos.x, seesaw.pos.y, seesaw.pos.z);
+			ImGui::Text("Position: (%.2f, %.2f, %.2f)", seesaw.pos.x, seesaw.pos.y, seesaw.pos.z);
 			ImGui::Text("Tilt Angle: %.2f deg", seesaw.params.tiltAngle);
 			ImGui::Text("Max Tilt: %.2f deg", seesaw.params.maxTiltAngle);
 			ImGui::Text("Board Length: %.2f", seesaw.params.boardLength);
 
-			if (player)
-			{
-				bool onBoard = Seesaw_IsPlayerOnBoard(i, player->Position);
-				ImGui::Text("Player On Board: %s", onBoard ? "YES" : "NO");
-				if (onBoard)
-				{
-					float posOnBoard = Seesaw_GetPlayerPosition(i, player->Position);
-					ImGui::Text("Player Position: %.2f", posOnBoard);
-				}
-			}
-
-			if (seesaw.partIndices.size() >= 2)
-			{
-				int boardIdx = seesaw.partIndices[1];
-				if (boardIdx >= 0 && boardIdx < (int)mapData.size())
-				{
-					const MAPDATA& board = mapData[boardIdx];
-					XMFLOAT3 half = Field_GetCollisionHalfSize(board);
-					ImGui::Text("Board Collider Half: (%.2f, %.2f, %.2f)",
-						half.x, half.y, half.z);
-					ImGui::Text("Board Rotate: (%.2f, %.2f, %.2f)",
-						board.rotate.x, board.rotate.y, board.rotate.z);
-				}
-			}
-
 			ImGui::TreePop();
 		}
 	}
-
 	ImGui::End();
 }

@@ -2,7 +2,7 @@
 // 3Dプレイヤー vs シーン衝突 + 3Dトリガー判定
 
 #include <cmath>
-#include "collision.h"
+#include "Collision.h"
 #include "player3D.h"
 
 using namespace DirectX;

@@ -1,54 +1,81 @@
-//camera.h
+// camera.h
 #pragma once
 
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
 
-
+//=========================================================================================================
+// ƒJƒƒ‰\‘¢‘ÌiƒVƒ“ƒvƒ‹‚Èƒrƒ…[EƒvƒƒWƒFƒNƒVƒ‡ƒ“ŠÇ—j
+// ¦ –{ƒvƒƒWƒFƒNƒg‚Í C API •—‚ÌŠÖ”ŒQ‚Å CameraObject ‚ğ‘€ì‚·‚éİŒv
+//=========================================================================================================
 class CAMERA
 {
 public:
-	DirectX::XMFLOAT3 Position;			// ã‚«ãƒ¡ãƒ©ã®ä½ç½®
-	DirectX::XMFLOAT3 AtPosition;		// ã‚«ãƒ¡ãƒ©ã®æ³¨è¦–ç‚¹
-	DirectX::XMFLOAT3 UpVector;		// ã‚«ãƒ¡ãƒ©ã®ä¸Šæ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«	
-	
-	DirectX::XMMATRIX View;				//ãƒ“ãƒ¥ãƒ¼è¡Œåˆ—
-	DirectX::XMMATRIX Projection;		//ãƒ—ãƒ­ã‚¸ã‚§ãƒƒã‚¯ã‚·ãƒ§ãƒ³è¡Œåˆ—	
+	DirectX::XMFLOAT3 Position;     // ƒJƒƒ‰ˆÊ’uiWorldj
+	DirectX::XMFLOAT3 AtPosition;   // ’‹“_iWorldj
+	DirectX::XMFLOAT3 UpVector;     // ã•ûŒüƒxƒNƒgƒ‹iWorldj
 
-	float Fov;							//è¦–é‡è§’
-	float Aspect;						//ã‚¢ã‚¹ãƒšã‚¯ãƒˆæ¯”
-	float NearClip;					//è¿‘é¢ã‚¯ãƒªãƒƒãƒ—
-	float FarClip;						//é é¢ã‚¯ãƒªãƒƒãƒ—
+	DirectX::XMMATRIX View;         // ƒrƒ…[s—ñ
+	DirectX::XMMATRIX Projection;   // ƒvƒƒWƒFƒNƒVƒ‡ƒ“s—ñ
+
+	float Fov;                      // ‹–ìŠpidegj
+	float Aspect;                   // ƒAƒXƒyƒNƒg”ä
+	float NearClip;                 // ‹ßƒNƒŠƒbƒv
+	float FarClip;                  // ‰“ƒNƒŠƒbƒv
 };
 
 //=========================================================================================================
-// ãƒ—ãƒ­ãƒˆã‚¿ã‚¤ãƒ—å®£è¨€
+// ƒ‰ƒCƒtƒTƒCƒNƒ‹
 //=========================================================================================================
 void Camera_Initialize();
 void Camera_Finalize();
+
+//=========================================================================================================
+// XViƒvƒŒƒCƒ„[‹“_j
+//=========================================================================================================
 void Player3DCamera_Update();
 void Player2DCamera_Update();
+void Player2DCamera_DebugUpdate();
 void Title_Camera_Update();
+
+//=========================================================================================================
+// •`‰æis—ñXVj
+//=========================================================================================================
 void Camera_Draw();
-void SetCameraFov(float);
-void SetCameraAspect(float);
-void SetCameraClip(float, float);
-void SetCameraPosition(DirectX::XMFLOAT3);
-void SetCameraAtPosition(DirectX::XMFLOAT3);
-void SetCameraUpVector(DirectX::XMFLOAT3);
+
+//=========================================================================================================
+// ƒZƒbƒ^[ / ƒQƒbƒ^[
+//=========================================================================================================
+void SetCameraFov(float fov);
+void SetCameraAspect(float asp);
+void SetCameraClip(float nearClip, float farClip);
+void SetCameraPosition(DirectX::XMFLOAT3 pos);
+void SetCameraAtPosition(DirectX::XMFLOAT3 atpos);
+void SetCameraUpVector(DirectX::XMFLOAT3 up);
+
 DirectX::XMMATRIX GetViewMatrix();
 DirectX::XMMATRIX GetProjectionMatrix();
 DirectX::XMFLOAT3 GetCameraAtPosition();
 DirectX::XMFLOAT3 GetCameraPosition();
 
+//=========================================================================================================
+// 2DƒJƒƒ‰“à•”ó‘Ô‚ÌƒŠƒZƒbƒgi2D->3DØ‚è‘Ö‚¦“™‚Åg—pj
+//=========================================================================================================
 void Camera_Reset2DState();
 
-void Camera_CheckCollision(DirectX::XMFLOAT3 targetPos,
-	DirectX::XMFLOAT3 desiredCamPos, DirectX::XMFLOAT3& outCamPos);
+//=========================================================================================================
+// ƒJƒƒ‰Õ“Ëiƒ^[ƒQƒbƒg->ƒJƒƒ‰‚ÌƒŒƒC‚Å•Ç‚É“–‚½‚éê‡AƒJƒƒ‰ˆÊ’u‚ğè‘O‚É‹l‚ß‚éj
+//=========================================================================================================
+void Camera_CheckCollision(
+	DirectX::XMFLOAT3 targetPos,
+	DirectX::XMFLOAT3 desiredCamPos,
+	DirectX::XMFLOAT3& outCamPos
+);
 
-void Player2DCamera_DebugUpdate();
-// æ—¢å­˜å®£è¨€ã®æœ«å°¾ä»˜è¿‘ã«è¿½è¨˜
+//=========================================================================================================
+// ƒ}ƒEƒXŠ´“xiYaw/Pitchj
+//=========================================================================================================
 void SetCameraMouseSensitivity(float yaw, float pitch);
 float GetMouseSensYaw();
 float GetMouseSensPitch();

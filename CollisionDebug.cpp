@@ -2,7 +2,7 @@
 // 衝突システムのデバッグ描画と追加デバッグボックス管理
 
 #include <cstdio>
-#include "collision.h"
+#include "Collision.h"
 #include "player3D.h"
 #include "Player2D.h"
 

@@ -4,7 +4,7 @@
 #include <cfloat>
 #include <cmath>
 #include <algorithm>
-#include "collision.h"
+#include "Collision.h"
 #include "Player2D.h"
 
 using namespace DirectX;

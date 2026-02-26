@@ -1,7 +1,7 @@
 // CollisionState.cpp
 // グローバル共有状態、影プリズム管理、Field型判定
 
-#include "collision.h"
+#include "Collision.h"
 #include "player3D.h"
 #include "Player2D.h"
 

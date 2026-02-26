@@ -3,7 +3,7 @@
 
 #include <cfloat>
 #include <cmath>
-#include "collision.h"
+#include "Collision.h"
 
 using namespace DirectX;
 using namespace mu;
