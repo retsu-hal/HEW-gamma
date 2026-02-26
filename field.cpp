@@ -699,3 +699,16 @@ GAME_STAGE GetCurrentStage()
 {
 	return g_CurrentStage;
 }
+
+XMFLOAT3 Field_GetCollisionHalfSize(const MAPDATA& m)
+{
+	if (m.useCustomCollider)
+	{
+		return m.colliderHalf;
+	}
+	return XMFLOAT3{
+		BOX_RADIUS * m.scale.x,
+		BOX_RADIUS * m.scale.y,
+		BOX_RADIUS * m.scale.z
+	};
+}

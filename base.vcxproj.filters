@@ -141,6 +141,9 @@
     <ClCompile Include="Trail.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="DebugUtil.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bill_Board.h">
@@ -272,9 +275,12 @@
     <ClInclude Include="shader.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="DebugUtil.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="DirectXTex_Release.lib" />
+    <Library Include="DirectXTex_Debug.lib" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

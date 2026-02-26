@@ -4,7 +4,6 @@
 #include <vector>
 #include "field.h"
 
-using namespace DirectX;
 
 enum SEESAW_TILT_AXIS
 {

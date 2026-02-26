@@ -7,12 +7,8 @@
 #include "debug.h"
 #include "camera.h"
 #include "direct3d.h"
-static bool g_SeesawDebugDraw = true;
+#include "DebugUtil.h"
 
-void Seesaw_SetDebugDraw(bool enable)
-{
-	g_SeesawDebugDraw = enable;
-}
 
 struct SeesawPartConfig
 {
@@ -67,7 +63,7 @@ XMFLOAT3 Field_GetColliderHalfSize(const MAPDATA& m)
 
 XMFLOAT3 Field_GetColliderHalfSize(int mapIndex)
 {
-	return Field_GetColliderHalfSize(GetFieldMap()[mapIndex]);
+	return Field_GetCollisionHalfSize(GetFieldMap()[mapIndex]);
 }
 
 XMFLOAT3 Field_GetHalfSize(int mapIndex)
@@ -576,66 +572,8 @@ static ImVec2 SeesawWorldToScreen(const XMFLOAT3& p, bool* valid)
 	);
 }
 
-static void SeesawDrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick = 1.0f)
-{
-	bool va, vb;
-	ImVec2 sa = SeesawWorldToScreen(a, &va);
-	ImVec2 sb = SeesawWorldToScreen(b, &vb);
-	if (va && vb)
-		ImGui::GetBackgroundDrawList()->AddLine(sa, sb, col, thick);
-}
-
-static void SeesawDrawOBB_FullRotation(const XMFLOAT3& center, const XMFLOAT3& half,
-	const XMFLOAT3& rotDeg, ImU32 col)
-{
-	XMMATRIX rotMat = XMMatrixRotationRollPitchYaw(
-		XMConvertToRadians(rotDeg.x),
-		XMConvertToRadians(rotDeg.y),
-		XMConvertToRadians(rotDeg.z)
-	);
-
-	XMFLOAT3 localCorners[8] = {
-		{-half.x, -half.y, -half.z}, {+half.x, -half.y, -half.z},
-		{+half.x, +half.y, -half.z}, {-half.x, +half.y, -half.z},
-		{-half.x, -half.y, +half.z}, {+half.x, -half.y, +half.z},
-		{+half.x, +half.y, +half.z}, {-half.x, +half.y, +half.z},
-	};
-
-	XMFLOAT3 worldCorners[8];
-	for (int i = 0; i < 8; i++)
-	{
-		XMVECTOR vLocal = XMLoadFloat3(&localCorners[i]);
-		XMVECTOR vWorld = XMVector3TransformNormal(vLocal, rotMat);
-		XMFLOAT3 rotated;
-		XMStoreFloat3(&rotated, vWorld);
-		worldCorners[i] = XMFLOAT3(
-			center.x + rotated.x,
-			center.y + rotated.y,
-			center.z + rotated.z
-		);
-	}
-
-	const int edges[12][2] = {
-		{0,1},{1,2},{2,3},{3,0},
-		{4,5},{5,6},{6,7},{7,4},
-		{0,4},{1,5},{2,6},{3,7}
-	};
-
-	for (int i = 0; i < 12; i++)
-		SeesawDrawLine3D(worldCorners[edges[i][0]], worldCorners[edges[i][1]], col, 2.0f);
-}
-
-static void SeesawDrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
-{
-	bool valid;
-	ImVec2 sp = SeesawWorldToScreen(p, &valid);
-	if (valid)
-		ImGui::GetBackgroundDrawList()->AddCircleFilled(sp, size, col);
-}
-
 void Seesaw_DebugDraw()
 {
-	if (!g_SeesawDebugDraw) return;
 	if (g_Seesaws.empty()) return;
 
 	std::vector<MAPDATA>& mapData = GetFieldMap();
@@ -677,9 +615,9 @@ void Seesaw_DebugDraw()
 			IM_COL32(255, 100, 100, 255) :
 			IM_COL32(100, 255, 100, 255);
 
-		SeesawDrawOBB_FullRotation(boardColliderCenter, boardHalf, board.rotate, boardColor);
+		DebugDrawOBB_FullRotation(boardColliderCenter, boardHalf, board.rotate, boardColor);
 
-		SeesawDrawPoint3D(boardColliderCenter, IM_COL32(255, 255, 0, 255), 5.0f);
+		DrawPoint3D(boardColliderCenter, IM_COL32(255, 255, 0, 255), 5.0f);
 
 		if (player)
 		{
@@ -697,10 +635,10 @@ void Seesaw_DebugDraw()
 			float surfaceY = baseCenterY + heightOffset + boardHalf.y;
 
 			XMFLOAT3 surfacePoint = { player->Position.x, surfaceY, player->Position.z };
-			SeesawDrawPoint3D(surfacePoint, IM_COL32(0, 255, 255, 255), 6.0f);
+			DrawPoint3D(surfacePoint, IM_COL32(0, 255, 255, 255), 6.0f);
 
 			XMFLOAT3 footPoint = { player->Position.x, player->Position.y, player->Position.z };
-			SeesawDrawLine3D(footPoint, surfacePoint, IM_COL32(255, 0, 255, 200), 2.0f);
+			DrawLine3D(footPoint, surfacePoint, IM_COL32(255, 0, 255, 200), 2.0f);
 		}
 
 
@@ -711,23 +649,23 @@ void Seesaw_DebugDraw()
 			{
 				const MAPDATA& base = mapData[baseIdx];
 				XMFLOAT3 baseHalf = Field_GetColliderHalfSize(base);
-				SeesawDrawOBB_FullRotation(base.pos, baseHalf, base.rotate,
+				DebugDrawOBB_FullRotation(base.pos, baseHalf, base.rotate,
 					IM_COL32(100, 100, 255, 255));
 			}
 		}
 
-		SeesawDrawPoint3D(seesaw.pos, IM_COL32(255, 0, 255, 255), 6.0f);
+		DrawPoint3D(seesaw.pos, IM_COL32(255, 0, 255, 255), 6.0f);
 
 		XMFLOAT3 axisEnd = board.pos;
 		if (seesaw.params.tiltAxis == SEESAW_TILT_X)
 		{
 			axisEnd.x += 0.5f;
-			SeesawDrawLine3D(board.pos, axisEnd, IM_COL32(255, 0, 0, 255), 3.0f);
+			DrawLine3D(board.pos, axisEnd, IM_COL32(255, 0, 0, 255), 3.0f);
 		}
 		else
 		{
 			axisEnd.z += 0.5f;
-			SeesawDrawLine3D(board.pos, axisEnd, IM_COL32(0, 0, 255, 255), 3.0f);
+			DrawLine3D(board.pos, axisEnd, IM_COL32(0, 0, 255, 255), 3.0f);
 		}
 
 		if (seesaw.partIndices.size() >= 1)
@@ -737,7 +675,7 @@ void Seesaw_DebugDraw()
 			{
 				const MAPDATA& base = mapData[baseIdx];
 				XMFLOAT3 baseHalf = Field_GetColliderHalfSize(base);
-				SeesawDrawOBB_FullRotation(base.pos, baseHalf, base.rotate, IM_COL32(128, 128, 128, 255));
+				DebugDrawOBB_FullRotation(base.pos, baseHalf, base.rotate, IM_COL32(128, 128, 128, 255));
 			}
 		}
 

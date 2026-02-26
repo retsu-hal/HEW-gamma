@@ -4,7 +4,7 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
-using namespace DirectX;
+
 
 class CAMERA
 {

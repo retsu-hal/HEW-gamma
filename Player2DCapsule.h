@@ -5,7 +5,6 @@
 #include <DirectXMath.h>
 #include <cmath>
 
-using namespace DirectX;
 
 #define PLAYER2D_CAPSULE_RADIUS     (0.35f)
 #define PLAYER2D_CAPSULE_HEIGHT     (1.3f)
@@ -13,7 +12,7 @@ using namespace DirectX;
 
 struct Capsule2D
 {
-    XMFLOAT3 center;  
+    DirectX::XMFLOAT3 center;
     float radius;     
     float halfHeight; 
     float halfZ;      
@@ -28,22 +27,22 @@ struct Capsule2D
     {
     }
 
-    XMFLOAT3 GetTop() const
+    DirectX::XMFLOAT3 GetTop() const
     {
         float cosZ = cosf(rotationZ);
         float sinZ = sinf(rotationZ);
-        return XMFLOAT3(
+        return DirectX::XMFLOAT3(
             center.x - halfHeight * sinZ,
             center.y + halfHeight * cosZ,
             center.z
         );
     }
 
-    XMFLOAT3 GetBottom() const
+    DirectX::XMFLOAT3 GetBottom() const
     {
         float cosZ = cosf(rotationZ);
         float sinZ = sinf(rotationZ);
-        return XMFLOAT3(
+        return DirectX::XMFLOAT3(
             center.x + halfHeight * sinZ,
             center.y - halfHeight * cosZ,
             center.z
@@ -55,11 +54,11 @@ struct Capsule2D
         return halfHeight * 2.0f + radius * 2.0f;
     }
 
-    XMFLOAT3 GetBoundingHalfSize() const
+    DirectX::XMFLOAT3 GetBoundingHalfSize() const
     {
         float cosZ = fabsf(cosf(rotationZ));
         float sinZ = fabsf(sinf(rotationZ));
-        return XMFLOAT3(
+        return DirectX::XMFLOAT3(
             radius + halfHeight * sinZ,
             radius + halfHeight * cosZ,
             halfZ

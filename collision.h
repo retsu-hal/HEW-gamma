@@ -1,19 +1,17 @@
 //Collision.h
 #pragma once
 
-#include <d3d11.h>
+
 #include <DirectXMath.h>
-#include"direct3d.h"
-#include"sprite.h"
-#include"shader.h"
+#include <vector>
+
+
 #include"field.h"
-#include"player3D.h"
 #include "ShadowColliderBox.h"
 #include "Player2DCapsule.h"
-//=========================================================================================================
-// マクロ定義
-//=========================================================================================================
-#define COE (0.1f)//反発係数
+#include"DebugUtil.h"
+#include "MathUtil.h"
+
 
 //=========================================================================================================
 // 構造体宣言
@@ -102,23 +100,6 @@ void Collision_DebugAddExtraOBB(const DirectX::XMFLOAT3& center, const DirectX::
 
 void Collision_DebugDraw();
 
-
-struct ShadowDebugOptions//シャドウの当たり判定のデバッグ描画オプション
-{
-    bool drawPrism = true; 
-    bool drawAABB = false; 
-    bool drawNormal = true;   
-    bool drawVertices = false;
-    bool drawStandSegments = true;
-    bool drawGround = true;
-
-    unsigned int prismColor = 0xFF0000FF;
-    unsigned int aabbColor = 0x80FFFF00;
-    unsigned int normalColor = 0xFFFFFF00;
-    unsigned int vertexColor = 0xFF00FF00;
-    unsigned int standSegColor = 0xFFFF00FF;
-    unsigned int groundColor = 0xFFFF00FF;
-};
 
 void Collision_SetShadowDebugOptions(const ShadowDebugOptions& options);
 

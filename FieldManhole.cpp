@@ -6,9 +6,8 @@
 #include <cmath>
 #include "camera.h"
 #include "direct3d.h"
+#include "DebugUtil.h"
 
-#include "debug.h"
-static bool g_ManholeDebugDraw = true;
 
 struct ManholePartConfig
 {
@@ -16,8 +15,6 @@ struct ManholePartConfig
     XMFLOAT3 offsetPos;
     XMFLOAT3 scale;
     XMFLOAT3 rotate;
-    //XMFLOAT3 colliderHalf;
-    //bool useCustomCollider;
 };
 
 static const ManholePartConfig MANHOLE_CONFIG =
@@ -26,17 +23,11 @@ static const ManholePartConfig MANHOLE_CONFIG =
     XMFLOAT3(0.0f, -0.5f, 0.0f),
     XMFLOAT3(1.0f, 0.3f, 1.0f),
     XMFLOAT3(0.0f, 0.0f, 0.0f),
-    //XMFLOAT3(0.5f, 0.15f, 0.5f),
-    //true                        
 };
 
 static std::vector<ManholeData> g_Manholes;
 static float g_TotalTime = 0.0f;
 
-void Manhole_SetDebugDraw(bool enable)
-{
-    g_ManholeDebugDraw = enable;
-}
 
 void Manhole_Initialize()
 {
@@ -160,49 +151,8 @@ static ImVec2 ManholeWorldToScreen(const XMFLOAT3& p, bool* valid)
     );
 }
 
-static void ManholeDrawLine3D(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col, float thick = 1.0f)
-{
-    bool va, vb;
-    ImVec2 sa = ManholeWorldToScreen(a, &va);
-    ImVec2 sb = ManholeWorldToScreen(b, &vb);
-    if (va && vb)
-        ImGui::GetBackgroundDrawList()->AddLine(sa, sb, col, thick);
-}
-
-static void ManholeDrawAABB(const XMFLOAT3& center, const XMFLOAT3& half, ImU32 col)
-{
-    XMFLOAT3 corners[8] = {
-        {center.x - half.x, center.y - half.y, center.z - half.z},
-        {center.x + half.x, center.y - half.y, center.z - half.z},
-        {center.x + half.x, center.y + half.y, center.z - half.z},
-        {center.x - half.x, center.y + half.y, center.z - half.z},
-        {center.x - half.x, center.y - half.y, center.z + half.z},
-        {center.x + half.x, center.y - half.y, center.z + half.z},
-        {center.x + half.x, center.y + half.y, center.z + half.z},
-        {center.x - half.x, center.y + half.y, center.z + half.z},
-    };
-
-    const int edges[12][2] = {
-        {0,1},{1,2},{2,3},{3,0},
-        {4,5},{5,6},{6,7},{7,4},
-        {0,4},{1,5},{2,6},{3,7}
-    };
-
-    for (int i = 0; i < 12; i++)
-        ManholeDrawLine3D(corners[edges[i][0]], corners[edges[i][1]], col, 2.0f);
-}
-
-static void ManholeDrawPoint3D(const XMFLOAT3& p, ImU32 col, float size = 4.0f)
-{
-    bool valid;
-    ImVec2 sp = ManholeWorldToScreen(p, &valid);
-    if (valid)
-        ImGui::GetBackgroundDrawList()->AddCircleFilled(sp, size, col);
-}
-
 void Manhole_DebugDraw()
 {
-    if (!g_ManholeDebugDraw) return;
     if (g_Manholes.empty()) return;
 
     std::vector<MAPDATA>& mapData = GetFieldMap();
@@ -222,15 +172,15 @@ void Manhole_DebugDraw()
             MANHOLE_CONFIG.scale.z * BOX_RADIUS
         };
 
-        ManholeDrawAABB(data.pos, half, IM_COL32(255, 200, 50, 255));
+        DebugDrawAABB(data.pos, half, IM_COL32(255, 200, 50, 255));
 
-        ManholeDrawPoint3D(manhole.basePos, IM_COL32(0, 255, 255, 255), 5.0f);
+        DrawPoint3D(manhole.basePos, IM_COL32(0, 255, 255, 255), 5.0f);
 
-        ManholeDrawPoint3D(data.pos, IM_COL32(255, 255, 0, 255), 4.0f);
+        DrawPoint3D(data.pos, IM_COL32(255, 255, 0, 255), 4.0f);
 
         XMFLOAT3 lowPos = manhole.basePos; 
         XMFLOAT3 highPos = manhole.basePos;
         highPos.y += manhole.params.amplitude;
-        ManholeDrawLine3D(lowPos, highPos, IM_COL32(100, 100, 255, 180), 1.0f);
+        DrawLine3D(lowPos, highPos, IM_COL32(100, 100, 255, 180), 1.0f);
     }
 }

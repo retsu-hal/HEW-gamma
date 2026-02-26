@@ -5,8 +5,6 @@
 #include <vector>
 #include "field.h"
 
-using namespace DirectX;
-
 struct ManholeParams
 {
     float amplitude;  
@@ -51,4 +49,3 @@ int Manhole_GetCount();
 void Manhole_ClearAll();
 
 void Manhole_DebugDraw();
-void Manhole_SetDebugDraw(bool enable);

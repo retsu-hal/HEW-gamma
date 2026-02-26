@@ -25,16 +25,6 @@ static PLAYER_MODE g_Mode = MODE_3D;
 // 3Dと2Dの切り替えに使用するキー
 static const auto TABKey = KK_TAB;
 
-// 3DﾌｨｰﾙﾄﾞのAABB半分のサイズを取得
-static XMFLOAT3 Field_GetHalfSize(const MAPDATA& m)
-{
-    return XMFLOAT3{
-        BOX_RADIUS * m.scale.x,
-        BOX_RADIUS * m.scale.y,
-        BOX_RADIUS * m.scale.z
-    };
-}
-
 // フィールドがトリガー用かどうかを取得
 static bool Field_IsWall(FIELD t)
 {
@@ -112,7 +102,7 @@ static bool RaycastOBB_Face(
     XMFLOAT3* outNormalW,
     float* outT)
 {
-    const XMFLOAT3 half = Field_GetHalfSize(box);
+    const XMFLOAT3 half = Field_GetCollisionHalfSize(box);
 
     const XMMATRIX R = XMMatrixRotationRollPitchYaw(
         XMConvertToRadians(box.rotate.x),
@@ -180,7 +170,7 @@ static XMFLOAT3 Calc2DPositionOnWallSurface(
     const XMFLOAT3& p3Pos,
     const XMFLOAT3& faceNormalW)
 {
-    const XMFLOAT3 half = Field_GetHalfSize(box);
+    const XMFLOAT3 half = Field_GetCollisionHalfSize(box);
 
     const XMMATRIX R = XMMatrixRotationRollPitchYaw(
         XMConvertToRadians(box.rotate.x),
@@ -242,7 +232,7 @@ static bool FindGroundTopY_OnXZ(float x, float z, float startY, float maxDown, f
     {
         const MAPDATA& m = map[i];
 
-        XMFLOAT3 half = Field_GetHalfSize(m);
+        XMFLOAT3 half = Field_GetCollisionHalfSize(m);
         if (x < m.pos.x - half.x || x > m.pos.x + half.x) continue;
         if (z < m.pos.z - half.z || z > m.pos.z + half.z) continue;
 

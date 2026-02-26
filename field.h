@@ -7,7 +7,7 @@
 #include "sprite.h"
 #include "shader.h"
 #include <vector>
-using namespace DirectX;
+
 
 //=========================================================================================================
 // マクロ
@@ -77,9 +77,6 @@ public:
     {}
 };
 
-// グローバルなフィールドデータ配列
-//extern std::vector<MAPDATA> g_MapData;
-
 //=========================================================================================================
 // プロトタイプ宣言
 //=========================================================================================================
@@ -100,3 +97,5 @@ XMFLOAT3 Field_GetPlayerStartPosition();
 
 void SetCurrentStage(GAME_STAGE stage);
 GAME_STAGE GetCurrentStage();
+
+XMFLOAT3 Field_GetCollisionHalfSize(const MAPDATA& m);
