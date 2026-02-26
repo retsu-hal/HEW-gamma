@@ -84,10 +84,10 @@
     <ClCompile Include="manager.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="model.cpp">
+    <ClCompile Include="memo.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="memo.cpp">
+    <ClCompile Include="model.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
     <ClCompile Include="mouse.cpp">
@@ -143,10 +143,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Audio.h">
+    <ClInclude Include="Bill_Board.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Bill_Board.h">
+    <ClInclude Include="Audio.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="camera.h">
@@ -159,6 +159,18 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="debug.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="debug_ostream.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="direct3d.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTex.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="effect.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="game.h">
@@ -174,18 +186,6 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="fade.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="effect.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectXTex.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="direct3d.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="debug_ostream.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="imgui-docking\imgui.h">
@@ -233,6 +233,24 @@
     <ClInclude Include="Player3D.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="Trail.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowColliderBox.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyDome.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="sprite.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="title.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="title_manager.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
     <ClInclude Include="PlayerModeSwitchManager.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
@@ -254,37 +272,6 @@
     <ClInclude Include="shader.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Trail.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="title.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="title_manager.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="sprite.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SkyDome.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldManhole.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="FieldSeesaw.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Option.h">
-  	<Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SkyBall.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Player2DCapsule.h">
-    <ClInclude Include="ShadowColliderBox.h">
-      <Filter>ヘッダーファイル</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="DirectXTex_Release.lib" />
@@ -295,17 +282,17 @@
     <None Include="DirectXTex.inl" />
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="ソースファイル">
-      <UniqueIdentifier>{514011c5-3188-4bdb-abc9-e643fb0adae4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="imgui">
-      <UniqueIdentifier>{8df540f3-24e0-4ffc-9cb5-e177faf38581}</UniqueIdentifier>
+    <Filter Include="ヘッダーファイル">
+      <UniqueIdentifier>{67fa0ed0-8948-413a-aafa-74f868b30902}</UniqueIdentifier>
     </Filter>
     <Filter Include="シェーダーファイル">
-      <UniqueIdentifier>{0257146b-a17f-44f4-bdd6-a2b8211018fa}</UniqueIdentifier>
+      <UniqueIdentifier>{89f2fe8c-660f-44f0-8dde-49676f496120}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ヘッダーファイル">
-      <UniqueIdentifier>{5724f2e1-47b1-4cec-b2ec-baaeddc1322a}</UniqueIdentifier>
+    <Filter Include="ソースファイル">
+      <UniqueIdentifier>{7120c180-ff45-4108-9493-a14f0ec4a901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{85f59d8d-c508-40b6-a4f9-71d635ecb74e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
