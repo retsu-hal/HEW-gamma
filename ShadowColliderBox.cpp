@@ -568,24 +568,86 @@ bool Shadow_Build(
 	const bool hasUpInPlane = (upLen > 1e-5f);
 	if (hasUpInPlane) upInPlane = upInPlane * (1.0f / upLen);
 
-	float hMax = -FLT_MAX;
+	XMFLOAT2 d2 = { 0.0f, 1.0f };
 	if (hasUpInPlane)
 	{
-		for (const auto& p : out.baseWorld)
-			hMax = (std::max)(hMax, Dot(p, upInPlane));
+		d2 = { Dot(upInPlane, out.u), Dot(upInPlane, out.v) };
 	}
-	float hBandMin = hMax - out.groundBandY;
-	float yBandMin = out.groundMaxY - out.groundBandY;
+	float d2Len = sqrtf(d2.x * d2.x + d2.y * d2.y);
+	if (d2Len < 1e-6f)
+	{
+		d2 = { 0.0f, 1.0f };
+		d2Len = 1.0f;
+	}
+	d2.x /= d2Len; d2.y /= d2Len;
+
+	XMFLOAT2 s2 = { -d2.y, d2.x };
+
+	const int bn = (int)out.baseWorld.size();
+	int idxMinS = 0, idxMaxS = 0;
+	float minS = FLT_MAX, maxS = -FLT_MAX;
+
+	for (int i = 0; i < bn; ++i)
+	{
+		const XMFLOAT2& p = out.poly[i];
+		float s = p.x * s2.x + p.y * s2.y;
+		if (s < minS) { minS = s; idxMinS = i; }
+		if (s > maxS) { maxS = s; idxMaxS = i; }
+	}
+
+	auto BuildChain = [&](int startIdx, int endIdx, int step) -> std::vector<int>
+		{
+			std::vector<int> chain;
+			chain.reserve(bn + 1);
+
+			int i = startIdx;
+			chain.push_back(i);
+
+			// Guard prevents infinite loops if input is degenerate.
+			for (int guard = 0; guard < bn + 2 && i != endIdx; ++guard)
+			{
+				i = (i + step + bn) % bn;
+				chain.push_back(i);
+			}
+			return chain;
+		};
+
+	auto ScoreChain = [&](const std::vector<int>& chain) -> float
+		{
+			float score = 0.0f;
+			for (int idx : chain)
+			{
+				const XMFLOAT2& p = out.poly[idx];
+				// Height in plane: dot(p, d2)
+				score += p.x * d2.x + p.y * d2.y;
+			}
+			return score;
+		};
+
+	std::vector<int> chainA = BuildChain(idxMinS, idxMaxS, +1);
+	std::vector<int> chainB = BuildChain(idxMinS, idxMaxS, -1);
+
+	const float scoreA = ScoreChain(chainA);
+	const float scoreB = ScoreChain(chainB);
+	const std::vector<int>& upperChain = (scoreA >= scoreB) ? chainA : chainB;
 
 	out.standSegments.clear();
+
+	const float kMaxSlopeDeg = 80.0f;
+	const float kMaxSlopeRad = XMConvertToRadians(kMaxSlopeDeg);
+	const float kTanMax = tanf(kMaxSlopeRad);
+
 	auto AddStandSeg = [&](const XMFLOAT3& A, const XMFLOAT3& B)
 		{
 			XMFLOAT3 d = B - A;
 			float len2 = LengthSq(d);
 			if (len2 < 1e-6f) return;
 
-			float len2xz = d.x * d.x + d.z * d.z;
-			if (len2xz < 1e-8f) return;
+			float lenXZ = sqrtf(d.x * d.x + d.z * d.z);
+			if (lenXZ < 1e-4f) return;
+
+			float dy = fabsf(d.y);
+			if (dy > kTanMax * lenXZ + 1e-5f) return; // too vertical
 
 			ShadowEdgeSegment s;
 			s.a = A;
@@ -593,39 +655,17 @@ bool Shadow_Build(
 			out.standSegments.push_back(s);
 		};
 
-	const int bn = (int)out.baseWorld.size();
-	for (int i = 0; i < bn; ++i)
+	if (upperChain.size() >= 2)
 	{
-		const XMFLOAT3 p0 = out.baseWorld[i];
-		const XMFLOAT3 p1 = out.baseWorld[(i + 1) % bn];
-
-		float aH = hasUpInPlane ? Dot(p0, upInPlane) : p0.y;
-		float bH = hasUpInPlane ? Dot(p1, upInPlane) : p1.y;
-		float bandMin = hasUpInPlane ? hBandMin : yBandMin;
-
-		const bool aIn = (aH >= bandMin);
-		const bool bIn = (bH >= bandMin);
-
-		if (aIn && bIn)
+		for (int k = 0; k + 1 < (int)upperChain.size(); ++k)
 		{
-			AddStandSeg(p0, p1);
-		}
-		else if (aIn ^ bIn)
-		{
-			float denom = (bH - aH);
-			if (std::fabs(denom) > 1e-6f)
-			{
-				float t = (bandMin - aH) / denom;
-				t = Clamp(t, 0.0f, 1.0f);
-				XMFLOAT3 pi = p0 + (p1 - p0) * t;
-
-				if (aIn) AddStandSeg(p0, pi);
-				else    AddStandSeg(pi, p1);
-			}
+			const int i0 = upperChain[k];
+			const int i1 = upperChain[k + 1];
+			AddStandSeg(out.baseWorld[i0], out.baseWorld[i1]);
 		}
 	}
-
 	std::vector<XMFLOAT3> allPts = out.baseWorld;
+
 	allPts.insert(allPts.end(), out.topWorld.begin(), out.topWorld.end());
 	ComputeAABB(allPts, out.aabbMin, out.aabbMax);
 

@@ -1254,6 +1254,7 @@ bool Player2DShadow_Collision()
 		if (!prism || !prism->isValid) continue;
 		if (prism->poly.size() < 3) continue;
 
+		if (prism->n.y > 0.70f) continue;
 
 		const float moveLen = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
 		const float gate = capsule.radius + capsule.halfHeight + moveLen + 0.3f;
@@ -1460,14 +1461,11 @@ bool Player2DShadow_TopContact()
 	Capsule2D capsule = Player2D_GetCapsule();
 
 	const float kSkin = 0.01f;
-
-	const float kStandWidth = capsule.radius + 0.12f; // (XZ) max distance to ledge to be considered landing
-	const float kContactUp = 0.25f;                   // allow slight gap above
-	const float kContactDown = -(capsule.radius + 0.45f); // allow some penetration / fall
+	const float kStandWidth = capsule.radius + 0.12f; // How far (in XZ) the player can be from the ledge to land
+	const float kContactUp = 0.25f;      // Allow slight gap above ledge
+	const float kContactDown = -(capsule.radius + 0.45f); // Allow a bit of penetration / high fall
 	const float kJumpEscapeVel = 0.02f;
 	const bool  isRising = (player->Velocity.y > kJumpEscapeVel);
-
-	const float kFaceNY = 0.85f;
 
 	auto Dot3 = [](const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; };
 	auto LenSqXZ = [](const XMFLOAT3& v) { return v.x * v.x + v.z * v.z; };
@@ -1492,22 +1490,6 @@ bool Player2DShadow_TopContact()
 				(aMin.y <= bMax.y && aMax.y >= bMin.y) &&
 				(aMin.z <= bMax.z && aMax.z >= bMin.z);
 		};
-	
-	auto PointInConvexPoly2D = [](const std::vector<XMFLOAT2>& poly, const XMFLOAT2& p, float eps) -> bool
-		{
-			if (poly.size() < 3) return false;
-			float sign = 0.0f;
-			for (int i = 0; i < (int)poly.size(); ++i)
-			{
-				const XMFLOAT2 a = poly[i];
-				const XMFLOAT2 b = poly[(i + 1) % (int)poly.size()];
-				const float cx = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
-				if (fabsf(cx) <= eps) continue;
-				if (sign == 0.0f) sign = (cx > 0.0f) ? 1.0f : -1.0f;
-				else if ((cx > 0.0f && sign < 0.0f) || (cx < 0.0f && sign > 0.0f)) return false;
-			}
-			return true;
-		};
 
 	// Player foot Y (your Player2D.Position.y is the capsule bottom-most point)
 	const float footY = player->Position.y;
@@ -1524,7 +1506,7 @@ bool Player2DShadow_TopContact()
 	{
 		const ShadowPrism* prism = prisms[prismIdx];
 		if (!prism || !prism->isValid) continue;
-		if (prism->poly.size() < 3) continue;
+		if (prism->baseWorld.size() < 2) continue;
 
 		XMFLOAT3 pMin = prism->aabbMin - XMFLOAT3(aabbPad, aabbPad, aabbPad);
 		XMFLOAT3 pMax = prism->aabbMax + XMFLOAT3(aabbPad, aabbPad, aabbPad);
@@ -1546,62 +1528,21 @@ bool Player2DShadow_TopContact()
 		if (sliceN > prism->thickness * 0.5f)
 			sliceN = prism->thickness;
 
-		if (prism->n.y >= kFaceNY)
-		{
-			if (fabsf(prism->n.y) < 1e-6f) continue;
-
-			const XMFLOAT3 originOff = prism->origin + prism->n * sliceN;
-
-			const float x = capsule.center.x;
-			const float z = capsule.center.z;
-
-			const float y = originOff.y - (prism->n.x * (x - originOff.x) + prism->n.z * (z - originOff.z)) / prism->n.y;
-
-			// Convert to prism local (u,v) and check inside polygon.
-			const XMFLOAT3 pOn = { x, y, z };
-			const XMFLOAT3 d = pOn - prism->origin;
-			const XMFLOAT2 uv = { Dot3(d, prism->u), Dot3(d, prism->v) };
-
-			if (!PointInConvexPoly2D(prism->poly, uv, 1e-5f))
-				continue;
-
-			const float groundY = y;
-			const float distToGround = footY - groundY;
-
-			if (isRising && distToGround > 0.0f)
-				continue;
-
-			const bool crossed = (footYPrev >= groundY + kSkin) && (footY <= groundY + kSkin);
-			if (!crossed)
+		auto ProcessSeg = [&](XMFLOAT3 a, XMFLOAT3 b)
 			{
-				if (distToGround < kContactDown || distToGround > kContactUp)
-					continue;
-			}
-
-			const float absDist = fabsf(distToGround);
-			if (absDist < bestAbs)
-			{
-				bestAbs = absDist;
-				bestIdx = prismIdx;
-				bestGroundY = groundY;
-				bestHasDir = false;
-			}
-			continue;
-		}
-
-		auto EvalSeg = [&](XMFLOAT3 a, XMFLOAT3 b)
-			{
+				// Move segment onto the current depth slice (toward the protruded side wall)
 				a = a + prism->n * sliceN;
 				b = b + prism->n * sliceN;
 
+				// If the segment is almost vertical in world (XZ tiny), it can't act as a ledge.
 				XMFLOAT3 e = b - a;
-				if (LenSqXZ(e) < 1e-8f) return;
+				if (LenSqXZ(e) < 1e-5f) return;
 
-				// Closest point from capsule center (in XZ) to segment (in XZ)
+				// Closest point from player (in XZ) to this segment (in XZ)
 				XMFLOAT3 p = capsule.center;
 				XMFLOAT3 ab = b - a;
 				float abxz2 = ab.x * ab.x + ab.z * ab.z;
-				if (abxz2 < 1e-8f) return;
+				if (abxz2 < 1e-6f) return;
 
 				float t = ((p.x - a.x) * ab.x + (p.z - a.z) * ab.z) / abxz2;
 				t = Clamp(t, 0.0f, 1.0f);
@@ -1615,6 +1556,7 @@ bool Player2DShadow_TopContact()
 				float groundY = q.y;
 				float distToGround = footY - groundY;
 
+				// Rising: don't snap down onto ledge from below.
 				if (isRising && distToGround > 0.0f)
 					return;
 
@@ -1632,25 +1574,28 @@ bool Player2DShadow_TopContact()
 					bestIdx = prismIdx;
 					bestGroundY = groundY;
 
-					XMFLOAT3 dir = { ab.x, 0.0f, ab.z };
-					float dl = sqrtf(dir.x * dir.x + dir.z * dir.z);
-					if (dl > 1e-6f) { dir.x /= dl; dir.z /= dl; bestDirXZ = dir; bestHasDir = true; }
-					else { bestHasDir = false; }
+					{
+						XMFLOAT3 dir = { ab.x, 0.0f, ab.z };
+						float dl = sqrtf(dir.x * dir.x + dir.z * dir.z);
+						if (dl > 1e-6f) { dir.x /= dl; dir.z /= dl; bestDirXZ = dir; bestHasDir = true; }
+						else { bestHasDir = false; }
+					}
 				}
 			};
 
+		// Preferred: use precomputed ledge segments from Shadow_Build().
 		if (!prism->standSegments.empty())
 		{
 			for (const auto& s : prism->standSegments)
-				EvalSeg(s.a, s.b);
+				ProcessSeg(s.a, s.b);
 		}
-		else if (prism->baseWorld.size() >= 2)
+		else
 		{
-			// Fallback: if standSegments weren't built for some reason, approximate using baseWorld edges.
+			// Fallback: use all polygon edges if segments weren't generated (degenerate case).
 			const int nV = (int)prism->baseWorld.size();
 			for (int i = 0; i < nV; ++i)
 			{
-				EvalSeg(prism->baseWorld[i], prism->baseWorld[(i + 1) % nV]);
+				ProcessSeg(prism->baseWorld[i], prism->baseWorld[(i + 1) % nV]);
 			}
 		}
 	}
