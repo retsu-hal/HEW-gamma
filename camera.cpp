@@ -293,16 +293,6 @@ void Player2DCamera_DebugUpdate()
     Mouse_State ms{};
     Mouse_GetState(&ms);
 
-    static bool relativeMode = true;
-    bool suppressDelta = false;
-    {
-        if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-            relativeMode = !relativeMode;
-            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-                : MOUSE_POSITION_MODE_ABSOLUTE);
-        }
-    }
-
     if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
     {
         const float sensYaw = 1.0f;

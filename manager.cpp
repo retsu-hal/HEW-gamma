@@ -73,6 +73,16 @@ void	Manager_Update()
 	}
 #endif // _DEBUG
 
+	static bool relativeMode = true;
+	bool suppressDelta = false;
+	{
+		if (Keyboard_IsKeyDownTrigger(KK_F2)) {
+			relativeMode = !relativeMode;
+			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
+				: MOUSE_POSITION_MODE_ABSOLUTE);
+		}
+	}
+
 
 	gPad.Update();
 

@@ -38,6 +38,22 @@ static int    s_GraceFrames = 0;
 static XMFLOAT3 s_LastStandDirXZ = { 1, 0, 0 };
 static bool     s_HasStandDir = false;
 
+static bool     s_StandSegValid = false;
+static bool     s_StandSegWalkable = false;
+static XMFLOAT3 s_StandSegA = { 0,0,0 };
+static XMFLOAT3 s_StandSegB = { 0,0,0 };
+static XMFLOAT3 s_StandSegAB = { 1,0,0 };
+static XMFLOAT3 s_StandDirXZ = { 1,0,0 };   // normalized XZ direction along the stand segment
+static float    s_StandLenXZ = 1.0f;        // |AB| in XZ (for slope delta)
+static float    s_FrameSlopeDeltaY = 0.0f;  // added to Position.y in MoveAndCollision()
+static XMFLOAT3 s_StandClosestQ = { 0,0,0 };
+
+// Debug vectors
+static XMFLOAT3 s_DbgMoveInXZ = { 0,0,0 };
+static XMFLOAT3 s_DbgMoveOutXZ = { 0,0,0 };
+static XMFLOAT3 s_DbgMoveSlope = { 0,0,0 };
+
+
 
 // シャドウの当たり判定の状態をリセット（プレイヤーが地面から離れたときなどに呼び出す）
 void Collision_ResetShadowContactState()
@@ -1208,6 +1224,7 @@ static float SignedDistToPolygon2D(
 	}
 }
 
+
 bool Player2DShadow_Collision()
 {
 	PLAYER* player = GetPlayer2D();
@@ -1224,14 +1241,19 @@ bool Player2DShadow_Collision()
 	XMFLOAT3 dXZ = { player->Velocity.x, 0.0f, player->Velocity.z };
 	bool hitAny = false;
 
+	s_FrameSlopeDeltaY = 0.0f;
+	s_DbgMoveInXZ = dXZ;
+	s_DbgMoveOutXZ = dXZ;
+	s_DbgMoveSlope = { 0,0,0 };
+
 	if (s_HasStandDir && s_LastStandingPrismIndex >= 0 && player->Velocity.y <= 0.02f)
 	{
 		float dl = sqrtf(dXZ.x * dXZ.x + dXZ.z * dXZ.z);
 		if (dl > 1e-6f)
 		{
-			float d = dXZ.x * s_LastStandDirXZ.x + dXZ.z * s_LastStandDirXZ.z;
-			dXZ.x = s_LastStandDirXZ.x * d;
-			dXZ.z = s_LastStandDirXZ.z * d;
+			float d = dXZ.x * s_StandDirXZ.x + dXZ.z * s_StandDirXZ.z;
+			dXZ.x = s_StandDirXZ.x * d;
+			dXZ.z = s_StandDirXZ.z * d;
 		}
 	}
 
@@ -1256,10 +1278,14 @@ bool Player2DShadow_Collision()
 		};
 
 
-	for (const ShadowPrism* prism : prisms)
+	for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
 	{
+		const ShadowPrism* prism = prisms[prismIdx];
 		if (!prism || !prism->isValid) continue;
 		if (prism->poly.size() < 3) continue;
+
+		if (s_StandSegValid && s_StandSegWalkable && prismIdx == s_LastStandingPrismIndex && player->Velocity.y <= 0.02f)
+			continue;
 
 		if (prism->n.y > 0.70f) continue;
 
@@ -1282,36 +1308,6 @@ bool Player2DShadow_Collision()
 
 		const float rN = CapsuleProjection(prism->n);
 		const bool overlapN = (n0 >= -rN) && (n0 <= prism->thickness + rN);
-
-		// Ground-like prisms are handled by Player2DShadow_TopContact().
-		// Avoid treating them as walls here, or ground movement can be blocked.
-		if (prism->n.y > 0.7f)
-		{
-			const bool insidePoly = PointInPolygon2D(p0.x, p0.y, poly);
-			const float bottomN = n0 - rN;
-
-			if (insidePoly && player->Velocity.y <= 0.0f)
-			{
-				const float targetBottomN = prism->thickness;
-				const float distToTop = bottomN - targetBottomN;
-
-				if (distToTop <= 0.10f && distToTop >= -0.35f)
-				{
-					float snapStrength = 1.0f;
-					if (distToTop > 0.0f)
-						snapStrength = Clamp(1.0f - distToTop / 0.10f, 0.2f, 1.0f);
-
-					player->Position = player->Position - prism->n * (distToTop * snapStrength);
-
-					const float vN = Dot(player->Velocity, prism->n);
-					if (vN < 0.0f)
-						player->Velocity = player->Velocity - prism->n * vN;
-
-					player->isGround = true;
-					hitAny = true;
-				}
-			}
-		}
 
 		if (!overlapN) continue;
 
@@ -1451,11 +1447,21 @@ bool Player2DShadow_Collision()
 		}
 	}
 
+	s_DbgMoveOutXZ = dXZ;
+	s_FrameSlopeDeltaY = 0.0f;
+	if (s_StandSegValid && s_StandSegWalkable && s_HasStandDir && s_LastStandingPrismIndex >= 0 && player->Velocity.y <= 0.02f && s_StandLenXZ > 1e-6f)
+	{
+		float amount = dXZ.x * s_StandDirXZ.x + dXZ.z * s_StandDirXZ.z;
+		s_FrameSlopeDeltaY = s_StandSegAB.y * (amount / s_StandLenXZ);
+	}
+	s_DbgMoveSlope = { dXZ.x, s_FrameSlopeDeltaY, dXZ.z };
+
 	player->Velocity.x = dXZ.x;
 	player->Velocity.z = dXZ.z;
 
 	return hitAny;
 }
+
 
 bool Player2DShadow_TopContact()
 {
@@ -1473,6 +1479,8 @@ bool Player2DShadow_TopContact()
 	const float kContactDown = -(capsule.radius + 0.45f); // Allow a bit of penetration / high fall
 	const float kJumpEscapeVel = 0.02f;
 	const bool  isRising = (player->Velocity.y > kJumpEscapeVel);
+
+	const float kMaxWalkSlopeTan = 57.0f;
 
 	auto Dot3 = [](const XMFLOAT3& a, const XMFLOAT3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; };
 	auto LenSqXZ = [](const XMFLOAT3& v) { return v.x * v.x + v.z * v.z; };
@@ -1500,7 +1508,7 @@ bool Player2DShadow_TopContact()
 
 	// Player foot Y (your Player2D.Position.y is the capsule bottom-most point)
 	const float footY = player->Position.y;
-	const float footYPrev = footY - player->Velocity.y; // dt==1 in this project
+	const float footYPrev = footY - player->Velocity.y - s_FrameSlopeDeltaY; // dt==1 in this project
 
 	int bestIdx = -1;
 	float bestAbs = 1e9f;
@@ -1508,6 +1516,13 @@ bool Player2DShadow_TopContact()
 
 	XMFLOAT3 bestDirXZ = { 1,0,0 };
 	bool bestHasDir = false;
+
+	XMFLOAT3 bestSegA = { 0,0,0 };
+	XMFLOAT3 bestSegB = { 0,0,0 };
+	XMFLOAT3 bestSegQ = { 0,0,0 };
+	XMFLOAT3 bestSegAB = { 1,0,0 };
+	float    bestLenXZ = 1.0f;
+	bool     bestWalkable = false;
 
 	for (int prismIdx = 0; prismIdx < (int)prisms.size(); ++prismIdx)
 	{
@@ -1532,8 +1547,8 @@ bool Player2DShadow_TopContact()
 		if (sliceN < 0.0f) sliceN = 0.0f;
 		if (sliceN > prism->thickness) sliceN = prism->thickness;
 		// Bias to the outer face if the player is already on the outer half.
-		if (sliceN > prism->thickness * 0.5f)
-			sliceN = prism->thickness;
+		/*if (sliceN > prism->thickness * 0.5f)
+			sliceN = prism->thickness;*/
 
 		auto ProcessSeg = [&](XMFLOAT3 a, XMFLOAT3 b)
 			{
@@ -1550,6 +1565,10 @@ bool Player2DShadow_TopContact()
 				XMFLOAT3 ab = b - a;
 				float abxz2 = ab.x * ab.x + ab.z * ab.z;
 				if (abxz2 < 1e-6f) return;
+
+				float lenXZ = sqrtf(abxz2);
+				float slopeTan = fabsf(ab.y) / (lenXZ + 1e-6f);
+				bool  walkable = (slopeTan <= kMaxWalkSlopeTan);
 
 				float t = ((p.x - a.x) * ab.x + (p.z - a.z) * ab.z) / abxz2;
 				t = Clamp(t, 0.0f, 1.0f);
@@ -1580,6 +1599,13 @@ bool Player2DShadow_TopContact()
 					bestAbs = absDist;
 					bestIdx = prismIdx;
 					bestGroundY = groundY;
+
+					bestSegA = a;
+					bestSegB = b;
+					bestSegQ = q;
+					bestSegAB = ab;
+					bestLenXZ = lenXZ;
+					bestWalkable = walkable;
 
 					{
 						XMFLOAT3 dir = { ab.x, 0.0f, ab.z };
@@ -1623,8 +1649,20 @@ bool Player2DShadow_TopContact()
 		s_GraceFrames = 0;
 		s_LastShadowTopPos = { player->Position.x, targetY, player->Position.z };
 
+		s_StandSegValid = true;
+		s_StandSegWalkable = bestWalkable;
+		s_StandSegA = bestSegA;
+		s_StandSegB = bestSegB;
+		s_StandSegAB = bestSegAB;
+		s_StandClosestQ = bestSegQ;
+		s_StandLenXZ = (bestLenXZ > 1e-6f) ? bestLenXZ : 1.0f;
+
 		s_HasStandDir = bestHasDir;
-		if (bestHasDir) s_LastStandDirXZ = bestDirXZ;
+		if (bestHasDir)
+		{
+			s_StandDirXZ = bestDirXZ;
+			s_LastStandDirXZ = bestDirXZ;
+		}
 	}
 	else
 	{
@@ -1643,12 +1681,16 @@ bool Player2DShadow_TopContact()
 			{
 				s_LastStandingPrismIndex = -1;
 				s_GraceFrames = 0;
+				s_StandSegValid = false;
+				s_StandSegWalkable = false;
 			}
 		}
 		else
 		{
 			s_LastStandingPrismIndex = -1;
 			s_GraceFrames = 0;
+			s_StandSegValid = false;
+			s_StandSegWalkable = false;
 		}
 	}
 
@@ -1665,6 +1707,8 @@ int Collision_Player2D_MoveAndCollision()
 	player->Position.x += player->Velocity.x;
 	player->Position.y += player->Velocity.y;
 	player->Position.z += player->Velocity.z;
+
+	player->Position.y += s_FrameSlopeDeltaY;
 
 	int hit = Player2DField_Collision();
 
@@ -1861,6 +1905,33 @@ void Collision_DebugDraw()
 	{
 		Capsule2D capsule = Player2D_GetCapsule();
 		DebugDrawCapsule2D(capsule, IM_COL32(0, 255, 0, 255));
+
+		// Shadow slope-walk debug (current stand segment + move projection)
+		if (g_ShadowDebugOpts.drawStandSegments && s_StandSegValid)
+		{
+			ImU32 colSeg = s_StandSegWalkable ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 80, 80, 255);
+			DrawLine3D(s_StandSegA, s_StandSegB, colSeg, 6.0f);
+			DrawPoint3D(s_StandClosestQ, IM_COL32(255, 255, 255, 255), 5.0f);
+
+			XMFLOAT3 p = capsule.center;
+			// input(move) before any clipping
+			DrawLine3D(p, p + s_DbgMoveInXZ, IM_COL32(80, 80, 255, 255), 2.0f);
+			// after wall clipping (XZ only)
+			DrawLine3D(p, p + s_DbgMoveOutXZ, IM_COL32(80, 255, 255, 255), 2.0f);
+			// final slope displacement applied this frame (XZ + dY)
+			DrawLine3D(p, p + s_DbgMoveSlope, IM_COL32(255, 255, 80, 255), 3.0f);
+
+			// Text overlay
+			float slopeTan = fabsf(s_StandSegAB.y) / (s_StandLenXZ + 1e-6f);
+			char buf[160];
+			std::snprintf(buf, sizeof(buf), "StandPrism=%d  walkable=%d  slopeTan=%.3f  dY=%.3f",
+				s_LastStandingPrismIndex, (int)s_StandSegWalkable, slopeTan, s_FrameSlopeDeltaY);
+
+			ScreenPt sp = WorldToScreen(s_StandClosestQ);
+			if (sp.valid)
+				ImGui::GetBackgroundDrawList()->AddText(sp.pos, IM_COL32(255, 255, 255, 255), buf);
+		}
+
 	}
 
 	// フィールドのトリガーの当たり判定ボックスのデバッグ描画
