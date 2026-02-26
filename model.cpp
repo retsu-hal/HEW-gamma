@@ -421,13 +421,32 @@ void ModelUpdateAnimation(MODEL* model, float deltaTime)
 
 	const aiAnimation* anim = model->AiScene->mAnimations[0];
 
-	float ticksPerSecond =
-		anim->mTicksPerSecond != 0.0f ?
-		(float)anim->mTicksPerSecond : 25.0f;
+	if (!model->LoopAnimation && model->AnimationFinished)
+	{
+		float endTime = (model->CustomEndTime > 0.0f)
+			? model->CustomEndTime
+			: (float)anim->mDuration;
+		ReadNodeHierarchy(model, endTime, model->AiScene->mRootNode, XMMatrixIdentity());
+		return;
+	}
+
+	//float ticksPerSecond =
+	//	anim->mTicksPerSecond != 0.0f ?
+	//	(float)anim->mTicksPerSecond : 25.0f;
+
+	float ticksPerSecond = (float)anim->mTicksPerSecond;
+	if (ticksPerSecond < 1.0f)
+		ticksPerSecond = 30.0f;
 
 	model->AnimationTime += deltaTime * ticksPerSecond;
 
-	float duration = (float)anim->mDuration;
+	float duration = (model->CustomEndTime > 0.0f)
+		? model->CustomEndTime
+		: (float)anim->mDuration;
+
+	if (duration <= 0.0f)
+		return;
+
 	float time;
 
 	if (model->LoopAnimation)
@@ -440,13 +459,13 @@ void ModelUpdateAnimation(MODEL* model, float deltaTime)
 		// Play once: clamp at the end
 		if (model->AnimationTime >= duration)
 		{
-			time = duration;
+			model->AnimationTime = duration;
 			model->AnimationFinished = true;
+			time = duration;
 		}
 		else
 		{
 			time = model->AnimationTime;
-			model->AnimationFinished = false;
 		}
 	}
 
@@ -457,4 +476,10 @@ void ModelUpdateAnimation(MODEL* model, float deltaTime)
 		XMMatrixIdentity());
 }
 
+void ModelResetAnimation(MODEL* model)
+{
+	if (model == NULL) return;
+	model->AnimationTime = 0.0f;
+	model->AnimationFinished = false;
+}
 

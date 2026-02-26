@@ -35,6 +35,8 @@ struct MODEL
 	bool LoopAnimation = true;       // true = loop, false = play once
 	bool AnimationFinished = false;   // flag to check if done
 
+	float CustomEndTime = 0.0f;
+
 	XMMATRIX GlobalInverse;
 };
 
@@ -42,8 +44,8 @@ MODEL* ModelLoad(const char* FileName, bool preTransformVertices = false);
 //if use true mean it will follow maya stats
 //if use false mean it become defult in maya
 void ModelRelease(MODEL* model);
-
 void ModelDraw(MODEL* model);
+void ModelResetAnimation(MODEL* model);
 
 const aiNodeAnim* FindNodeAnim(const aiAnimation* animation, const std::string& nodeName);
 XMMATRIX InterpolatePosition(float time, const aiNodeAnim* channel);
