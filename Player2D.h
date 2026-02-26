@@ -52,7 +52,7 @@ void Player2D_Finalize(void);
 void Player2D_Update();
 void Player2D_Draw(void);
 
-XMFLOAT3 GetPlayer2DPosition();
+DirectX::XMFLOAT3 GetPlayer2DPosition();
 
 void Player2D_Gravity();
 void Player2D_Move();
@@ -66,10 +66,10 @@ PLAYER* GetPlayer2D();
 
 
 Capsule2D Player2D_GetCapsule();
-XMFLOAT3 Player2D_GetSolidHalfSize();
+DirectX::XMFLOAT3 Player2D_GetSolidHalfSize();
 
 
-void Player2D_InitAt(const XMFLOAT3& pos, const XMFLOAT3& rot);
+void Player2D_InitAt(const DirectX::XMFLOAT3& pos, const DirectX::XMFLOAT3& rot);
 void Player2D_Uninit();
 void Player2D_SetActive(bool active);
 

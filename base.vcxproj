@@ -149,7 +149,7 @@
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="Collision.cpp" />
     <ClCompile Include="controller.cpp" />
-    <ClCompile Include="DebugUtil.cpp" />
+    <ClCompile Include="UtilDebug.cpp" />
     <ClCompile Include="debug_ostream.cpp" />
     <ClCompile Include="direct3d.cpp" />
     <ClCompile Include="effect.cpp" />
@@ -197,7 +197,7 @@
     <ClInclude Include="Collision.h" />
     <ClInclude Include="controller.h" />
     <ClInclude Include="debug.h" />
-    <ClInclude Include="DebugUtil.h" />
+    <ClInclude Include="UtilDebug.h" />
     <ClInclude Include="debug_ostream.h" />
     <ClInclude Include="direct3d.h" />
     <ClInclude Include="DirectXTex.h" />
@@ -214,7 +214,7 @@
     <ClInclude Include="keyboard.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="manager.h" />
-    <ClInclude Include="MathUtil.h" />
+    <ClInclude Include="UtilMath.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="mouse.h" />
     <ClInclude Include="newKeyBind.h" />

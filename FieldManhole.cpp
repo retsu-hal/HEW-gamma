@@ -6,7 +6,7 @@
 #include <cmath>
 #include "camera.h"
 #include "direct3d.h"
-#include "DebugUtil.h"
+#include "UtilDebug.h"
 
 
 struct ManholePartConfig
@@ -121,34 +121,6 @@ void Manhole_UpdateAll(float deltaTime)
     {
         UpdateSingleManhole(i, deltaTime);
     }
-}
-
-static ImVec2 ManholeWorldToScreen(const XMFLOAT3& p, bool* valid)
-{
-    *valid = false;
-
-    XMMATRIX vp = GetViewMatrix() * GetProjectionMatrix();
-    XMVECTOR vW = XMVectorSet(p.x, p.y, p.z, 1.0f);
-    XMVECTOR vV = XMVector3TransformCoord(vW, GetViewMatrix());
-
-    if (XMVectorGetZ(vV) <= 0.01f) return ImVec2(0, 0);
-
-    XMVECTOR vC = XMVector3TransformCoord(vW, vp);
-    XMFLOAT3 ndc;
-    XMStoreFloat3(&ndc, vC);
-
-    if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f)
-        return ImVec2(0, 0);
-
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    float w = (float)Direct3D_GetBackBufferWidth();
-    float h = (float)Direct3D_GetBackBufferHeight();
-
-    *valid = true;
-    return ImVec2(
-        viewport->Pos.x + (ndc.x * 0.5f + 0.5f) * w,
-        viewport->Pos.y + (-ndc.y * 0.5f + 0.5f) * h
-    );
 }
 
 void Manhole_DebugDraw()

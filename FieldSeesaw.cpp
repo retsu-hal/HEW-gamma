@@ -7,7 +7,7 @@
 #include "debug.h"
 #include "camera.h"
 #include "direct3d.h"
-#include "DebugUtil.h"
+#include "UtilDebug.h"
 
 
 struct SeesawPartConfig
@@ -46,35 +46,6 @@ static const SeesawPartConfig SEESAW_PARTS[] =
 static const int SEESAW_PART_COUNT = sizeof(SEESAW_PARTS) / sizeof(SEESAW_PARTS[0]);
 
 static std::vector<SeesawData> g_Seesaws;
-
-
-XMFLOAT3 Field_GetColliderHalfSize(const MAPDATA& m)
-{
-	if (m.useCustomCollider)
-	{
-		return m.colliderHalf;
-	}
-	return XMFLOAT3{
-		BOX_RADIUS * m.scale.x,
-		BOX_RADIUS * m.scale.y,
-		BOX_RADIUS * m.scale.z
-	};
-}
-
-XMFLOAT3 Field_GetColliderHalfSize(int mapIndex)
-{
-	return Field_GetCollisionHalfSize(GetFieldMap()[mapIndex]);
-}
-
-XMFLOAT3 Field_GetHalfSize(int mapIndex)
-{
-	const MAPDATA& m = GetFieldMap()[mapIndex];
-	return XMFLOAT3{
-		BOX_RADIUS * m.scale.x,
-		BOX_RADIUS * m.scale.y,
-		BOX_RADIUS * m.scale.z
-	};
-}
 
 void Seesaw_Initialize()
 {
@@ -229,7 +200,7 @@ bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos)
 		return false;
 
 	const MAPDATA& board = mapData[boardIdx];
-	XMFLOAT3 boardHalf = Field_GetColliderHalfSize(board);
+	XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board);
 
 	float dx = playerPos.x - board.pos.x;
 	float dz = playerPos.z - board.pos.z;
@@ -470,7 +441,7 @@ int Seesaw_PlayerCollision()
 
 		MAPDATA& board = mapData[boardIdx];
 
-		XMFLOAT3 boardHalf = Field_GetColliderHalfSize(board);
+		XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board);
 
 		XMFLOAT3 localOffset = { 0.0f, SEESAW_PARTS[1].colliderOffsetY, 0.0f };
 
@@ -543,35 +514,6 @@ int Seesaw_PlayerCollision()
 	return hit;
 }
 
-
-static ImVec2 SeesawWorldToScreen(const XMFLOAT3& p, bool* valid)
-{
-	*valid = false;
-
-	XMMATRIX vp = GetViewMatrix() * GetProjectionMatrix();
-	XMVECTOR vW = XMVectorSet(p.x, p.y, p.z, 1.0f);
-	XMVECTOR vV = XMVector3TransformCoord(vW, GetViewMatrix());
-
-	if (XMVectorGetZ(vV) <= 0.01f) return ImVec2(0, 0);
-
-	XMVECTOR vC = XMVector3TransformCoord(vW, vp);
-	XMFLOAT3 ndc;
-	XMStoreFloat3(&ndc, vC);
-
-	if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f)
-		return ImVec2(0, 0);
-
-	ImGuiViewport* viewport = ImGui::GetMainViewport();
-	float w = (float)Direct3D_GetBackBufferWidth();
-	float h = (float)Direct3D_GetBackBufferHeight();
-
-	*valid = true;
-	return ImVec2(
-		viewport->Pos.x + (ndc.x * 0.5f + 0.5f) * w,
-		viewport->Pos.y + (-ndc.y * 0.5f + 0.5f) * h
-	);
-}
-
 void Seesaw_DebugDraw()
 {
 	if (g_Seesaws.empty()) return;
@@ -588,7 +530,7 @@ void Seesaw_DebugDraw()
 		if (boardIdx < 0 || boardIdx >= (int)mapData.size()) continue;
 
 		const MAPDATA& board = mapData[boardIdx];
-		XMFLOAT3 boardHalf = Field_GetColliderHalfSize(board);
+		XMFLOAT3 boardHalf = Field_GetCollisionHalfSize(board);
 
 		XMFLOAT3 localOffset = { 0.0f, SEESAW_PARTS[1].colliderOffsetY, 0.0f };
 
@@ -648,7 +590,7 @@ void Seesaw_DebugDraw()
 			if (baseIdx >= 0 && baseIdx < (int)mapData.size())
 			{
 				const MAPDATA& base = mapData[baseIdx];
-				XMFLOAT3 baseHalf = Field_GetColliderHalfSize(base);
+				XMFLOAT3 baseHalf = Field_GetCollisionHalfSize(base);
 				DebugDrawOBB_FullRotation(base.pos, baseHalf, base.rotate,
 					IM_COL32(100, 100, 255, 255));
 			}
@@ -674,7 +616,7 @@ void Seesaw_DebugDraw()
 			if (baseIdx >= 0 && baseIdx < (int)mapData.size())
 			{
 				const MAPDATA& base = mapData[baseIdx];
-				XMFLOAT3 baseHalf = Field_GetColliderHalfSize(base);
+				XMFLOAT3 baseHalf = Field_GetCollisionHalfSize(base);
 				DebugDrawOBB_FullRotation(base.pos, baseHalf, base.rotate, IM_COL32(128, 128, 128, 255));
 			}
 		}
@@ -712,7 +654,7 @@ void Seesaw_DebugDraw()
 				if (boardIdx >= 0 && boardIdx < (int)mapData.size())
 				{
 					const MAPDATA& board = mapData[boardIdx];
-					XMFLOAT3 half = Field_GetColliderHalfSize(board);
+					XMFLOAT3 half = Field_GetCollisionHalfSize(board);
 					ImGui::Text("Board Collider Half: (%.2f, %.2f, %.2f)",
 						half.x, half.y, half.z);
 					ImGui::Text("Board Rotate: (%.2f, %.2f, %.2f)",

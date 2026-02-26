@@ -35,8 +35,8 @@ struct SeesawParams
 class SeesawData
 {
 public:
-    XMFLOAT3 pos;                
-    XMFLOAT3 rotate;             
+    DirectX::XMFLOAT3 pos;
+    DirectX::XMFLOAT3 rotate;
     std::vector<int> partIndices;
     SeesawParams params;
 
@@ -57,18 +57,13 @@ std::vector<SeesawData>& Seesaw_GetAll();
 SeesawData* Seesaw_Get(int index);
 int Seesaw_GetCount();
 
-bool Seesaw_IsPlayerOnBoard(int seesawIndex, const XMFLOAT3& playerPos);
-float Seesaw_GetPlayerPosition(int seesawIndex, const XMFLOAT3& playerPos);
+bool Seesaw_IsPlayerOnBoard(int seesawIndex, const DirectX::XMFLOAT3& playerPos);
+float Seesaw_GetPlayerPosition(int seesawIndex, const DirectX::XMFLOAT3& playerPos);
 
 int Seesaw_PlayerCollision();
 
-XMFLOAT3 Seesaw_GetBoardColliderHalf(int seesawIndex);
+DirectX::XMFLOAT3 Seesaw_GetBoardColliderHalf(int seesawIndex);
 
 void Seesaw_ClearAll();
 
 void Seesaw_DebugDraw();
-void Seesaw_SetDebugDraw(bool enable);
-
-XMFLOAT3 Field_GetHalfSize(int mapIndex);
-XMFLOAT3 Field_GetColliderHalfSize(int mapIndex);
-XMFLOAT3 Field_GetColliderHalfSize(const MAPDATA& m);

@@ -7,10 +7,10 @@
 #include "Player2D.h"
 #include <iostream>
 #include "field.h"
-#include "MathUtil.h"
+#include "UtilMath.h"
 
 #include "field.h"
-#include "MathUtil.h"
+#include "UtilMath.h"
 using namespace mu;
 //=========================================================================================================
 // ƒOƒ[ƒoƒ‹•Ï”

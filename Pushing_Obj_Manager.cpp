@@ -12,7 +12,7 @@
 #include <cfloat>
 #include <algorithm>
 
-#include "MathUtil.h"
+#include "UtilMath.h"
 using namespace mu;
 
 // Constants

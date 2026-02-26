@@ -9,8 +9,8 @@
 #include"field.h"
 #include "ShadowColliderBox.h"
 #include "Player2DCapsule.h"
-#include"DebugUtil.h"
-#include "MathUtil.h"
+#include"UtilDebug.h"
+#include "UtilMath.h"
 
 
 //=========================================================================================================

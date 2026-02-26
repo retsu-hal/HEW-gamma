@@ -1,5 +1,5 @@
-#include "DebugUtil.h"
-#include "MathUtil.h"
+#include "UtilDebug.h"
+#include "UtilMath.h"
 #include "camera.h"
 #include "direct3d.h"
 

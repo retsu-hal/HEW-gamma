@@ -3,7 +3,6 @@
 #include <DirectXMath.h>
 #include "field.h"
 
-using namespace DirectX;
 
 // Push state enumeration
 enum PUSH_STATE
@@ -16,7 +15,7 @@ enum PUSH_STATE
 struct PUSH_TARGET
 {
     int fieldIndex = -1;     // Index of the field object being pushed
-    XMFLOAT3 pushDirection = { 0, 0, 0 }; // Direction of push
+    DirectX::XMFLOAT3 pushDirection = { 0, 0, 0 }; // Direction of push
 };
 
 // Function declarations
@@ -29,4 +28,4 @@ PUSH_STATE PlayerPushManager_GetState();
 bool PlayerPushManager_IsPushing();
 const PUSH_TARGET* PlayerPushManager_GetCurrentTarget();
 bool PlayerPushManager_ShouldShowBillBoard();
-XMFLOAT3 PlayerPushManager_GetBillBoardPosition();
+DirectX::XMFLOAT3 PlayerPushManager_GetBillBoardPosition();

@@ -4,7 +4,7 @@
 #include "Camera.h"
 #include "shader.h"
 #include "sprite.h"
-#include "MathUtil.h"
+#include "UtilMath.h"
 using namespace mu;
 
 

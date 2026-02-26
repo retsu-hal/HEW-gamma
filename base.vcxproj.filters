@@ -141,7 +141,7 @@
     <ClCompile Include="Trail.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="DebugUtil.cpp">
+    <ClCompile Include="UtilDebug.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -212,7 +212,7 @@
     <ClInclude Include="manager.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MathUtil.h">
+    <ClInclude Include="UtilMath.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="model.h">
@@ -275,7 +275,7 @@
     <ClInclude Include="shader.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="DebugUtil.h">
+    <ClInclude Include="UtilDebug.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

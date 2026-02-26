@@ -56,7 +56,7 @@ enum GAME_STAGE
     STAGE_MAX,
 };
 
-class MAPDATA
+struct MAPDATA
 {
 public:
     XMFLOAT3 pos;    //ˆÊ’u

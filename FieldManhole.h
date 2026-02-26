@@ -23,8 +23,8 @@ struct ManholeParams
 class ManholeData
 {
 public:
-    XMFLOAT3 basePos;       
-    XMFLOAT3 currentPos;    
+    DirectX::XMFLOAT3 basePos;
+    DirectX::XMFLOAT3 currentPos;
     int mapIndex;           
     ManholeParams params;
 

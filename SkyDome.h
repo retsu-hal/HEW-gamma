@@ -4,7 +4,7 @@
 #include "direct3d.h"
 #include "model.h"
 
-using namespace DirectX;
+
 
 void SkyDome_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void SkyDome_Finalize(void);
@@ -14,9 +14,9 @@ void SkyDome_Draw(void);
 class SkyDome
 {
 public:
-	XMFLOAT3 m_position;
-	XMFLOAT3 m_rotation;
-	XMFLOAT3 m_scaling;
+	DirectX::XMFLOAT3 m_position;
+	DirectX::XMFLOAT3 m_rotation;
+	DirectX::XMFLOAT3 m_scaling;
 	float m_rotation_speed;
 
 

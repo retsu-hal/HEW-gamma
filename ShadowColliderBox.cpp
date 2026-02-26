@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cfloat>
-#include "MathUtil.h"
+#include "UtilMath.h"
 using namespace mu;
 using namespace DirectX;
 
