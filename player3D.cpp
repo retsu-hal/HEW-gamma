@@ -14,6 +14,7 @@
 using namespace mu;
 
 #include "FieldSeesaw.h"
+#include "FieldPortal.h"
 
 
 
@@ -475,14 +476,18 @@ void Player3D_Dash()
 
 void Player3D_Action()
 {
+
 	if (IsInputTrigger(ActionKey, gPad))
 	{
-		// 傾僋僔儑儞偺僩儕僈乕張棟
+
 	}
+	
 	isTrigger = false;
 
 	TRIGGER_HIT hit;
 	if (!Collision_PlayerTrigger(&hit, 0.2f)) return;
+
+
 	if (hit.side != TRIGGER_SIDE_FRONT) return;
 	switch (hit.type)
 	{
@@ -688,6 +693,44 @@ void Player3D_CheckGoal()
 {
 	TRIGGER_HIT hit;
 	if (!Collision_PlayerTrigger(&hit, 0.0f)) return;
+
+
+	static int  sPortalCooldown = 0;   // 連続転送防止
+	static bool sPrevInPortal = false;
+
+	if (sPortalCooldown > 0) sPortalCooldown--;
+
+	// 少しだけ余裕を持たせる（必要なければ 0.0f に戻してOK）
+	if (!Collision_PlayerTrigger(&hit, 0.2f))
+	{
+		sPrevInPortal = false;
+		return;
+	}
+
+	if (hit.type == FIELD_PORTAL_K)
+	{
+		// “入った瞬間”だけ転送（立ちっぱなしで毎フレーム転送しない）
+		if (!sPrevInPortal && sPortalCooldown == 0)
+		{
+			XMFLOAT3 dest;
+			if (!Portal_GetDestByEntranceMapIndex((int)hit.mapIndex, &dest))
+			{
+				// ペアリング未構築などの保険：R へ
+				dest = Field_GetPlayerStartPosition();
+			}
+
+			Player3D_setposition(dest);
+			g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+			sPortalCooldown = 20;
+		}
+
+		sPrevInPortal = true;
+		return; // ポータル優先（同フレームで Goal/Stage 処理しない）
+	}
+
+	sPrevInPortal = false;
+
 
 	if (hit.type == FIELD_GOAL)
 	{

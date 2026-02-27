@@ -11,6 +11,7 @@
 #include "FieldSeesaw.h"
 #include "FieldManhole.h"
 #include "manager.h"
+#include "FieldPortal.h"
 
 
 //=========================================================================================================
@@ -167,6 +168,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	Seesaw_Initialize();
 	Manhole_Initialize();
+	Portal_Initialize();
 
 	// テクスチャ
 	TexMetadata metadata;
@@ -193,7 +195,8 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		if (m.no == FIELD_WALL)   hasWall = true;
 	}
 
-	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_OBJ_3] || !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
+	if (hasGround || hasWall || !Model[FIELD_OBJ_1] || !Model[FIELD_OBJ_2] || !Model[FIELD_OBJ_3] 
+		|| !Model[FIELD_EMPTY_BOX]) EnsureBoxCreated();
 
 	if (!Model[FIELD_GROUND])
 	{
@@ -260,6 +263,11 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
 	}
 
+	if (!Model[FIELD_PORTAL_K])
+	{
+		Model[FIELD_PORTAL_K] = ModelLoad("asset\\model\\test.fbx");
+	}
+
 	if (!Model[FIELD_SEESAW_1])
 	{
 		Model[FIELD_SEESAW_1] = ModelLoad("asset\\model\\Seesaw_dodai.fbx");
@@ -279,6 +287,7 @@ void field_Finalize(void)
 {
 	Seesaw_Finalize();
 	Manhole_Finalize();
+	Portal_Finalize();
 
 	g_MapData.clear();  // Clear the vector
 
@@ -418,6 +427,7 @@ void field_Draw(void)
 	DEBUG_IMGUI_BEGIN({
 		Seesaw_DebugDraw();
 		Manhole_DebugDraw();
+		Portal_DebugDraw();
 		});
 }
 
@@ -555,6 +565,7 @@ bool LoadMapFromFile(const char* filename)
 	g_MapData.clear();
 	Seesaw_ClearAll();
 	Manhole_ClearAll();
+	Portal_ClearAll();
 
 	// 追加: 読み込み開始時に初期位置をデフォルトへ
 	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -620,6 +631,17 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
+			if (c == 'J')
+			{
+				XMFLOAT3 jPos(
+					(float)(x - 2),
+					(float)(y - 2),
+					(float)z
+				);
+				Portal_RegisterExitMarker(jPos);
+				continue;
+			}
+
 			FIELD type;
 			bool valid = true;
 
@@ -641,6 +663,7 @@ bool LoadMapFromFile(const char* filename)
 			case '7': type = FIELD_STAGE_1;    break;
 			case '8': type = FIELD_STAGE_2;    break;
 			case '9': type = FIELD_STAGE_3;    break;
+			case 'K': type = FIELD_PORTAL_K;    break;
 			case '.': valid = false;         break;
 			case ' ': valid = false;         break;
 			default:  valid = false;         break;
@@ -680,6 +703,8 @@ bool LoadMapFromFile(const char* filename)
 		}
 		z++;
 	}
+
+	Portal_BuildPairs(g_PlayerStartPos);
 
 	file.close();
 	return true;
