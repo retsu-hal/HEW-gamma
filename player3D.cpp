@@ -57,14 +57,38 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player3D.FirstAnim = g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 
+
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx");
-	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_03.fbx");
+	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Idle.fbx");
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx",true);
-
-
 	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\Walking.fbx");
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\Pushing.fbx");
+
+	g_Player3D.Model[PLAYER_ANIM_JUMP] = ModelLoad("asset\\model\\Jump.fbx");
+	g_Player3D.Model[PLAYER_ANIM_JUMP]->LoopAnimation = false;
+	g_Player3D.Model[PLAYER_ANIM_JUMP]->CustomEndTime = 58.0f; // --> use if need to cut the animation short/アニメーションを短くカットする必要がある場合に使用します
+
+
+
+	{
+		MODEL* jm = g_Player3D.Model[PLAYER_ANIM_JUMP];
+		if (jm && jm->AiScene && jm->AiScene->HasAnimations())
+		{
+			const aiAnimation* anim = jm->AiScene->mAnimations[0];
+			float tps = (float)anim->mTicksPerSecond;
+			float dur = (float)anim->mDuration;
+			float seconds = (tps > 0.0f) ? dur / tps : -1.0f;
+
+			char buf[256];
+			sprintf(buf,
+				"JUMP ANIM: duration=%.4f ticks, ticksPerSec=%.4f, seconds=%.4f, channels=%d",
+				dur, tps, seconds, anim->mNumChannels);
+			OutputDebugStringA(buf);
+			// Also show in ImGui if you prefer:
+			// hal::dout << buf << std::endl;
+		}
+	}
 
 	g_Player3D.Firstposition = g_Player3D.Position;
 	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 180.0f, 0.0f);
@@ -225,6 +249,20 @@ void Player3D_Move()
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 	bool isMoving = false;
 
+
+	if (IsInputTrigger(JumpKey, gPad))
+	{
+		g_Player3D.state = PLAYER_STATE_JUMP;
+	}
+
+	MODEL* jumpModel = g_Player3D.Model[PLAYER_ANIM_JUMP];
+	if (g_Player3D.CurrentAnimIndex == PLAYER_ANIM_JUMP &&
+		jumpModel != NULL && jumpModel->AnimationFinished)
+	{
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+	}
+
+
 	g_Player3D.ControllerMode = gPad.IsConnected();
 
 	// キーボードの存在する代表的な操作キーをチェック（押されているならキーボード優先）
@@ -292,11 +330,14 @@ void Player3D_Move()
 	// アニメ切替
 	if (!g_Player3D.isPushing && !g_Player3D.isAuto)
 	{
-		if (isMoving) {
-			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
-		}
-		else {
-			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+		if (g_Player3D.CurrentAnimIndex != PLAYER_ANIM_JUMP)
+		{
+			if (isMoving) {
+				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+			}
+			else {
+				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+			}
 		}
 	}
 
@@ -372,11 +413,6 @@ void Player3D_Move()
 		g_Player3D.Velocity.z = -g_Player3D.maxMoveSpeed;
 	}
 
-	if (IsInputTrigger(JumpKey, gPad))
-	{
-		g_Player3D.state = PLAYER_STATE_JUMP;
-	}
-
 	// Dash開始
 	if (IsInputTrigger(DashKey, gPad))
 	{
@@ -388,12 +424,28 @@ void Player3D_Move()
 
 void Player3D_Jump()
 {
-		if (g_Player3D.isGround)
-		{
-			g_Player3D.Velocity.y = g_Player3D.jumpPower;
-			g_Player3D.isGround = false;
-			g_Player3D.state = PLAYER_STATE_MOVE; // 上昇後はFALLへ
-		}
+	// DEBUG: track how many times this is called per jump
+	static int jumpCallCount = 0;
+	jumpCallCount++;
+
+	char buf[128];
+	sprintf(buf, "Player3D_Jump called: count=%d, isGround=%d\n",
+		jumpCallCount, g_Player3D.isGround);
+	OutputDebugStringA(buf);
+	if (g_Player3D.isGround)
+	{
+		jumpCallCount = 0;  // reset counter when actually jumping
+
+		OutputDebugStringA(">>> JUMP EXECUTED - Animation Reset!\n");
+
+		ModelResetAnimation(g_Player3D.Model[PLAYER_ANIM_JUMP]);
+
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_JUMP;
+		g_Player3D.Velocity.y = g_Player3D.jumpPower;
+		g_Player3D.isGround = false;
+		g_Player3D.state = PLAYER_STATE_MOVE;
+	}
+
 }
 
 void Player3D_Change()
@@ -450,14 +502,26 @@ void Player3D_Draw(void)
 	if (!g_Player3D.Active) return;
 
 	DEBUG_IMGUI_BEGIN({
-		ImGui::Begin("Debug - han");
-				if (ImGui::TreeNode("Player3D.cpp"))
-				{
-					ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
-					ImGui::TreePop();
-				}
-				ImGui::End();
-	});
+		 ImGui::Begin("Debug - han");
+		 if (ImGui::TreeNode("Player3D.cpp"))
+		 {
+			 ImGui::Text("Trigger: %s", isTrigger ? "true" : "false");
+
+			 // Jump animation debug
+			 MODEL* jm = g_Player3D.Model[PLAYER_ANIM_JUMP];
+			 if (jm) {
+				 ImGui::Text("Jump AnimTime: %.2f / 73.00", jm->AnimationTime);
+				 ImGui::Text("Jump Finished: %s", jm->AnimationFinished ? "YES" : "NO");
+			 }
+			 ImGui::Text("CurrentAnim: %d (0=IDLE 1=WALK 2=JUMP)", g_Player3D.CurrentAnimIndex);
+			 ImGui::Text("State: %d", g_Player3D.state);
+			 ImGui::Text("isGround: %s", g_Player3D.isGround ? "YES" : "NO");
+			 ImGui::Text("VelY: %.4f", g_Player3D.Velocity.y);
+
+			 ImGui::TreePop();
+		 }
+		 ImGui::End();
+		});
 
 
 	XMMATRIX scale = XMMatrixScaling
@@ -491,11 +555,28 @@ void Player3D_Draw(void)
 	Shader_SetWorldMatrix(world);
 	Shader_SetMatrix(wvp);
 
+	if (g_Player3D.CurrentAnimIndex == PLAYER_ANIM_JUMP)
+	{
+		MODEL* jumpModel = g_Player3D.Model[PLAYER_ANIM_JUMP];
+		if (jumpModel != NULL && jumpModel->AnimationFinished)
+		{
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+		}
+	}
+
 	MODEL* currentModel = g_Player3D.Model[g_Player3D.CurrentAnimIndex];
 
 	if (currentModel != NULL)
 	{
-		ModelUpdateAnimation(currentModel, 10.0f / 600.0f);
+		// Faster animation speed for jump, normal for everything else
+		float animSpeed = 10.0f / 600.0f;  // default speed
+
+		if (g_Player3D.CurrentAnimIndex == PLAYER_ANIM_JUMP)
+		{
+			animSpeed = 20.0f / 600.0f;  // ~2.5x faster for jump
+		}
+
+		ModelUpdateAnimation(currentModel, animSpeed);
 		Shader_SetBones(currentModel);
 	}
 
@@ -580,13 +661,20 @@ XMFLOAT3 Player3D_GetTriggerHalfSize()
 
 void Player3D_Idle()
 {
+	if (IsInputTrigger(JumpKey, gPad))
+	{
+		g_Player3D.state = PLAYER_STATE_JUMP;
+		return;
+	}
+
 	if (IsInputPress(UpKey, gPad)|| IsInputPress(RightKey, gPad) || IsInputPress(DownKey, gPad) || IsInputPress(LeftKey, gPad))
 	{
 		g_Player3D.state = PLAYER_STATE_MOVE;
 	}
 
-	// Only set IDLE animation if not pushing
-	if (!g_Player3D.isPushing || !g_Player3D.isAuto)
+	// Only set IDLE animation if not pushing and not auto and not jumping
+	if (!g_Player3D.isPushing && !g_Player3D.isAuto &&
+		g_Player3D.CurrentAnimIndex != PLAYER_ANIM_JUMP)
 	{
 		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
 	}
