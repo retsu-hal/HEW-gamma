@@ -156,6 +156,9 @@
     <ClCompile Include="Collision3D.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="FieldPortal.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bill_Board.h">
@@ -288,6 +291,9 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="UtilDebug.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldPortal.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

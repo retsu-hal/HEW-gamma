@@ -96,9 +96,12 @@ bool Field_IsTrigger(FIELD t)
     {
     case FIELD_GOAL:
     case FIELD_OBJ_1:
+	case FIELD_WALL:
     case FIELD_STAGE_1:
     case FIELD_STAGE_2:
     case FIELD_STAGE_3:
+
+	case FIELD_PORTAL_K:
         return true;
     default:
         return false;

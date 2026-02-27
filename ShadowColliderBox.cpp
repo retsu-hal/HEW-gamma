@@ -25,6 +25,7 @@ static bool Field_IsReceiver(FIELD t)
 	switch (t)
 	{
 	case FIELD_OBJ_1:
+	case FIELD_WALL:
 		return true;
 	default:
 		return false;

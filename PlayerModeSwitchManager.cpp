@@ -44,12 +44,12 @@ static const auto TABKey = KK_TAB;
 //=========================================================================================================
 
 // 2DâªÇ≈Ç´ÇÈÅuï«ÅvÇ©Ç«Ç§Ç©
-// Å¶åªèÛÇÕ FIELD_OBJ_1 ÇÃÇ›
 static bool Field_IsWall(FIELD t)
 {
 	switch (t)
 	{
 	case FIELD_OBJ_1:
+	case FIELD_WALL:
 		return true;
 	default:
 		return false;
