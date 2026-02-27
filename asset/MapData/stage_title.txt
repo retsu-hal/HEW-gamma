@@ -16,7 +16,7 @@ W................w
 W................w
 W................w 
 W.R..............w
-WGGGGGGGGGGGGGGGGw
+WWWWWWWWWWWWWWWWWW
 
 
 # Layer Y=2
@@ -26,7 +26,7 @@ W................W
 W................W
 W................W 
 W................W
-WGGGGGGGGGGGGGGGGW
+WWWWWWWWWWWWWWWWWW
 
 # Layer Y=3
 EEEEEEEEEEEEEEEEEE
@@ -35,5 +35,5 @@ W................W
 W................W
 W................W 
 W................W
-WGGGGGGGGGGGGGGGGW
+WWWWWWWWWWWWWWWWWW
 
