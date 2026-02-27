@@ -23,11 +23,11 @@ static float g_StopTime = 0.0f;
 
 static Player2DAnimeDef g_AnimDefs[PLAYER2D_ANIME_MAX] = {
 	//                  texturePath                           cols rows start count speed loop
-	/* IDLE */ { L"asset\\Texture\\Player2D\\2D_idol.png",     5,   5,    0,    25,  2.0f, true  },
+	/* IDLE */ { L"asset\\Texture\\Player2D\\2D_idol.png",     5,   5,    0,    25,  4.5f, true  },
 	/* WALK */ { L"asset\\Texture\\Player2D\\2D_walk.png",     5,   5,    0,    25,  2.0f, true  },
 	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    0,    9,  2.0f, false },
 	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    9,    8,  2.0f, false },
-	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    17,    8,  2.0f, false },
+	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    17,    8,  3.0f, false },
 
 };
 
