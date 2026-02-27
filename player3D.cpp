@@ -67,7 +67,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	g_Player3D.Model[PLAYER_ANIM_JUMP] = ModelLoad("asset\\model\\anim\\Jump.fbx");
 	g_Player3D.Model[PLAYER_ANIM_JUMP]->LoopAnimation = false;
-	g_Player3D.Model[PLAYER_ANIM_JUMP]->CustomEndTime = 58.0f; // --> use if need to cut the animation short/アニメーションを短くカットする必要がある場合に使用します
+	g_Player3D.Model[PLAYER_ANIM_JUMP]->CustomEndTime = 53.0f; // --> use if need to cut the animation short/アニメーションを短くカットする必要がある場合に使用します
 
 
 
@@ -571,10 +571,10 @@ void Player3D_Draw(void)
 		// Faster animation speed for jump, normal for everything else
 		float animSpeed = 10.0f / 600.0f;  // default speed
 
-		if (g_Player3D.CurrentAnimIndex == PLAYER_ANIM_JUMP)
-		{
-			animSpeed = 20.0f / 600.0f;  // ~2.5x faster for jump
-		}
+		//if (g_Player3D.CurrentAnimIndex == PLAYER_ANIM_JUMP)
+		//{
+		//	animSpeed = 20.0f / 600.0f;  // ~2.5x faster for jump
+		//}
 
 		ModelUpdateAnimation(currentModel, animSpeed);
 		Shader_SetBones(currentModel);
