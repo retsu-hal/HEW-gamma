@@ -7,7 +7,7 @@
 #include "sprite.h"
 #include "shader.h"
 #include <vector>
-using namespace DirectX;
+
 
 //=========================================================================================================
 // マクロ
@@ -56,7 +56,7 @@ enum GAME_STAGE
     STAGE_MAX,
 };
 
-class MAPDATA
+struct MAPDATA
 {
 public:
     XMFLOAT3 pos;    //位置
@@ -76,9 +76,6 @@ public:
         , useCustomCollider(false)
     {}
 };
-
-// グローバルなフィールドデータ配列
-//extern std::vector<MAPDATA> g_MapData;
 
 //=========================================================================================================
 // プロトタイプ宣言
@@ -100,3 +97,5 @@ XMFLOAT3 Field_GetPlayerStartPosition();
 
 void SetCurrentStage(GAME_STAGE stage);
 GAME_STAGE GetCurrentStage();
+
+XMFLOAT3 Field_GetCollisionHalfSize(const MAPDATA& m);

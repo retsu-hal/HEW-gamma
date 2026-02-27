@@ -1,7 +1,6 @@
 //PlayerModeSwitchManager.h
 #pragma once
 #include <DirectXMath.h>
-using namespace DirectX;
 
 // プレイヤーモード
 enum PLAYER_MODE
@@ -24,7 +23,7 @@ struct SWITCH_TARGET
 {
 	int     fieldIndex = -1;
 	BOX_FACE face = FACE_NONE;
-	XMFLOAT3 normal = { 0,0,0 };
+	DirectX::XMFLOAT3 normal = { 0,0,0 };
 };
 
 void PlayerModeSwitchManager_Init();// 初期化

@@ -18,9 +18,6 @@
     <ClCompile Include="camera.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Collision.cpp">
-      <Filter>ソースファイル</Filter>
-    </ClCompile>
     <ClCompile Include="controller.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
@@ -141,6 +138,24 @@
     <ClCompile Include="Trail.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="UtilDebug.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionDebug.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionGeometry.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionState.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision2D.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="Collision3D.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bill_Board.h">
@@ -209,7 +224,7 @@
     <ClInclude Include="manager.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="MathUtil.h">
+    <ClInclude Include="UtilMath.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="model.h">
@@ -272,9 +287,12 @@
     <ClInclude Include="shader.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
+    <ClInclude Include="UtilDebug.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="DirectXTex_Release.lib" />
+    <Library Include="DirectXTex_Debug.lib" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

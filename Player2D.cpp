@@ -3,13 +3,13 @@
 #include "PlayerStatus.h"
 #include "Camera.h"
 #include "shader.h"
-#include "Collision.h"
 #include "sprite.h"
-#include "MathUtil.h"
+#include "UtilMath.h"
 using namespace mu;
 
 
 #include "debug.h"
+#include "collision.h"
 
 
 
@@ -25,8 +25,9 @@ static Player2DAnimeDef g_AnimDefs[PLAYER2D_ANIME_MAX] = {
 	//                  texturePath                           cols rows start count speed loop
 	/* IDLE */ { L"asset\\Texture\\Player2D\\2D_idol.png",     5,   5,    0,    25,  2.0f, true  },
 	/* WALK */ { L"asset\\Texture\\Player2D\\2D_walk.png",     5,   5,    0,    25,  2.0f, true  },
-	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    0,    25,  2.0f, true },
-	/* FALL */ { L"asset\\Texture\\Player2D\\2D_animation.png", 50,  1,   0,    1, 1.5f, false },
+	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    0,    9,  2.0f, false },
+	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    9,    8,  2.0f, false },
+	/* JUMP */ { L"asset\\Texture\\Player2D\\2D_jump.png",     5,   5,    17,    8,  2.0f, false },
 
 };
 
@@ -37,6 +38,9 @@ static int   g_AnimFrame = 0;
 static float g_AnimTimer = 0.0f;
 static bool  g_AnimFinished = false;
 static bool  g_FacingRight = true;
+
+static bool g_JustJumped = false;
+static bool g_JustLanded = false;
 
 static Vertex3D Player2DVertex[4] = {
 	{
@@ -98,93 +102,52 @@ PLAYER2D_ANIME Player2D_GetAnime()
 // アニメーションを更新する
 static void Player2D_UpdateAnime()
 {
-	/*if (g_CurrentAnim < 0 || g_CurrentAnim >= PLAYER2D_ANIME_MAX)
+	const float moveEpsSq = 0.0001f;
+	const float vyEps = 0.001f;
+
+	float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
+	float rightX = cosf(yawRad);
+	float rightZ = -sinf(yawRad);
+	float rightDot = g_Player2D.Velocity.x * rightX + g_Player2D.Velocity.z * rightZ;
+	if (rightDot > 0.001f) g_FacingRight = true;
+	else if (rightDot < -0.001f) g_FacingRight = false;
+
+	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
+		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
+
+	if (g_JustLanded)
 	{
-		g_CurrentAnim = PLAYER2D_ANIME_IDLE;
+		Player2D_SetAnime(PLAYER2D_ANIME_FALL);
+		g_JustLanded = false;
 	}
-
-	if (g_Player2D.state == PLAYER_STATE_FALL && !g_Player2D.isGround)
+	else if (g_JustJumped)
 	{
-		Player2D_SetAnime((g_Player2D.Velocity.y > 0.0f) ? PLAYER2D_ANIME_JUMP : PLAYER2D_ANIME_FALL);
+		Player2D_SetAnime(PLAYER2D_ANIME_JUMP);
+		g_JustJumped = false;
 	}
-	else if (g_Player2D.isGround)
+	else
 	{
-		float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
-			g_Player2D.Velocity.z * g_Player2D.Velocity.z;
-
-		Player2D_SetAnime((speedSq > 0.0001f) ? PLAYER2D_ANIME_WALK : PLAYER2D_ANIME_IDLE);
-	}
-
-	const Player2DAnimeDef& def = g_AnimDefs[g_CurrentAnim];
-
-	if (!(g_AnimFinished && !def.loop))
-	{
-		int frameCount = (def.frameCount > 0) ? def.frameCount : 1;
-		float speed = (def.frameSpeed > 0.0f) ? def.frameSpeed : 1.0f;
-
-		g_AnimTimer += 1.0f;
-		if (g_AnimTimer >= speed)
+		if ((g_CurrentAnim == PLAYER2D_ANIME_JUMP || g_CurrentAnim == PLAYER2D_ANIME_FALL) && !g_AnimFinished)
 		{
-			g_AnimTimer = 0.0f;
-			g_AnimFrame++;
 
-			if (g_AnimFrame >= frameCount)
+		}
+		else
+		{
+			if (!g_Player2D.isGround)
 			{
-				if (def.loop) g_AnimFrame = 0;
+				if (g_Player2D.Velocity.y < -vyEps)
+					Player2D_SetAnime(PLAYER2D_ANIME_FALL);
 				else
-				{
-					g_AnimFrame = frameCount - 1;
-					g_AnimFinished = true;
-				}
+					Player2D_SetAnime(PLAYER2D_ANIME_JUMP_AIR);
+			}
+			else
+			{
+				Player2D_SetAnime((speedSq > moveEpsSq) ? PLAYER2D_ANIME_WALK : PLAYER2D_ANIME_IDLE);
 			}
 		}
 	}
 
-	if (g_Player2D.state == PLAYER_STATE_FALL && !g_Player2D.isGround)
-	{
-		if (g_Player2D.Velocity.y > 0.0f)
-			Player2D_SetAnime(PLAYER2D_ANIME_JUMP);
-		else
-			Player2D_SetAnime(PLAYER2D_ANIME_FALL);
-	}
-	else if (g_Player2D.isGround)
-	{
-		float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
-			g_Player2D.Velocity.z * g_Player2D.Velocity.z;
-
-		if (speedSq > 0.0001f)
-			Player2D_SetAnime(PLAYER2D_ANIME_WALK);
-		else
-			Player2D_SetAnime(PLAYER2D_ANIME_IDLE);
-	}
-
-	float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
-	float rightX = cosf(yawRad);
-	float rightZ = -sinf(yawRad);
-	float rightDot = g_Player2D.Velocity.x * rightX + g_Player2D.Velocity.z * rightZ;
-
-	if (rightDot > 0.001f)
-		g_FacingRight = true;
-	else if (rightDot < -0.001f)
-		g_FacingRight = false;*/
-
-	const float moveEpsSq = 0.0001f;
-	float speedSq = g_Player2D.Velocity.x * g_Player2D.Velocity.x +
-		g_Player2D.Velocity.z * g_Player2D.Velocity.z;
-
-	PLAYER2D_ANIME wanted = (speedSq > moveEpsSq) ? PLAYER2D_ANIME_WALK : PLAYER2D_ANIME_IDLE;
-	Player2D_SetAnime(wanted);
-
-	float yawRad = XMConvertToRadians(g_Player2D.Rotation.y);
-	float rightX = cosf(yawRad);
-	float rightZ = -sinf(yawRad);
-	float rightDot = g_Player2D.Velocity.x * rightX + g_Player2D.Velocity.z * rightZ;
-
-	if (rightDot > 0.001f) g_FacingRight = true;
-	else if (rightDot < -0.001f) g_FacingRight = false;
-
 	const Player2DAnimeDef& def = g_AnimDefs[g_CurrentAnim];
-
 	int frameCount = (def.frameCount > 0) ? def.frameCount : 1;
 	float speed = (def.frameSpeed > 0.0f) ? def.frameSpeed : 1.0f;
 
@@ -200,6 +163,18 @@ static void Player2D_UpdateAnime()
 			g_AnimFinished = !def.loop;
 		}
 	}
+
+	DEBUG_IMGUI_BEGIN({
+		ImGui::Begin("Debug - han");
+				if (ImGui::TreeNode("2DMoAnim.cpp"))
+				{
+					ImGui::Text("isG: %s", g_Player2D.isGround? "true" : "false");
+					ImGui::Text("Anim: %d", g_CurrentAnim);
+					ImGui::TreePop();
+				}
+				ImGui::End();
+
+		});
 }
 // アニメーションを更新する
 static void Player2D_UpdateUV()
@@ -348,21 +323,19 @@ void Player2D_Update()
 {
 	if (!g_Player2D.Active) return;
 
-	// 重力処理
-	Player2D_Gravity();
+	
 
 	// 落下死処理
-	if (g_Player2D.Position.y < -10.0f)
-	{
-		Player2D_Respawn();	
-	}
+	Player2D_Respawn();
 
 
-	Player2D_Move();
-	Player2D_Jump();
 
+	Player2D_Move();		// 移動処理
+	Player2D_Jump();		// ジャンプ処理
 
-	Player2D_UpdateAnime();
+	Player2D_Gravity();		// 重力処理
+	
+	Player2D_UpdateAnime();	// アニメーションの更新
 }
 
 //=========================================================================================================
@@ -414,7 +387,6 @@ void Player2D_Gravity()
 	g_Player2D.blockMovement = false;
 
 	bool wasGround = g_Player2D.isGround;
-	g_Player2D.isGround = false;
 
 	if (!wasGround)
 	{
@@ -438,6 +410,8 @@ void Player2D_Gravity()
 
 	
 	int hit = Collision_Player2D_MoveAndCollision();
+
+	g_JustLanded = (!wasGround && g_Player2D.isGround);
 
 	if (g_Player2D.isGround && g_Player2D.Velocity.y < 0.0f)
 	{
@@ -623,6 +597,7 @@ void Player2D_Jump()
 	if (canJump && wantsToJump && g_JumpKeyReleased)
 	{
 		g_Player2D.Velocity.y = JUMP_INITIAL_VELOCITY;
+		g_JustJumped = true;
 		g_Player2D.isGround = false;
 		g_IsJumping = true;
 		g_JumpKeyReleased = false;

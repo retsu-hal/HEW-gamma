@@ -5,7 +5,6 @@
 #include "direct3d.h"
 #include "model.h"
 
-using namespace DirectX;
 
 #define LIGHT_SPEEDMAX (1.0f)
 #define LIGHT_RADIUS (0.2f)

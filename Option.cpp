@@ -10,6 +10,7 @@
 #include "Audio.h"
 #include "camera.h"
 #include "Collision.h"
+#include "newKeyBind.h"
 
 static bool debugMode = TRUE;
 

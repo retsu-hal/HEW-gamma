@@ -4,7 +4,7 @@
 #include <d3d11.h>
 #include <DirectXMath.h>
 #include "direct3d.h"
-using namespace DirectX;
+
 
 //=========================================================================================================
 //構造体
@@ -13,7 +13,7 @@ class EFFECT
 {
 	public:
 		bool		Enable;
-		XMFLOAT3	Position;
+		DirectX::XMFLOAT3	Position;
 		int			FrameCount;	//アニメーションカウンター
 
 };
@@ -27,5 +27,5 @@ void Effect_Finalize();
 void Effect_Update();
 void Effect_Draw();
 
-void CreateEffect(XMFLOAT2 Position);	//エフェクト作成
+void CreateEffect(DirectX::XMFLOAT2 Position);	//エフェクト作成
 

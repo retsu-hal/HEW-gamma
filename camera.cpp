@@ -1,41 +1,55 @@
-//camera.cpp
+// camera.cpp
 #include "camera.h"
-#include"keyboard.h"
+#include "keyboard.h"
 #include "mouse.h"
 #include "player3D.h"
-#include "debug.h"
 #include "Player2D.h"
-#include <iostream>
 #include "field.h"
-#include "MathUtil.h"
+#include "UtilMath.h"
 
-#include "field.h"
-#include "MathUtil.h"
+#include <iostream>
+
 using namespace mu;
+using namespace DirectX;
+
 //=========================================================================================================
-// グローバル変数
+// 内部状態（本ファイル内のみ）
 //=========================================================================================================
-static CAMERA CameraObject;
+
+// カメラ本体
+static CAMERA  g_CameraObject;
+
+// プレイヤー位置の前フレーム保持（用途：将来の揺れ/補間などの拡張用）
 XMFLOAT3 g_PlayerPosOld;
 
-
-//マウス操作用変数
+// マウス状態（デバッグ用途/既存互換のため残す）
 Mouse_State ms{};
-float cSize = 1.0f;//カメラの感度調整用
+float cSize = 1.0f; // カメラの感度/サイズ調整用（現状は未使用気味）
 
-//カメラ操作用変数
-static bool   gCamAnglesInit = false;//カメラ角度初期化フラグ
-static XMFLOAT3 gCamTarget = { 0, 0, 0 };//カメラ注視点
-static XMFLOAT3 gCamPos = { 0, 0, 0 };//カメラ位置
-static float gYawDeg = 180.0f;//カメラの水平回転角度
-static float gPitchDeg = 15.0f;//カメラの上下回転角度
-static float gDistance = 8.0f;//カメラと注視点の距離
-static const float kPitchMin = -75.0f;//カメラの上下限度角度
+//---------------------------------------------------------------------------------------------------------
+// 3Dカメラ（追従 + マウス操作）
+//---------------------------------------------------------------------------------------------------------
+static bool    gCamAnglesInit = false;        // 角度初期化フラグ（現状は未使用だが互換で保持）
+static XMFLOAT3 gCamTarget = { 0, 0, 0 };     // カメラ注視点（補間後）
+static XMFLOAT3 gCamPos = { 0, 0, 0 };     // カメラ位置（補間後）
+
+static float   gYawDeg = 180.0f;            // 水平回転（deg）
+static float   gPitchDeg = 15.0f;             // 垂直回転（deg）
+static float   gDistance = 8.0f;              // ターゲットからの距離
+
+static const float kPitchMin = -75.0f;
 static const float kPitchMax = 75.0f;
-static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f };//カメラ注視点オフセット
-static float gFollowLerp = 0.15f;//カメラ追従の速さ
 
+static XMFLOAT3 gTargetOffset = { 0.0f, 1.2f, 0.0f }; // プレイヤーから注視点へのオフセット
+static float    gFollowLerp = 0.15f;               // 追従補間（0..1）
 
+// マウス感度
+static float g_MouseSensYaw = 1.0f;
+static float g_MouseSensPitch = 1.0f;
+
+//---------------------------------------------------------------------------------------------------------
+// 2Dカメラ（固定Yawで追従）
+//---------------------------------------------------------------------------------------------------------
 static const float kCam2D_Distance = 8.0f;
 static const float kCam2D_HeightOffset = 1.5f;
 static const float kCam2D_LookAtYOfs = 1.0f;
@@ -44,20 +58,30 @@ static const float kCam2D_FollowLerp = 0.12f;
 static bool  g_Cam2D_Initialized = false;
 static float g_Cam2D_YawDeg = 0.0f;
 
-// ファイル先頭付近の既存のカメラ関連のstatic変数定義の近くに追記
-static float g_MouseSensYaw = 1.0f;
-static float g_MouseSensPitch = 1.0f;
+//---------------------------------------------------------------------------------------------------------
+// カメラ衝突設定（レイキャスト）
+//---------------------------------------------------------------------------------------------------------
+static const float kCameraCollisionRadius = 0.1f;  // カメラ球半径（当たり判定の拡張量）
+static const float kCameraCollisionPadding = 0.1f;  // 壁から離す追加距離
+static const float kCameraMinDistance = 1.2f;  // 最低距離（近すぎ防止）
 
+//=========================================================================================================
+// ユーティリティ
+//=========================================================================================================
+
+// 3Dベクトルの線形補間
 static XMFLOAT3 Lerp3(const XMFLOAT3& a, const XMFLOAT3& b, float t)
-{// 3Dベクトルの線形補間
-    return {
-        a.x + (b.x - a.x) * t,
-        a.y + (b.y - a.y) * t,
-        a.z + (b.z - a.z) * t
-    };
+{
+	return {
+		a.x + (b.x - a.x) * t,
+		a.y + (b.y - a.y) * t,
+		a.z + (b.z - a.z) * t
+	};
 }
 
-// Ray vs AABB intersection
+// Ray vs AABB（スラブ法）
+// outNormal: 進入面の法線（ローカル）
+// outT     : ヒット距離（rayO + rayD * t）
 static bool RaycastAABB(
 	const XMFLOAT3& rayO,
 	const XMFLOAT3& rayD_in,
@@ -77,6 +101,7 @@ static bool RaycastAABB(
 		{
 			if (fabsf(rd) < 1e-6f)
 			{
+				// レイが軸に平行：原点がスラブ内ならOK
 				return (ro >= c - h && ro <= c + h);
 			}
 
@@ -106,7 +131,7 @@ static bool RaycastAABB(
 	return true;
 }
 
-// Ray vs OBB intersection (uses boxHalf you already computed)
+// Ray vs OBB（OBBをローカルに落としてAABBとして判定）
 static bool RaycastOBB(
 	const XMFLOAT3& rayO,
 	const XMFLOAT3& rayD_in,
@@ -127,7 +152,6 @@ static bool RaycastOBB(
 	XMVECTOR O = XMLoadFloat3(&rayO);
 	XMVECTOR D = XMLoadFloat3(&rayD_in);
 	D = XMVector3Normalize(D);
-
 	XMVECTOR C = XMLoadFloat3(&boxC);
 
 	XMVECTOR Orel = O - C;
@@ -152,82 +176,170 @@ static bool RaycastOBB(
 	return true;
 }
 
+// カメラが衝突判定対象とするフィールド種別
+static bool CameraShouldCollide(FIELD type)
+{
+	switch (type)
+	{
+	case FIELD_GROUND:
+	case FIELD_WALL:
+		return true;
+	default:
+		return false;
+	}
+}
+
 //=========================================================================================================
-// 初期化
+// 初期化 / 終了
 //=========================================================================================================
+
 void Camera_Initialize()
 {
-    CameraObject.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
-    CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	g_CameraObject.Position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_CameraObject.AtPosition = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	g_CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 
-    CameraObject.Fov = 45.0f;
-    float width = (float)Direct3D_GetBackBufferWidth();
-    float height = (float)Direct3D_GetBackBufferHeight();
-    CameraObject.Aspect = width / height;
-    CameraObject.NearClip = 0.5f;
-    CameraObject.FarClip = 1000.0f;
+	g_CameraObject.Fov = 45.0f;
 
-    g_PlayerPosOld = GetPlayer3DPosition();
-    
-    Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
+	float width = (float)Direct3D_GetBackBufferWidth();
+	float height = (float)Direct3D_GetBackBufferHeight();
+	g_CameraObject.Aspect = (height > 1e-6f) ? (width / height) : 1.0f;
+
+	g_CameraObject.NearClip = 0.5f;
+	g_CameraObject.FarClip = 1000.0f;
+
+	g_PlayerPosOld = GetPlayer3DPosition();
+
+	// 3D操作を想定し、相対モードを基本とする
+	Mouse_SetMode(MOUSE_POSITION_MODE_RELATIVE);
 }
 
-
-//=========================================================================================================
-// 終了処理
-//=========================================================================================================
 void Camera_Finalize()
 {
-    return;
+	// 現状は動的リソース無し
+	return;
 }
 
+//=========================================================================================================
+// 更新
+//=========================================================================================================
 
-//=========================================================================================================
-// 更新処理
-//=========================================================================================================
 void Player3DCamera_Update()
 {
-	Mouse_State ms{};
-	Mouse_GetState(&ms);
+	Mouse_State msLocal{};
+	Mouse_GetState(&msLocal);
 
-	/*static bool relativeMode = true;
-	bool suppressDelta = false;
-	{
-		if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-			relativeMode = !relativeMode;
-			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}
-	}*/
-
-	
-	if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
+	// マウス操作（相対モードのみ）
+	if (msLocal.positionMode == MOUSE_POSITION_MODE_RELATIVE)
 	{
 		const float sensYaw = 1.0f * g_MouseSensYaw;
 		const float sensPitch = 1.0f * g_MouseSensPitch;
-		gYawDeg += ms.x * sensYaw;
-		gPitchDeg -= ms.y * sensPitch;
+
+		gYawDeg += msLocal.x * sensYaw;
+		gPitchDeg -= msLocal.y * sensPitch;
 
 		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
 		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
 	}
 
-	// Mouse wheel zoom control
-	const float zoomSpeed = 0.06f;      // How much to zoom per wheel tick
-	const float minDistance = 2.5f;    // Minimum camera distance
-	const float maxDistance = 12.0f;   // Maximum camera distance
+	// ホイールズーム（距離制御）
+	const float zoomSpeed = 0.06f;
+	const float minDistance = 2.5f;
+	const float maxDistance = 12.0f;
 
-	gDistance -= ms.scrollWheelValue * zoomSpeed;
+	gDistance -= msLocal.scrollWheelValue * zoomSpeed;
 	if (gDistance < minDistance) gDistance = minDistance;
 	if (gDistance > maxDistance) gDistance = maxDistance;
 
-    XMFLOAT3 playerPos = GetPlayer3DPosition();
-    XMFLOAT3 desiredTarget = {
-        playerPos.x + gTargetOffset.x,
-        playerPos.y + gTargetOffset.y,
-        playerPos.z + gTargetOffset.z
-    };
+	// ターゲット（プレイヤー位置 + オフセット）
+	XMFLOAT3 playerPos = GetPlayer3DPosition();
+	XMFLOAT3 desiredTarget = {
+		playerPos.x + gTargetOffset.x,
+		playerPos.y + gTargetOffset.y,
+		playerPos.z + gTargetOffset.z
+	};
+
+	// 球面座標風に「背面方向」を算出してカメラ位置を決める
+	float yaw = XMConvertToRadians(gYawDeg);
+	float pitch = XMConvertToRadians(gPitchDeg);
+
+	float cp = cosf(pitch), sp = sinf(pitch);
+	float cy = cosf(yaw), sy = sinf(yaw);
+
+	XMFLOAT3 back = { sy * cp, sp, cy * cp };
+	XMFLOAT3 desiredPos = {
+		desiredTarget.x - back.x * gDistance,
+		desiredTarget.y - back.y * gDistance,
+		desiredTarget.z - back.z * gDistance
+	};
+
+	// 壁がある場合は手前に詰める（衝突回避）
+	XMFLOAT3 finalPos;
+	Camera_CheckCollision(desiredTarget, desiredPos, finalPos);
+
+	// 追従補間（カメラの急な揺れを抑える）
+	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+	gCamPos = Lerp3(gCamPos, finalPos, gFollowLerp);
+
+	g_CameraObject.AtPosition = gCamTarget;
+	g_CameraObject.Position = gCamPos;
+	g_CameraObject.UpVector = { 0, 1, 0 };
+}
+
+void Player2DCamera_Update()
+{
+	PLAYER* p2 = GetPlayer2D();
+	if (!p2) return;
+
+	// 2Dモードに入った瞬間のYawを固定（壁面に対して一定方向で追従）
+	if (!g_Cam2D_Initialized)
+	{
+		g_Cam2D_YawDeg = p2->Rotation.y;
+		g_Cam2D_Initialized = true;
+	}
+
+	XMFLOAT3 targetAt = {
+		p2->Position.x,
+		p2->Position.y + kCam2D_LookAtYOfs,
+		p2->Position.z
+	};
+
+	float yawRad = XMConvertToRadians(g_Cam2D_YawDeg);
+
+	float fwdX = sinf(yawRad);
+	float fwdZ = cosf(yawRad);
+
+	XMFLOAT3 targetPos = {
+		p2->Position.x - fwdX * kCam2D_Distance,
+		p2->Position.y + kCam2D_HeightOffset,
+		p2->Position.z - fwdZ * kCam2D_Distance
+	};
+
+	g_CameraObject.AtPosition = Lerp3(g_CameraObject.AtPosition, targetAt, kCam2D_FollowLerp);
+	g_CameraObject.Position = Lerp3(g_CameraObject.Position, targetPos, kCam2D_FollowLerp);
+	g_CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
+}
+
+void Player2DCamera_DebugUpdate()
+{
+	// デバッグ用：3Dと同じ操作系で2Dプレイヤーを追う
+	Mouse_State msLocal{};
+	Mouse_GetState(&msLocal);
+
+	if (msLocal.positionMode == MOUSE_POSITION_MODE_RELATIVE)
+	{
+		gYawDeg += msLocal.x * 1.0f;
+		gPitchDeg -= msLocal.y * 1.0f;
+		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+	}
+
+	XMFLOAT3 playerPos = GetPlayer2DPosition();
+	XMFLOAT3 desiredTarget = {
+		playerPos.x + gTargetOffset.x,
+		playerPos.y + gTargetOffset.y,
+		playerPos.z + gTargetOffset.z
+	};
 
 	float yaw = XMConvertToRadians(gYawDeg);
 	float pitch = XMConvertToRadians(gPitchDeg);
@@ -242,239 +354,60 @@ void Player3DCamera_Update()
 		desiredTarget.z - back.z * gDistance
 	};
 
-	XMFLOAT3 finalPos;
-	Camera_CheckCollision(desiredTarget, desiredPos, finalPos);
+	gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
+	gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
 
-    gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-	gCamPos = Lerp3(gCamPos, finalPos, gFollowLerp);
-
-    CameraObject.AtPosition = gCamTarget;
-    CameraObject.Position = gCamPos;
-    CameraObject.UpVector = { 0, 1, 0 };
-}
-
-void Player2DCamera_Update()
-{
-    PLAYER* p2 = GetPlayer2D();
-    if (!p2) return;
-
-    if (!g_Cam2D_Initialized)
-    {
-        g_Cam2D_YawDeg = p2->Rotation.y;
-        g_Cam2D_Initialized = true;
-    }
-
-    XMFLOAT3 targetAt = {
-        p2->Position.x,
-        p2->Position.y + kCam2D_LookAtYOfs,
-        p2->Position.z
-    };
-
-    float yawRad = XMConvertToRadians(g_Cam2D_YawDeg);
-
-    float fwdX = sinf(yawRad);
-    float fwdZ = cosf(yawRad);
-
-    XMFLOAT3 targetPos = {
-        p2->Position.x - fwdX * kCam2D_Distance,
-        p2->Position.y + kCam2D_HeightOffset,
-        p2->Position.z - fwdZ * kCam2D_Distance
-    };
-
-
-    CameraObject.AtPosition = Lerp3(CameraObject.AtPosition, targetAt, kCam2D_FollowLerp);
-    CameraObject.Position = Lerp3(CameraObject.Position, targetPos, kCam2D_FollowLerp);
-    CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
-
-}
-
-void Player2DCamera_DebugUpdate()
-{
-    Mouse_State ms{};
-    Mouse_GetState(&ms);
-
-    static bool relativeMode = true;
-    bool suppressDelta = false;
-    {
-        if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-            relativeMode = !relativeMode;
-            Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-                : MOUSE_POSITION_MODE_ABSOLUTE);
-        }
-    }
-
-    if (ms.positionMode == MOUSE_POSITION_MODE_RELATIVE)
-    {
-        const float sensYaw = 1.0f;
-        const float sensPitch = 1.0f;
-        gYawDeg += ms.x * sensYaw;
-        gPitchDeg -= ms.y * sensPitch;
-
-        if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
-        if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
-    }
-
-    XMFLOAT3 playerPos = GetPlayer2DPosition();
-    XMFLOAT3 desiredTarget = {
-        playerPos.x + gTargetOffset.x,
-        playerPos.y + gTargetOffset.y,
-        playerPos.z + gTargetOffset.z
-    };
-
-    float yaw = XMConvertToRadians(gYawDeg);
-    float pitch = XMConvertToRadians(gPitchDeg);
-
-    float cp = cosf(pitch), sp = sinf(pitch);
-    float cy = cosf(yaw), sy = sinf(yaw);
-
-    XMFLOAT3 back = { sy * cp, sp, cy * cp };
-    XMFLOAT3 desiredPos = {
-        desiredTarget.x - back.x * gDistance,
-        desiredTarget.y - back.y * gDistance,
-        desiredTarget.z - back.z * gDistance
-    };
-
-    gCamTarget = Lerp3(gCamTarget, desiredTarget, gFollowLerp);
-    gCamPos = Lerp3(gCamPos, desiredPos, gFollowLerp);
-
-    CameraObject.AtPosition = gCamTarget;
-    CameraObject.Position = gCamPos;
-    CameraObject.UpVector = { 0, 1, 0 };
+	g_CameraObject.AtPosition = gCamTarget;
+	g_CameraObject.Position = gCamPos;
+	g_CameraObject.UpVector = { 0, 1, 0 };
 }
 
 void Title_Camera_Update()
 {
-	/*static bool relativeMode = true;
-	if (Keyboard_IsKeyDownTrigger(KK_ESCAPE)) {
-			relativeMode = !relativeMode;
-			Mouse_SetMode(relativeMode ? MOUSE_POSITION_MODE_RELATIVE
-				: MOUSE_POSITION_MODE_ABSOLUTE);
-		}*/
-
-    //XMFLOAT3 playerPos = GetPlayer3DPosition();
-
-    //// Follow only X
-    //CameraObject.Position.x = playerPos.x;
-
-    //// Much lower height (closer to ground)
-    //CameraObject.Position.y = 3.0f;
-
-    //// Closer depth (near the map)
-    //CameraObject.Position.z = playerPos.z - 6.0f;
-
-    //// Look at player (slightly up for nicer framing)
-    //CameraObject.AtPosition.x = playerPos.x;
-    //CameraObject.AtPosition.y = playerPos.y + 2.0f;
-    //CameraObject.AtPosition.z = playerPos.z;
-
-    // Fixed cinematic camera
-    CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
-    CameraObject.AtPosition = XMFLOAT3(4.0f, 1.0f, 0.0f);
-    CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	// タイトル：固定シネマティック
+	g_CameraObject.Position = XMFLOAT3(4.0f, 3.0f, -5.0f);
+	g_CameraObject.AtPosition = XMFLOAT3(4.0f, 1.0f, 0.0f);
+	g_CameraObject.UpVector = XMFLOAT3(0.0f, 1.0f, 0.0f);
 }
 
 //=========================================================================================================
-// 描画処理
+// 行列更新
 //=========================================================================================================
+
 void Camera_Draw()
 {
+	float w = (float)Direct3D_GetBackBufferWidth();
+	float h = (float)Direct3D_GetBackBufferHeight();
+	if (h > 1e-6f) g_CameraObject.Aspect = w / h;
 
-    float w = (float)Direct3D_GetBackBufferWidth();
-    float h = (float)Direct3D_GetBackBufferHeight();
-    if (h > 1e-6f) CameraObject.Aspect = w / h;
+	g_CameraObject.Projection = XMMatrixPerspectiveFovLH(
+		XMConvertToRadians(g_CameraObject.Fov),
+		g_CameraObject.Aspect,
+		g_CameraObject.NearClip,
+		g_CameraObject.FarClip);
 
-    CameraObject.Projection = XMMatrixPerspectiveFovLH(XMConvertToRadians(CameraObject.Fov),CameraObject.Aspect,CameraObject.NearClip,CameraObject.FarClip);
+	XMVECTOR vPos = XMVectorSet(g_CameraObject.Position.x, g_CameraObject.Position.y, g_CameraObject.Position.z, 0.0f);
+	XMVECTOR vAt = XMVectorSet(g_CameraObject.AtPosition.x, g_CameraObject.AtPosition.y, g_CameraObject.AtPosition.z, 0.0f);
+	XMVECTOR vUp = XMVectorSet(g_CameraObject.UpVector.x, g_CameraObject.UpVector.y, g_CameraObject.UpVector.z, 0.0f);
 
-
-    XMVECTOR vPos = XMVectorSet(CameraObject.Position.x,CameraObject.Position.y,CameraObject.Position.z,0.0f);
-    XMVECTOR vAt = XMVectorSet(CameraObject.AtPosition.x, CameraObject.AtPosition.y, CameraObject.AtPosition.z, 0.0f);
-    XMVECTOR vUp = XMVectorSet(CameraObject.UpVector.x, CameraObject.UpVector.y, CameraObject.UpVector.z, 0.0f);
-    CameraObject.View = XMMatrixLookAtLH(vPos, vAt, vUp);
-
-    return;
+	g_CameraObject.View = XMMatrixLookAtLH(vPos, vAt, vUp);
 }
 
 //=========================================================================================================
-// 視野角
+// セッター / ゲッター
 //=========================================================================================================
-void SetCameraFov(float fov)
-{
-    CameraObject.Fov = fov;
-}
 
+void SetCameraFov(float fov) { g_CameraObject.Fov = fov; }
+void SetCameraAspect(float asp) { g_CameraObject.Aspect = asp; }
+void SetCameraClip(float n, float f) { g_CameraObject.NearClip = n; g_CameraObject.FarClip = f; }
+void SetCameraPosition(XMFLOAT3 pos) { g_CameraObject.Position = pos; }
+void SetCameraAtPosition(XMFLOAT3 atpos) { g_CameraObject.AtPosition = atpos; }
+void SetCameraUpVector(XMFLOAT3 up) { g_CameraObject.UpVector = up; }
 
-//=========================================================================================================
-// アスペクト比
-//=========================================================================================================
-void SetCameraAspect(float asp)
-{
-    CameraObject.Aspect = asp;
-}
-
-//=========================================================================================================
-// クリップ距離
-//=========================================================================================================
-void SetCameraClip(float n, float f)
-{
-    CameraObject.NearClip = n;
-    CameraObject.FarClip = f;
-}
-
-//=========================================================================================================
-// カメラ位置
-//=========================================================================================================
-void SetCameraPosition(XMFLOAT3 pos)
-{
-    CameraObject.Position = pos;
-}
-
-//=========================================================================================================
-// カメラ注視点
-//=========================================================================================================
-void SetCameraAtPosition(XMFLOAT3 atpos )
-{
-    CameraObject.AtPosition = atpos;
-}
-
-//=========================================================================================================
-// カメラ上方向ベクトル
-//=========================================================================================================
-void SetCameraUpVector(XMFLOAT3 up)
-{
-    CameraObject.UpVector = up;
-}
-
-//=========================================================================================================
-// ビュー行列取得
-//=========================================================================================================
-XMMATRIX GetViewMatrix()
-{
-    return CameraObject.View;
-}
-
-//=========================================================================================================
-// プロジェクション行列取得
-//=========================================================================================================
-XMMATRIX GetProjectionMatrix()
-{
-    return CameraObject.Projection;
-}
-
-//=========================================================================================================
-// カメラ注視点取得
-//=========================================================================================================
-XMFLOAT3 GetCameraAtPosition()
-{
-    return CameraObject.AtPosition;
-}
-
-//=========================================================================================================
-// カメラ位置取得
-//=========================================================================================================
-XMFLOAT3 GetCameraPosition()
-{
-    return CameraObject.Position;
-}
+XMMATRIX GetViewMatrix() { return g_CameraObject.View; }
+XMMATRIX GetProjectionMatrix() { return g_CameraObject.Projection; }
+XMFLOAT3 GetCameraAtPosition() { return g_CameraObject.AtPosition; }
+XMFLOAT3 GetCameraPosition() { return g_CameraObject.Position; }
 
 void Camera_Reset2DState()
 {
@@ -488,82 +421,27 @@ void SetCameraMouseSensitivity(float yaw, float pitch)
 	g_MouseSensPitch = pitch;
 }
 
-float GetMouseSensYaw()
-{
-	return g_MouseSensYaw;
-}
+float GetMouseSensYaw() { return g_MouseSensYaw; }
+float GetMouseSensPitch() { return g_MouseSensPitch; }
 
-float GetMouseSensPitch()
-{
-	return g_MouseSensPitch;
-}
-
-// Camera collision configuration
-static const float kCameraCollisionRadius = 0.1f;      // Camera collision sphere size
-static const float kCameraCollisionPadding = 0.1f;    // Extra space from walls
-static const float kCameraMinDistance = 1.2f;         // Minimum distance from player
-
-static bool CameraShouldCollide(FIELD type)
-{
-	switch (type)
-	{
-	case FIELD_GROUND:
-	case FIELD_WALL:
-		return true;
-	default:
-		return false;
-	}
-}
-
-static void DrawRayDebug(const XMFLOAT3& a, const XMFLOAT3& b, ImU32 col = IM_COL32(255, 0, 0, 255))
-{
-	auto WorldToScreen = [](const XMFLOAT3& p, ImVec2& out) -> bool
-		{
-			XMMATRIX vp = GetViewMatrix() * GetProjectionMatrix();
-			XMVECTOR vW = XMVectorSet(p.x, p.y, p.z, 1.0f);
-			XMVECTOR vC = XMVector3TransformCoord(vW, vp);
-
-			XMFLOAT3 ndc;
-			XMStoreFloat3(&ndc, vC);
-
-			if (ndc.x < -1.5f || ndc.x > 1.5f || ndc.y < -1.5f || ndc.y > 1.5f || ndc.z < 0.0f)
-				return false;
-
-			ImGuiViewport* vp_ = ImGui::GetMainViewport();
-			float w = (float)Direct3D_GetBackBufferWidth();
-			float h = (float)Direct3D_GetBackBufferHeight();
-
-			out.x = vp_->Pos.x + (ndc.x * 0.5f + 0.5f) * w;
-			out.y = vp_->Pos.y + (-ndc.y * 0.5f + 0.5f) * h;
-			return true;
-		};
-
-	ImVec2 sa, sb;
-	if (WorldToScreen(a, sa) && WorldToScreen(b, sb))
-	{
-		ImGui::GetBackgroundDrawList()->AddLine(sa, sb, col, 2.0f);
-	}
-}
+//=========================================================================================================
+// カメラ衝突
+//=========================================================================================================
 
 void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3& outCamPos)
 {
-	//DrawRayDebug(targetPos, desiredCamPos, IM_COL32(255, 0, 0, 255));
 	outCamPos = desiredCamPos;
 
-	// Calculate ray from target to desired camera position
-	XMFLOAT3 rayDir;
-	rayDir.x = desiredCamPos.x - targetPos.x;
-	rayDir.y = desiredCamPos.y - targetPos.y;
-	rayDir.z = desiredCamPos.z - targetPos.z;
+	// レイ（ターゲット -> 目的カメラ位置）
+	XMFLOAT3 rayDir = {
+		desiredCamPos.x - targetPos.x,
+		desiredCamPos.y - targetPos.y,
+		desiredCamPos.z - targetPos.z
+	};
 
 	float rayLength = sqrtf(rayDir.x * rayDir.x + rayDir.y * rayDir.y + rayDir.z * rayDir.z);
+	if (rayLength < 0.001f) return;
 
-	if (rayLength < 0.001f)
-	{
-		return;
-	}
-
-	// Normalize ray direction
 	rayDir.x /= rayLength;
 	rayDir.y /= rayLength;
 	rayDir.z /= rayLength;
@@ -571,22 +449,17 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 	std::vector<MAPDATA>& map = GetFieldMap();
 
 	float closestHit = rayLength;
-	bool hitSomething = false;
+	bool  hitSomething = false;
 
 	const float cameraRadius = kCameraCollisionRadius;
 
 	for (size_t i = 0; i < map.size(); i++)
 	{
-		//if (map[i].pos.y < targetPos.y )
-		//	continue;
-		if (!CameraShouldCollide(map[i].no))
-			continue;
+		if (!CameraShouldCollide(map[i].no)) continue;
 
+		// field.cpp は整理対象外のため、ここでは既存ロジックを保持
 		XMFLOAT3 boxHalf;
-		if (map[i].useCustomCollider)
-		{
-			boxHalf = map[i].colliderHalf;
-		}
+		if (map[i].useCustomCollider) boxHalf = map[i].colliderHalf;
 		else
 		{
 			boxHalf = XMFLOAT3(
@@ -596,14 +469,14 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 			);
 		}
 
-		// Only slightly expand the box
+		// カメラ半径分だけ当たりを太らせる
 		boxHalf.x += cameraRadius;
 		boxHalf.y += cameraRadius;
 		boxHalf.z += cameraRadius;
 
 		float hitDist = 0.0f;
-
 		XMFLOAT3 hitNormal{};
+
 		if (RaycastOBB(targetPos, rayDir, map[i].pos, boxHalf, map[i].rotate, rayLength, &hitNormal, &hitDist))
 		{
 			if (hitDist < closestHit)
@@ -612,20 +485,16 @@ void Camera_CheckCollision(XMFLOAT3 targetPos, XMFLOAT3 desiredCamPos, XMFLOAT3&
 				hitSomething = true;
 			}
 		}
-
 	}
 
 	if (hitSomething)
 	{
-		// Keep a comfortable distance from the obstacle
+		// 壁の少し手前にカメラを寄せる
 		float safeDistance = closestHit - cameraRadius - kCameraCollisionPadding;
-
-		if (safeDistance < kCameraMinDistance)
-			safeDistance = kCameraMinDistance;
+		if (safeDistance < kCameraMinDistance) safeDistance = kCameraMinDistance;
 
 		outCamPos.x = targetPos.x + rayDir.x * safeDistance;
 		outCamPos.y = targetPos.y + rayDir.y * safeDistance;
 		outCamPos.z = targetPos.z + rayDir.z * safeDistance;
 	}
-
 }
