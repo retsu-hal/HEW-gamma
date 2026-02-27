@@ -101,3 +101,5 @@ void SetCurrentStage(GAME_STAGE stage);
 GAME_STAGE GetCurrentStage();
 
 XMFLOAT3 Field_GetCollisionHalfSize(const MAPDATA& m);
+
+void Field_ReloadCurrentMap();

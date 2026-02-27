@@ -657,6 +657,9 @@ void Player2D_Reset()
 	g_AnimTimer = 0.0f;
 	g_AnimFinished = false;
 	g_FacingRight = true;
+
+	Field_ReloadCurrentMap();
+	Collision_ResetShadowContactState();
 }
 
 

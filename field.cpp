@@ -737,3 +737,27 @@ XMFLOAT3 Field_GetCollisionHalfSize(const MAPDATA& m)
 		BOX_RADIUS * m.scale.z
 	};
 }
+
+void Field_ReloadCurrentMap()
+{
+	GAME_STAGE currentStage = GetCurrentStage();
+
+	switch (currentStage)
+	{
+	case STAGE_SELECT:
+		LoadMapFromFile("asset\\MapData\\stage_select.txt");
+		break;
+	case STAGE_1:
+		LoadMapFromFile("asset\\MapData\\stage1.txt");
+		break;
+	case STAGE_2:
+		LoadMapFromFile("asset\\MapData\\stage2.txt");
+		break;
+	case STAGE_3:
+		LoadMapFromFile("asset\\MapData\\stage3.txt");
+		break;
+	default:
+		LoadMapFromFile("asset\\MapData\\stage_select.txt");
+		break;
+	}
+}

@@ -64,6 +64,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\anim\\Idle.fbx");
 	//g_Player3D.Model[PLAYER_ANIM_IDLE] = ModelLoad("asset\\model\\Chara_test_02.fbx",true);
 	g_Player3D.Model[PLAYER_ANIM_WALK] = ModelLoad("asset\\model\\anim\\Walking.fbx");
+	g_Player3D.Model[PLAYER_ANIM_DASH] = ModelLoad("asset\\model\\anim\\Running.fbx");
 	g_Player3D.Model[PLAYER_ANIM_PUSH] = ModelLoad("asset\\model\\anim\\Push.fbx");
 
 	g_Player3D.Model[PLAYER_ANIM_JUMP] = ModelLoad("asset\\model\\anim\\Jump.fbx");
@@ -242,6 +243,8 @@ void Player3D_Respawn()
 	g_Player3D.Quaternion = g_Player3D.FirstQuaternion;
 
 	g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
+	Field_ReloadCurrentMap();
+	Collision_ResetShadowContactState();
 	return;
 }
 
@@ -460,10 +463,15 @@ void Player3D_Dash()
 	{
 		// ƒ_ƒbƒVƒ…ŠJn/Œp‘±
 		g_Player3D.isDash = true;
+		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_DASH;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 
 		// ƒ_ƒbƒVƒ…’†‚àˆÚ“®“ü—Í‚ğ”½‰f
 		Player3D_Move();
+		if (g_Player3D.CurrentAnimIndex != PLAYER_ANIM_JUMP)
+		{
+			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_DASH;
+		}
 	}
 	else
 	{
@@ -700,7 +708,7 @@ void Player3D_CheckGoal()
 
 	if (sPortalCooldown > 0) sPortalCooldown--;
 
-	// ÉÙ¤·¤À¤±ÓàÔ£¤ò³Ö¤¿¤»¤ë£¨±ØÒª¤Ê¤±¤ì¤Ğ 0.0f ¤Ë‘ø¤·¤ÆOK£©
+	// ÉÙ¤·¤À¤±ÓàÔ£¤ò³Ö¤¿¤»¤E¨±ØÒª¤Ê¤±¤EĞ 0.0f ¤Ë‘ø¤·¤ÆOK£©
 	if (!Collision_PlayerTrigger(&hit, 0.2f))
 	{
 		sPrevInPortal = false;
@@ -709,13 +717,13 @@ void Player3D_CheckGoal()
 
 	if (hit.type == FIELD_PORTAL_K)
 	{
-		// ¡°Èë¤Ã¤¿Ë²ég¡±¤À¤±ÜËÍ£¨Á¢¤Á¤Ã¤Ñ¤Ê¤·¤Çš°¥Õ¥ì©`¥àÜËÍ¤·¤Ê¤¤£©
+		// ¡°ÈEÃ¤¿Ë²ég¡±¤À¤±ÜËÍ£¨Á¢¤Á¤Ã¤Ñ¤Ê¤·¤Çš°¥Õ¥E`¥àÜËÍ¤·¤Ê¤¤£©
 		if (!sPrevInPortal && sPortalCooldown == 0)
 		{
 			XMFLOAT3 dest;
 			if (!Portal_GetDestByEntranceMapIndex((int)hit.mapIndex, &dest))
 			{
-				// ¥Ú¥¢¥ê¥ó¥°Î´˜‹ºB¤Ê¤É¤Î±£ê“£ºR ¤Ø
+				// ¥Ú¥¢¥Eó¥°Î´EºB¤Ê¤É¤Î±£ê“£ºR ¤Ø
 				dest = Field_GetPlayerStartPosition();
 			}
 
@@ -726,7 +734,7 @@ void Player3D_CheckGoal()
 		}
 
 		sPrevInPortal = true;
-		return; // ¥İ©`¥¿¥ëƒÏÈ£¨Í¬¥Õ¥ì©`¥à¤Ç Goal/Stage „IÀí¤·¤Ê¤¤£©
+		return; // ¥İ©`¥¿¥EÏÈ£¨Í¬¥Õ¥E`¥à¤Ç Goal/Stage „IÀúÀ·¤Ê¤¤£©
 	}
 
 	sPrevInPortal = false;
