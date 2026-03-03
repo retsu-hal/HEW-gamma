@@ -452,7 +452,7 @@ void PlayerModeSwitchManager_Update()
 	}
 
 	// ƒgƒŠƒK[“ü—Í‚Å‚Ì‚İØ‚è‘Ö‚¦‚é
-	if (!Keyboard_IsKeyDownTrigger(TABKey)) return;
+	if (!IsInputTrigger(ChangeKey, gPad)) return;
 
 	if (g_Mode == MODE_3D)
 		TrySwitch3DTo2D();

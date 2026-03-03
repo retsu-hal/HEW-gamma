@@ -268,6 +268,12 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		Model[FIELD_PORTAL_K] = ModelLoad("asset\\model\\arch.fbx");
 	}
 
+	if (!Model[FIELD_PORTAL_J])
+	{
+		Model[FIELD_PORTAL_J] = ModelLoad("asset\\model\\test.fbx");
+	}
+
+
 	if (!Model[FIELD_SEESAW_1])
 	{
 		Model[FIELD_SEESAW_1] = ModelLoad("asset\\model\\Seesaw_dodai.fbx");
@@ -631,17 +637,6 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
-			if (c == 'J')
-			{
-				XMFLOAT3 jPos(
-					(float)(x - 2),
-					(float)(y - 2),
-					(float)z
-				);
-				Portal_RegisterExitMarker(jPos);
-				continue;
-			}
-
 			FIELD type;
 			bool valid = true;
 
@@ -664,6 +659,8 @@ bool LoadMapFromFile(const char* filename)
 			case '8': type = FIELD_STAGE_2;    break;
 			case '9': type = FIELD_STAGE_3;    break;
 			case 'K': type = FIELD_PORTAL_K;    break;
+			case 'J': type = FIELD_PORTAL_J;    break;
+
 			case '.': valid = false;         break;
 			case ' ': valid = false;         break;
 			default:  valid = false;         break;
@@ -699,13 +696,23 @@ bool LoadMapFromFile(const char* filename)
 					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 					g_MapData.push_back(data);
 				}
+
+				// ポータル入口（K）の mapIndex を登録
+				if (type == FIELD_PORTAL_K)
+				{
+					Portal_RegisterEntranceMapIndex((int)g_MapData.size() - 1);
+				}
+				// ポータル出口（J）の mapIndex を登録
+				if (type == FIELD_PORTAL_J)
+				{
+					Portal_RegisterExitMapIndex((int)g_MapData.size() - 1);
+				}
 			}
 		}
 		z++;
 	}
 
-	Portal_BuildPairs(g_PlayerStartPos);
-
+	Portal_BuildPairs();
 	file.close();
 	return true;
 }

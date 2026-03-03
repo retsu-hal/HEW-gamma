@@ -708,44 +708,31 @@ void Player3D_Idle()
 void Player3D_CheckGoal()
 {
 	TRIGGER_HIT hit;
-	if (!Collision_PlayerTrigger(&hit, 0.0f)) return;
+	if (!Collision_PlayerTrigger(&hit, 0.2f)) return;
 
 
-	static int  sPortalCooldown = 0;   // ﾟBｾAﾜ寨ﾍｷﾀﾖｹ
-	static bool sPrevInPortal = false;
-
-	if (sPortalCooldown > 0) sPortalCooldown--;
-
-	// ﾉﾙ､ｷ､ﾀ､ｱﾓ獪｣､ﾖ､ｿ､ｻ､・ｨｱﾘﾒｪ､ﾊ､ｱ､・ﾐ 0.0f ､ﾋ諾､ｷ､ﾆOK｣ｩ
-	if (!Collision_PlayerTrigger(&hit, 0.2f))
+	if (hit.type == FIELD_PORTAL_K || hit.type == FIELD_PORTAL_J)
 	{
-		sPrevInPortal = false;
-		return;
-	}
-
-	if (hit.type == FIELD_PORTAL_K)
-	{
-		// ｡ｰﾈ・ﾃ､ｿﾋｲ馮｡ｱ､ﾀ､ｱﾜ寨ﾍ｣ｨﾁ｢､ﾁ､ﾃ､ﾑ､ﾊ､ｷ､ﾇ垈･ﾕ･・`･玳寨ﾍ､ｷ､ﾊ､､｣ｩ
-		if (!sPrevInPortal && sPortalCooldown == 0)
+		// ActionKey を押した瞬間のみ転送実行
+		if (IsInputTrigger(ActionKey, gPad))
 		{
 			XMFLOAT3 dest;
-			if (!Portal_GetDestByEntranceMapIndex((int)hit.mapIndex, &dest))
+			if (Portal_GetDestForTrigger((int)hit.mapIndex, &dest))
 			{
-				// ･ﾚ･｢･・ｰﾎｴ・ｺB､ﾊ､ﾉ､ﾎｱ｣齠｣ｺR ､ﾘ
-				dest = Field_GetPlayerStartPosition();
+				// K→J の転送時、そのペアを激活する（J→K を許可）
+				if (hit.type == FIELD_PORTAL_K)
+				{
+					Portal_ActivatePair((int)hit.mapIndex);
+				}
+
+				// プレイヤーを転送
+				Player3D_setposition(dest);
+				g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
 			}
-
-			Player3D_setposition(dest);
-			g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
-
-			sPortalCooldown = 20;
 		}
 
-		sPrevInPortal = true;
-		return; // ･ﾝｩ`･ｿ･・槃ﾈ｣ｨﾍｬ･ﾕ･・`･爨ﾇ Goal/Stage Иﾀ惕ｷ､ﾊ､､｣ｩ
+		return; // ポータル処理後は Goal/Stage 判定をスキップ
 	}
-
-	sPrevInPortal = false;
 
 
 	if (hit.type == FIELD_GOAL)

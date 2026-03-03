@@ -6,40 +6,50 @@
 
 struct PortalData
 {
-    int                 entranceMapIndex; // GetFieldMap() 内の K の MAPDATA インデックス
-    DirectX::XMFLOAT3   destPos;          // 対応する J の座標（不足時は R）
-    bool                hasExplicitJ;     // true: J が存在 / false: R へフォールバック
+	int  kMapIndex;     // K乮擖岥乯偺 g_MapData 僀儞僨僢僋僗
+	int  jMapIndex;     // J乮弌岥乯偺 g_MapData 僀儞僨僢僋僗
+	bool activated;     // true: K仺J 巊梡嵪傒乮J仺K 傕嫋壜乯
 
-    PortalData()
-        : entranceMapIndex(-1)
-        , destPos(0.0f, 0.0f, 0.0f)
-        , hasExplicitJ(false)
-    {
-    }
+	PortalData()
+		: kMapIndex(-1)
+		, jMapIndex(-1)
+		, activated(false)
+	{
+	}
 };
 
-// 初期化/解放
+//==============================================================================
+// 弶婜壔 / 廔椆張棟
+//==============================================================================
 void Portal_Initialize();
 void Portal_Finalize();
 
-// ステージ切り替え/マップ再読み込み時に呼ぶ
+//==============================================================================
+// 撪晹忬懺僋儕傾
+//==============================================================================
 void Portal_ClearAll();
 
-// マップロード中に登録する（K は MapData に入れた後に mapIndex を渡す）
+//==============================================================================
+// 儅僢僾撉崬拞偵屇傃弌偡搊榐娭悢
+//==============================================================================
 void Portal_RegisterEntranceMapIndex(int mapIndex);
+void Portal_RegisterExitMapIndex(int mapIndex);
 
-// マップロード中に登録する（J は座標のみ）
-void Portal_RegisterExitMarker(const DirectX::XMFLOAT3& pos);
+//==============================================================================
+// 儅僢僾儘乕僪姰椆屻偵屇傃弌偡儁傾峔抸娭悢
+//==============================================================================
+void Portal_BuildPairs();
 
-// マップロード完了後に呼ぶ：K と J を「出現順」でペアリング
-//  - J が不足した場合は fallbackR（=R の座標）を dest に入れる
-void Portal_BuildPairs(const DirectX::XMFLOAT3& fallbackR);
+bool Portal_GetDestForTrigger(int mapIndex, DirectX::XMFLOAT3* outDest);
 
-// K の mapIndex から転送先を取得
-bool Portal_GetDestByEntranceMapIndex(int entranceMapIndex, DirectX::XMFLOAT3* outDest);
+void Portal_ActivatePair(int mapIndex);
 
-// デバッグ描画（J の位置 / K->J の線など）
+//==============================================================================
+// 僨僶僢僌昤夋
+//==============================================================================
 void Portal_DebugDraw();
 
-// 内部データ参照（必要なら）
+//==============================================================================
+// 撪晹僨乕僞嶲徠
+//==============================================================================
 const std::vector<PortalData>& Portal_GetAll();

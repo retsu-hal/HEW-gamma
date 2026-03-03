@@ -102,6 +102,7 @@ bool Field_IsTrigger(FIELD t)
     case FIELD_STAGE_3:
 
 	case FIELD_PORTAL_K:
+    case FIELD_PORTAL_J:
         return true;
     default:
         return false;

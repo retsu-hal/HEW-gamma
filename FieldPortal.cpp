@@ -8,16 +8,21 @@
 using namespace DirectX;
 
 //==============================================================================
-// 内部状態
+// 撪晹忬懺
+//
+//   儅僢僾撉崬拞偵 K 偲 J 偺 mapIndex 傪廂廤偟丄
+//   撉崬姰椆屻偵撉傒崬傒弴偱 1:1 偵儁傾儕儞僌偡傞丅
+//
+//   婰崋偺堄枴乮儅僢僾暥帤乯
+//     K : 億乕僞儖擖岥乮僩儕僈乕乯
+//     J : 億乕僞儖弌岥乮僩儕僈乕乯
 //==============================================================================
-
-static std::vector<int>        g_PortalEntranceMapIndices; // K の mapIndex（出現順）
-static std::vector<XMFLOAT3>   g_PortalExitMarkers;        // J の座標（出現順）
-static std::vector<PortalData> g_Portals;                  // K->J（または R）確定後
-static XMFLOAT3                g_FallbackR = { 0.0f, 0.0f, 0.0f };    // デバッグ表示用
+static std::vector<int>        g_EntranceIndices;   // K乮擖岥乯偺 mapIndex 堦棗乮撉崬弴乯
+static std::vector<int>        g_ExitIndices;        // J乮弌岥乯偺 mapIndex 堦棗乮撉崬弴乯
+static std::vector<PortalData> g_Portals;            // K-J 儁傾僥乕僽儖
 
 //==============================================================================
-// API
+// 弶婜壔 / 廔椆張棟
 //==============================================================================
 
 void Portal_Initialize()
@@ -32,66 +37,123 @@ void Portal_Finalize()
 
 void Portal_ClearAll()
 {
-    g_PortalEntranceMapIndices.clear();
-    g_PortalExitMarkers.clear();
+    g_EntranceIndices.clear();
+    g_ExitIndices.clear();
     g_Portals.clear();
-    g_FallbackR = { 0.0f, 0.0f, 0.0f };
 }
+
+//==============================================================================
+// 儅僢僾儘乕僪拞偺搊榐
+//==============================================================================
 
 void Portal_RegisterEntranceMapIndex(int mapIndex)
 {
     if (mapIndex < 0) return;
-    g_PortalEntranceMapIndices.push_back(mapIndex);
+    g_EntranceIndices.push_back(mapIndex);
 }
 
-void Portal_RegisterExitMarker(const XMFLOAT3& pos)
+void Portal_RegisterExitMapIndex(int mapIndex)
 {
-    g_PortalExitMarkers.push_back(pos);
+    if (mapIndex < 0) return;
+    g_ExitIndices.push_back(mapIndex);
 }
 
-void Portal_BuildPairs(const XMFLOAT3& fallbackR)
+//==============================================================================
+// 儁傾峔抸乮儅僢僾儘乕僪姰椆屻偵屇傇乯
+//   K 偲 J 傪撉傒崬傒弴偱 1:1 偵儁傾儕儞僌偡傞丅
+//   悢偑崌傢側偄応崌偼彮側偄曽偵崌傢偣傞乮梋傝偼柍帇乯丅
+//==============================================================================
+
+void Portal_BuildPairs()
 {
     g_Portals.clear();
-    g_FallbackR = fallbackR;
 
-    // K の数だけ PortalData を作る（J が足りなければ R へ）
-    const int kCount = (int)g_PortalEntranceMapIndices.size();
-    const int jCount = (int)g_PortalExitMarkers.size();
+    const int kCount = (int)g_EntranceIndices.size();
+    const int jCount = (int)g_ExitIndices.size();
+    const int pairCount = (kCount < jCount) ? kCount : jCount;
 
-    g_Portals.reserve(kCount);
-    for (int i = 0; i < kCount; ++i)
+    g_Portals.reserve(pairCount);
+    for (int i = 0; i < pairCount; ++i)
     {
         PortalData p;
-        p.entranceMapIndex = g_PortalEntranceMapIndices[i];
-        if (i < jCount)
-        {
-            p.destPos = g_PortalExitMarkers[i];
-            p.hasExplicitJ = true;
-        }
-        else
-        {
-            // J 不足：R へフォールバック
-            p.destPos = fallbackR;
-            p.hasExplicitJ = false;
-        }
+        p.kMapIndex = g_EntranceIndices[i];
+        p.jMapIndex = g_ExitIndices[i];
+        p.activated = false;
         g_Portals.push_back(p);
     }
 }
 
-bool Portal_GetDestByEntranceMapIndex(int entranceMapIndex, XMFLOAT3* outDest)
+//==============================================================================
+// 揮憲僋僄儕
+//
+//   僾儗僀儎乕偑怗傟偨僩儕僈乕偺 mapIndex 傪庴偗庢傝丄
+//   揮憲愭偺嵗昗傪 outDest 偵彂偒崬傓丅
+//
+//   K 偵怗傟偨応崌 仺 J 偺嵗昗傪曉偡乮忢偵壜擻乯
+//   J 偵怗傟偨応崌 仺 activated == true 側傜 K 偺嵗昗傪曉偡
+//                     activated == false 側傜揮憲晄壜乮false 傪曉偡乯
+//==============================================================================
+
+bool Portal_GetDestForTrigger(int mapIndex, XMFLOAT3* outDest)
 {
     if (!outDest) return false;
+
+    std::vector<MAPDATA>& mapData = GetFieldMap();
+
     const int n = (int)g_Portals.size();
     for (int i = 0; i < n; ++i)
     {
-        if (g_Portals[i].entranceMapIndex == entranceMapIndex)
+        PortalData& p = g_Portals[i];
+
+        // K 偵怗傟偨 仺 J 傊揮憲乮忢偵壜擻乯
+        if (p.kMapIndex == mapIndex)
         {
-            *outDest = g_Portals[i].destPos;
+            if (p.jMapIndex < 0 || p.jMapIndex >= (int)mapData.size())
+                return false;
+
+            *outDest = mapData[p.jMapIndex].pos;
+            outDest->y += 0.1f;    // 抧柺傔傝崬傒杊巭
+            return true;
+        }
+
+        // J 偵怗傟偨 仺 activated 側傜 K 傊揮憲
+        if (p.jMapIndex == mapIndex)
+        {
+            if (!p.activated)
+                return false;       // 枹寖妶丗揮憲晄壜
+
+            if (p.kMapIndex < 0 || p.kMapIndex >= (int)mapData.size())
+                return false;
+
+            *outDest = mapData[p.kMapIndex].pos;
+            outDest->y += 0.1f;    // 抧柺傔傝崬傒杊巭
             return true;
         }
     }
+
     return false;
 }
+
+//==============================================================================
+// 儁傾寖妶乮K仺J 揮憲幚峴屻偵屇傇乯
+//==============================================================================
+
+void Portal_ActivatePair(int mapIndex)
+{
+    const int n = (int)g_Portals.size();
+    for (int i = 0; i < n; ++i)
+    {
+        if (g_Portals[i].kMapIndex == mapIndex)
+        {
+            g_Portals[i].activated = true;
+            return;
+        }
+    }
+}
+
+//==============================================================================
+// 撪晹僨乕僞嶲徠
+//==============================================================================
 
 const std::vector<PortalData>& Portal_GetAll()
 {
@@ -99,21 +161,11 @@ const std::vector<PortalData>& Portal_GetAll()
 }
 
 //==============================================================================
-// デバッグ描画
+// 僨僶僢僌昤夋
 //==============================================================================
 
 void Portal_DebugDraw()
 {
-    // J マーカー（全て）
-    for (size_t i = 0; i < g_PortalExitMarkers.size(); ++i)
-    {
-        const XMFLOAT3& jpos = g_PortalExitMarkers[i];
-        DrawPoint3D(jpos, IM_COL32(0, 255, 120, 255), 5.0f);
-    }
-
-    // R（フォールバック）
-    DrawPoint3D(g_FallbackR, IM_COL32(255, 255, 255, 255), 6.0f);
-
     if (g_Portals.empty()) return;
 
     std::vector<MAPDATA>& mapData = GetFieldMap();
@@ -121,31 +173,52 @@ void Portal_DebugDraw()
     for (size_t i = 0; i < g_Portals.size(); ++i)
     {
         const PortalData& p = g_Portals[i];
-        if (p.entranceMapIndex < 0 || p.entranceMapIndex >= (int)mapData.size())
-            continue;
 
-        const MAPDATA& k = mapData[p.entranceMapIndex];
-        const XMFLOAT3 kPos = k.pos;
-
-        // K の Trigger 領域（AABB）
-        XMFLOAT3 half = Field_GetCollisionHalfSize(k);
-        DebugDrawAABB(kPos, half, IM_COL32(255, 200, 50, 255));
-
-        // K 点（黄色）
-        DrawPoint3D(kPos, IM_COL32(255, 255, 0, 255), 4.0f);
-
-        // K->Dest（J または R）
-        const XMFLOAT3 dPos = p.destPos;
-        if (p.hasExplicitJ)
+        // --- K乮擖岥乯偺昤夋 ---
+        if (p.kMapIndex >= 0 && p.kMapIndex < (int)mapData.size())
         {
-            // 対応する J（シアン）
-            DrawPoint3D(dPos, IM_COL32(0, 255, 255, 255), 5.0f);
-            DrawLine3D(kPos, dPos, IM_COL32(80, 160, 255, 180), 1.0f);
+            const MAPDATA& kData = mapData[p.kMapIndex];
+            const XMFLOAT3 kPos = kData.pos;
+
+            // K 偺僩儕僈乕 AABB
+            XMFLOAT3 half = Field_GetCollisionHalfSize(kData);
+            DebugDrawAABB(kPos, half, IM_COL32(255, 200, 50, 255));
+
+            // K 偺埵抲乮墿怓乯
+            DrawPoint3D(kPos, IM_COL32(255, 255, 0, 255), 4.0f);
         }
-        else
+
+        // --- J乮弌岥乯偺昤夋 ---
+        if (p.jMapIndex >= 0 && p.jMapIndex < (int)mapData.size())
         {
-            // J 不足：R（白）へ
-            DrawLine3D(kPos, dPos, IM_COL32(255, 255, 255, 180), 1.0f);
+            const MAPDATA& jData = mapData[p.jMapIndex];
+            const XMFLOAT3 jPos = jData.pos;
+
+            // J 偺僩儕僈乕 AABB
+            XMFLOAT3 half = Field_GetCollisionHalfSize(jData);
+            DebugDrawAABB(jPos, half, IM_COL32(50, 200, 255, 255));
+
+            // J 偺埵抲乮僔傾儞乯
+            DrawPoint3D(jPos, IM_COL32(0, 255, 255, 255), 4.0f);
+        }
+
+        // --- K 仺 J 偺愙懕慄 ---
+        if (p.kMapIndex >= 0 && p.kMapIndex < (int)mapData.size() &&
+            p.jMapIndex >= 0 && p.jMapIndex < (int)mapData.size())
+        {
+            const XMFLOAT3 kPos = mapData[p.kMapIndex].pos;
+            const XMFLOAT3 jPos = mapData[p.jMapIndex].pos;
+
+            if (p.activated)
+            {
+                // 寖妶嵪傒乮憃曽岦乯丗椢慄
+                DrawLine3D(kPos, jPos, IM_COL32(0, 255, 0, 200), 2.0f);
+            }
+            else
+            {
+                // 枹寖妶乮K仺J 堦曽捠峴乯丗敀慄
+                DrawLine3D(kPos, jPos, IM_COL32(255, 255, 255, 150), 1.0f);
+            }
         }
     }
 }
