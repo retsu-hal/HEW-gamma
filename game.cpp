@@ -192,6 +192,7 @@ void Game_Finalize()
 	Camera_Finalize();
 
 	PlayerPushManager_Finalize();
+	PlayerModeSwitchManager_Finalize();
 	Player3D_Finalize();
 	Player2D_Finalize();
 	FinalizeBillBoard();
@@ -389,6 +390,7 @@ void Game_Draw()
 
 		Player3D_Draw();
 		PlayerPushManager_Draw();
+		PlayerModeSwitchManager_Draw();
 		g_BallLight.SetEnable(TRUE);
 		Shader_SetLight(g_BallLight.Light);
 	}
