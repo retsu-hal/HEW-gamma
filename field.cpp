@@ -201,6 +201,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	if (!Model[FIELD_GROUND])
 	{
 		Model[FIELD_GROUND] = ModelLoad("asset\\model\\Yuka.fbx");
+
 		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\Building_B.fbx");
 		//Model[FIELD_GROUND] = ModelLoad("asset\\model\\test.fbx");
 	}
@@ -265,12 +266,12 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 														
 	if (!Model[FIELD_PORTAL_K])							
 	{													
-		Model[FIELD_PORTAL_K] = ModelLoad("asset\\model\\arch.fbx");
+		Model[FIELD_PORTAL_K] = ModelLoad("asset\\model\\ball_k.fbx");
 	}
 
 	if (!Model[FIELD_PORTAL_J])
 	{
-		Model[FIELD_PORTAL_J] = ModelLoad("asset\\model\\test.fbx");
+		Model[FIELD_PORTAL_J] = ModelLoad("asset\\model\\ball_j.fbx");
 	}
 
 
