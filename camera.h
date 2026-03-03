@@ -38,6 +38,7 @@ void Player3DCamera_Update();
 void Player2DCamera_Update();
 void Player2DCamera_DebugUpdate();
 void Title_Camera_Update();
+void LightCamera_Update();
 
 //=========================================================================================================
 // 描画（行列更新）
@@ -79,3 +80,6 @@ void Camera_CheckCollision(
 void SetCameraMouseSensitivity(float yaw, float pitch);
 float GetMouseSensYaw();
 float GetMouseSensPitch();
+
+// Add alongside Camera_Reset2DState()
+void Camera_ResetLightState();

@@ -7,6 +7,7 @@
 #include	"Player3D.h"
 #include	"Player2D.h"
 #include	"LightSource.h"
+#include	"Switch_Light.h"
 #include	"field.h"
 #include	"Effect.h"
 #include	"score.h"
@@ -85,6 +86,8 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	SkyDome_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
+	SwitchLight_Initialize();
+	Camera_ResetLightState();
 	InitializeBillBoard();
 
 	// Initialize the ball's light source
@@ -188,6 +191,7 @@ void Game_Finalize()
 	field_Finalize();
 	SkyDome_Finalize();
 	Polygon3D_Finalize();
+	SwitchLight_Finalize();
 	Light_Finalize();
 	Camera_Finalize();
 
@@ -241,7 +245,7 @@ void Game_Update()
 
 	Collision_DebugClearExtraBoxes();
 
-
+	SwitchLight_Update();
 	Light_Update();
 	field_Update();
 	SkyDome_Update();
@@ -299,26 +303,29 @@ void Game_Update()
 #endif // _DEBUG
 
 
+	if (!SwitchLight_IsLightMode())
+	{
+		if (PlayerModeSwitchManager_GetMode() == MODE_3D)
+		{// 3D繝｢繝ｼ繝峨・譖ｴ譁ｰ
+			Player3D_Update();
+			Player3DCamera_Update();
 
-	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
-	{// 3D繝｢繝ｼ繝峨・譖ｴ譁ｰ
-		Player3D_Update();
-		Player3DCamera_Update();
+		}
+		else
+		{// 2D繝｢繝ｼ繝峨・譖ｴ譁ｰ
+			Player2D_Update();
+			Player2DCamera_Update();
 
-	}
-	else
-	{// 2D繝｢繝ｼ繝峨・譖ｴ譁ｰ
-		Player2D_Update();
-		Player2DCamera_Update();
-		
 
 #ifdef _DEBUG
-		if (g_2DPlayerDebugMode)
-		{
-			Player2DCamera_DebugUpdate();
-		}
+			if (g_2DPlayerDebugMode)
+			{
+				Player2DCamera_DebugUpdate();
+			}
 #endif // _DEBUG
+		}
 	}
+	
 	//Player3DCamera_Update();
 
 }

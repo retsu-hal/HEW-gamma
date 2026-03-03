@@ -154,6 +154,7 @@
     <ClCompile Include="CollisionState.cpp" />
     <ClCompile Include="controller.cpp" />
     <ClCompile Include="FieldPortal.cpp" />
+    <ClCompile Include="Switch_Light.cpp" />
     <ClCompile Include="UtilDebug.cpp" />
     <ClCompile Include="debug_ostream.cpp" />
     <ClCompile Include="direct3d.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="controller.h" />
     <ClInclude Include="debug.h" />
     <ClInclude Include="FieldPortal.h" />
+    <ClInclude Include="Switch_Light.h" />
     <ClInclude Include="UtilDebug.h" />
     <ClInclude Include="debug_ostream.h" />
     <ClInclude Include="direct3d.h" />

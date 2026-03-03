@@ -6,6 +6,8 @@
 #include "Player2D.h"
 #include "field.h"
 #include "UtilMath.h"
+#include "LightSource.h"
+#include "Switch_Light.h"
 
 #include <iostream>
 
@@ -57,6 +59,17 @@ static const float kCam2D_FollowLerp = 0.12f;
 
 static bool  g_Cam2D_Initialized = false;
 static float g_Cam2D_YawDeg = 0.0f;
+
+//---------------------------------------------------------------------------------------------------------
+// ライトカメラ
+//---------------------------------------------------------------------------------------------------------
+static const float kCamLight_Distance = 8.0f;
+static const float kCamLight_HeightOffset = 3.0f;
+static const float kCamLight_LookAtYOfs = 0.0f;
+static const float kCamLight_FollowLerp = 0.12f;
+
+static bool  g_CamLight_Initialized = false;
+static float g_CamLight_YawDeg = 0.0f;
 
 //---------------------------------------------------------------------------------------------------------
 // カメラ衝突設定（レイキャスト）
@@ -319,6 +332,71 @@ void Player2DCamera_Update()
 	g_CameraObject.Position = Lerp3(g_CameraObject.Position, targetPos, kCam2D_FollowLerp);
 	g_CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
 }
+
+//---------------------------------------------------------------------------------------------------------
+// ライトカメラ更新
+//---------------------------------------------------------------------------------------------------------
+void LightCamera_Update()
+{
+	// Get the OBJ_3 position from Switch_Light
+	XMFLOAT3 lightPos = SwitchLight_GetLightObjPosition();
+
+	if (!g_CamLight_Initialized)
+	{
+		// Set yaw based on current stage
+		GAME_STAGE stage = GetCurrentStage();
+		switch (stage)
+		{
+		case STAGE_1:
+			g_CamLight_YawDeg = 270.0f;
+			break;
+		case STAGE_2:
+			g_CamLight_YawDeg = 90.0f;
+			break;
+		case STAGE_3:
+			g_CamLight_YawDeg = 270.0f;
+			break;
+		case STAGE_SELECT:
+			g_CamLight_YawDeg = 0.0f;
+			break;
+		default:
+			g_CamLight_YawDeg = 0.0f;
+			break;
+		}
+		g_CamLight_Initialized = true;
+	}
+
+	// Look-at target: OBJ_3 position + Y offset
+	XMFLOAT3 targetAt = {
+		lightPos.x,
+		lightPos.y + kCamLight_LookAtYOfs,
+		lightPos.z
+	};
+
+	// Camera position: behind the OBJ_3 (fixed Yaw)
+	float yawRad = XMConvertToRadians(g_CamLight_YawDeg);
+
+	float fwdX = sinf(yawRad);
+	float fwdZ = cosf(yawRad);
+
+	XMFLOAT3 targetPos = {
+		lightPos.x - fwdX * kCamLight_Distance,
+		lightPos.y + kCamLight_HeightOffset,
+		lightPos.z - fwdZ * kCamLight_Distance
+	};
+
+	// Smooth follow (Lerp)
+	g_CameraObject.AtPosition = Lerp3(g_CameraObject.AtPosition, targetAt, kCamLight_FollowLerp);
+	g_CameraObject.Position = Lerp3(g_CameraObject.Position, targetPos, kCamLight_FollowLerp);
+	g_CameraObject.UpVector = { 0.0f, 1.0f, 0.0f };
+}
+
+void Camera_ResetLightState()
+{
+	g_CamLight_Initialized = false;
+	g_CamLight_YawDeg = 0.0f;
+}
+
 
 void Player2DCamera_DebugUpdate()
 {
