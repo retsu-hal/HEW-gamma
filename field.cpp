@@ -173,7 +173,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	// テクスチャ
 	TexMetadata metadata;
 	ScratchImage image;
-	LoadFromWICFile(L"asset\\Texture\\block_field.png", WIC_FLAGS_NONE, &metadata, image);
+	LoadFromWICFile(L"asset\\Texture\\renga.png", WIC_FLAGS_NONE, &metadata, image);
 	CreateShaderResourceView(pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Texture);
 	assert(g_Texture);
 
@@ -247,7 +247,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	}
 	if (!Model[FIELD_GOAL])
 	{
-		//Model[FIELD_GOAL] = ModelLoad("asset\\model\\test.fbx");
+		Model[FIELD_GOAL] = ModelLoad("asset\\model\\arch.fbx");
 	}
 
 	if (!Model[FIELD_STAGE_1])
