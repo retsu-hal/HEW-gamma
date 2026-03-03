@@ -327,7 +327,7 @@ void PlayerPushManager_Update()
     case PUSH_STATE_NONE:
     {
         // Check if we should start pushing
-        if (actionHeld && movingForward)
+        if (actionHeld && movingForward && !p3->isDash)
         {
             PUSH_TARGET target;
             if (FindPushableTarget(&target))
@@ -349,7 +349,7 @@ void PlayerPushManager_Update()
     {
         g_ShowBillBoard = false;  // Hide billboard while pushing
         // Check if we should stop pushing
-        if (!actionHeld || !movingForward)
+        if (!actionHeld || !movingForward || p3->isDash)
         {
             g_PushState = PUSH_STATE_NONE;
             g_CurrentTarget.fieldIndex = -1;
