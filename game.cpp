@@ -97,7 +97,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	SkyDome_Initialize(pDevice, pContext);
 	Light_Initialize(pDevice, pContext);
 	Camera_Initialize();
-	SwitchLight_Initialize();
+	SwitchLight_Initialize(pDevice, pContext);
 	Camera_ResetLightState();
 	InitializeBillBoard();
 
@@ -464,7 +464,7 @@ void Game_Draw()
 			DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
 		}
 	}
-
+	SwitchLight_Draw();
 	
 
 	SetDepthTest(FALSE);

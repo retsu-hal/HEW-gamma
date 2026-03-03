@@ -5,9 +5,10 @@
 
 using namespace DirectX;
 
-void SwitchLight_Initialize(void);
+void SwitchLight_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext);
 void SwitchLight_Finalize(void);
 void SwitchLight_Update(void);
+void SwitchLight_Draw(void);
 
 // Returns true if currently controlling the light
 bool SwitchLight_IsLightMode(void);

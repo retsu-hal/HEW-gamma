@@ -3,6 +3,9 @@
 #include "Camera.h"
 #include "keyboard.h"
 #include "Collision.h"
+#include "player3D.h"
+#include "PlayerModeSwitchManager.h"
+#include "Bill_Board.h"
 
 #include "debug.h"
 
@@ -16,6 +19,18 @@ static int g_LightObjIndex = -1;
 
 // OBJ_3 collision half-size (ball radius as ellipsoid)
 static const XMFLOAT3 kOBJ3_CollisionHalf = { 0.25f, 0.25f, 0.25f };
+
+// Billboard prompt distance
+static const float kPromptDistance = 3.0f;    // how close player needs to be
+static const float kBillboardYOffset = 1.0f;  // height above OBJ_3
+
+// Billboard texture
+static ID3D11Device* g_pDevice = nullptr;
+static ID3D11DeviceContext* g_pContext = nullptr;
+static ID3D11ShaderResourceView* g_TabPromptTexture = nullptr;
+
+// Is player near the light?
+static bool g_PlayerNearLight = false;
 
 //=========================================================================================================
 // Which field types should OBJ_3 collide with?
@@ -89,16 +104,50 @@ static void SwitchLight_CheckCollision(XMFLOAT3& objPos)
 	objPos = ellC;
 }
 
-void SwitchLight_Initialize(void)
+//=========================================================================================================
+// Get distance between player and OBJ_3
+//=========================================================================================================
+static float GetPlayerToLightDistance()
 {
+	if (g_LightObjIndex < 0) return 9999.0f;
+
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (g_LightObjIndex >= (int)map.size()) return 9999.0f;
+
+	XMFLOAT3 lightPos = map[g_LightObjIndex].pos;
+	XMFLOAT3 playerPos = { 0, 0, 0 };
+
+	PLAYER* p3 = GetPlayer3D();
+	if (!p3) return 9999.0f;
+
+	playerPos = p3->Position;
+
+	float dx = playerPos.x - lightPos.x;
+	float dy = playerPos.y - lightPos.y;
+	float dz = playerPos.z - lightPos.z;
+
+	return sqrtf(dx * dx + dy * dy + dz * dz);
+}
+
+void SwitchLight_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
+{
+	g_pDevice = pDevice;
+	g_pContext = pContext;
+
 	g_LightMode = false;
 	g_TabWasDown = false;
 	g_LightObjIndex = -1;
+
+	// Load the Tab prompt texture
+	TexMetadata metadata;
+	ScratchImage image;
+	LoadFromWICFile(L"asset\\texture\\UI\\Keyboard\\TAB.png", WIC_FLAGS_NONE, &metadata, image);
+	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_TabPromptTexture);
 }
 
 void SwitchLight_Finalize(void)
 {
-	// Nothing to release
+	SAFE_RELEASE(g_TabPromptTexture);
 }
 
 // Find the first FIELD_OBJ_3 in the map data
@@ -117,16 +166,26 @@ static int FindLightObjIndex()
 
 void SwitchLight_Update(void)
 {
-	// Detect Tab key press (rising edge only)
+	// Always find the OBJ_3 index (map may reload)
+	g_LightObjIndex = FindLightObjIndex();
+
+	// Check if player is near the light (for billboard only)
+	float dist = GetPlayerToLightDistance();
+	g_PlayerNearLight = (dist <= kPromptDistance);
+
+	// Tab toggle works from anywhere
 	bool tabIsDown = Keyboard_IsKeyDown(KK_TAB);
 	if (tabIsDown && !g_TabWasDown)
 	{
 		g_LightMode = !g_LightMode;
-
-		// Find the OBJ_3 when entering light mode
 		if (g_LightMode)
 		{
-			g_LightObjIndex = FindLightObjIndex();
+			PLAYER* p3 = GetPlayer3D();
+			if (p3)
+			{
+				p3->Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
+				p3->CurrentAnimIndex = PLAYER_ANIM_IDLE;
+			}
 		}
 	}
 	g_TabWasDown = tabIsDown;
@@ -160,11 +219,39 @@ void SwitchLight_Update(void)
 	if (Keyboard_IsKeyDown(KK_NUMPAD6)) {
 		obj.pos.y += speed;
 	}
+
 	// --- Collision check and resolution (same system as Player3D) ---
 	SwitchLight_CheckCollision(obj.pos);
 
 	// Camera follows the OBJ_3
 	LightCamera_Update();
+}
+
+void SwitchLight_Draw(void)
+{
+	// Only show billboard when player is near AND not already controlling the light
+	if (!g_PlayerNearLight) return;
+	if (g_LightMode) return;
+	if (g_LightObjIndex < 0) return;
+	if (!g_TabPromptTexture) return;
+
+	std::vector<MAPDATA>& map = GetFieldMap();
+	if (g_LightObjIndex >= (int)map.size()) return;
+
+	XMFLOAT3 lightPos = map[g_LightObjIndex].pos;
+
+	// Billboard position: above the OBJ_3
+	XMFLOAT3 billPos = {
+		lightPos.x,
+		lightPos.y + kBillboardYOffset,
+		lightPos.z
+	};
+
+	XMFLOAT2 size = { 2.0f, 2.0f };
+	XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	g_pContext->PSSetShaderResources(0, 1, &g_TabPromptTexture);
+	DrawBillBoard(billPos, size, color, 0, 1, 1);
 }
 
 bool SwitchLight_IsLightMode(void)
