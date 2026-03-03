@@ -489,7 +489,7 @@ void PlayerModeSwitchManager_Update()
 				XMFLOAT3 halfSize = Player3D_GetSolidHalfSize();
 				g_BillBoardPosition = XMFLOAT3(
 					p3->Position.x,
-					p3->Position.y + halfSize.y * 2.0f + 2.0f,
+					p3->Position.y + 2.0f,
 					p3->Position.z
 				);
 			}
@@ -507,7 +507,7 @@ void PlayerModeSwitchManager_Update()
 			g_ShowBillBoard = true;
 			g_BillBoardPosition = XMFLOAT3(
 				p2->Position.x,
-				p2->Position.y + 2.0f,
+				p2->Position.y + 0.5f,
 				p2->Position.z
 			);
 		}
@@ -536,7 +536,7 @@ void PlayerModeSwitchManager_Draw()
 
 	g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 
-	XMFLOAT2 size = { 5.0f, 5.0f };  // Billboard size
+	XMFLOAT2 size = { 2.0f, 2.0f };  // Billboard size
 	XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);

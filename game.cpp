@@ -34,6 +34,17 @@ static bool g_OptionMenu = false;
 LIGHTOBJECT g_BallLight;
 static XMFLOAT3 LightPos;
 
+static XMFLOAT3 g_LastShadowLightPos = { FLT_MAX, FLT_MAX, FLT_MAX };
+static bool g_ShadowDirty = true;
+
+static bool LightMoved(const XMFLOAT3& a, const XMFLOAT3& b, float threshold = 0.001f)
+{
+	float dx = a.x - b.x;
+	float dy = a.y - b.y;
+	float dz = a.z - b.z;
+	return (dx * dx + dy * dy + dz * dz) > threshold * threshold;
+}
+
 // BGM邂｡逅・
 static int g_Bgm3D = -1;  // 3D繝｢繝ｼ繝峨・BGM
 static int g_Bgm2D = -1;  // 2D繝｢繝ｼ繝峨・BGM
@@ -163,6 +174,7 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_Goal_3_Texture);
 
 	Collision_ResetShadowContactState();
+
 }
 
 
@@ -274,6 +286,7 @@ void Game_Update()
 		}
 	}
 
+
 	float shadowIntensity = 1.0f;
 	Shader_SetShadowLightData(LightPos, g_ShadowRadius, shadowIntensity);
 
@@ -291,9 +304,8 @@ void Game_Update()
 		}
 	}
 
-
 	Collision_SetShadowPrisms(g_ActiveShadowPrisms);
-	
+
 
 #ifdef _DEBUG
 	if (Keyboard_IsKeyDownTrigger(KK_LEFTALT))// F1キーでデバッグモードのオンオフ切り替え
@@ -342,39 +354,43 @@ void Game_Draw()
 	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
 
-
-	for (int face = 0; face < 6; face++)
+	if (g_ShadowDirty || LightMoved(LightPos, g_LastShadowLightPos))
 	{
-		Direct3D_BeginShadowPass(face);
-		Shader_Begin();
-		Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 1.0f);
-
-		XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, LightPos, lightRadius);
-		Shader_SetShadowMatrix(lightViewProj);
-
-
+		for (int face = 0; face < 6; face++)
 		{
-			XMMATRIX world = Light_GetWorldMatrix();
-			Light_DrawRaw(world, world * lightViewProj);
-		}
+			Direct3D_BeginShadowPass(face);
+			Shader_Begin();
+			Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 1.0f);
 
-		{
-			std::vector<MAPDATA>& Map = GetFieldMap();
-			float maxShadowDist = g_ShadowRadius;
+			XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, LightPos, lightRadius);
+			Shader_SetShadowMatrix(lightViewProj);
 
-			for (size_t i = 0; i < Map.size(); ++i)
+
 			{
-				XMVECTOR v = XMLoadFloat3(&Map[i].pos) - XMLoadFloat3(&LightPos);
-				if (XMVectorGetX(XMVector3LengthSq(v)) > maxShadowDist * maxShadowDist)
-					continue;
+				XMMATRIX world = Light_GetWorldMatrix();
+				Light_DrawRaw(world, world * lightViewProj);
+			}
 
-				XMMATRIX world = Field_GetWorldMatrix((int)i);
-				Field_DrawShadowMap(world, world * lightViewProj, (int)i);
+			{
+				std::vector<MAPDATA>& Map = GetFieldMap();
+				float maxShadowDist = g_ShadowRadius;
+
+				for (size_t i = 0; i < Map.size(); ++i)
+				{
+					XMVECTOR v = XMLoadFloat3(&Map[i].pos) - XMLoadFloat3(&LightPos);
+					if (XMVectorGetX(XMVector3LengthSq(v)) > maxShadowDist * maxShadowDist)
+						continue;
+
+					XMMATRIX world = Field_GetWorldMatrix((int)i);
+					Field_DrawShadowMap(world, world * lightViewProj, (int)i);
+				}
 			}
 		}
-	}
 
-	Direct3D_EndShadowPass();
+		Direct3D_EndShadowPass();
+		g_LastShadowLightPos = LightPos;
+		g_ShadowDirty = false;
+	}
 			
 	Shader_Begin();
 	Shader_SetLight(g_BallLight.Light);

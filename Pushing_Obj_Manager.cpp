@@ -309,7 +309,7 @@ void PlayerPushManager_Update()
             // Position billboard above the object
             g_BillBoardPosition = XMFLOAT3(
                 obj.pos.x,
-                obj.pos.y + objHalf.y + 2.0f,  // Above the object
+                obj.pos.y + objHalf.y + 1.0f,  // Above the object
                 obj.pos.z
             );
         }
@@ -393,7 +393,7 @@ void PlayerPushManager_Draw()
 
         g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
 
-        XMFLOAT2 size = { 5.0f, 5.0f };  // Billboard size
+        XMFLOAT2 size = { 2.0f, 2.0f };  // Billboard size
         XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
         DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);
