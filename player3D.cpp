@@ -96,7 +96,7 @@ void Player3D_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	g_Player3D.FirstRotation = g_Player3D.Rotation = XMFLOAT3(0.0f, 180.0f, 0.0f);
 	//g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.1f, 0.1f, 0.1f);
 	//g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(0.01f, 0.01f, 0.01f);
-	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(1.0f, 1.0f, 1.0f);
+	g_Player3D.FirstScaling = g_Player3D.Scaling = XMFLOAT3(1.5f, 1.5f, 1.5f);
 
 
 	g_Player3D.FirstVelocity = g_Player3D.Velocity = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -336,11 +336,19 @@ void Player3D_Move()
 	{
 		if (g_Player3D.CurrentAnimIndex != PLAYER_ANIM_JUMP)
 		{
-			if (isMoving) {
-				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+			if (g_Player3D.isDash)
+			{
+				// Dashing always shows dash animation, even when pushing
+				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_DASH;
 			}
-			else {
-				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+			else if (!g_Player3D.isPushing)
+			{
+				if (isMoving) {
+					g_Player3D.CurrentAnimIndex = PLAYER_ANIM_WALK;
+				}
+				else {
+					g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+				}
 			}
 		}
 	}
@@ -686,7 +694,7 @@ void Player3D_Idle()
 	}
 
 	// Only set IDLE animation if not pushing and not auto and not jumping
-	if (!g_Player3D.isPushing && !g_Player3D.isAuto &&
+	if (!g_Player3D.isPushing && !g_Player3D.isAuto && !g_Player3D.isDash &&
 		g_Player3D.CurrentAnimIndex != PLAYER_ANIM_JUMP)
 	{
 		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
