@@ -42,6 +42,7 @@ enum FIELD
     FIELD_MANHOLE,
 
     FIELD_PORTAL_K,
+    FIELD_PORTAL_J,
 
 
     FIELD_MAX,
