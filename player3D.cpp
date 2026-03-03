@@ -469,21 +469,30 @@ void Player3D_Dash()
 {
 	if (IsInputPress(DashKey, gPad))
 	{
-		// ダッシュ開始/継続
 		g_Player3D.isDash = true;
-		g_Player3D.CurrentAnimIndex = PLAYER_ANIM_DASH;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed * g_Player3D.dashMoveSpeed;
 
-		// ダッシュ中も移動入力を反映
+		// Use Move() to handle input and velocity
 		Player3D_Move();
+
+		// Only show dash animation if actually moving
 		if (g_Player3D.CurrentAnimIndex != PLAYER_ANIM_JUMP)
 		{
-			g_Player3D.CurrentAnimIndex = PLAYER_ANIM_DASH;
+			bool isMoving = (fabsf(g_Player3D.Velocity.x) > 0.01f ||
+				fabsf(g_Player3D.Velocity.z) > 0.01f);
+
+			if (isMoving)
+			{
+				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_DASH;
+			}
+			else
+			{
+				g_Player3D.CurrentAnimIndex = PLAYER_ANIM_IDLE;
+			}
 		}
 	}
 	else
 	{
-		// ダッシュ解除
 		g_Player3D.isDash = false;
 		g_Player3D.maxMoveSpeed = g_Player3D.FirstMaxMoveSpeed;
 		g_Player3D.state = PLAYER_STATE_MOVE;

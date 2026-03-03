@@ -12,6 +12,8 @@ using namespace mu;
 #include "debug.h"
 #include "camera.h"
 
+#include "Bill_Board.h"
+
 //=========================================================================================================
 // ƒfƒoƒbƒO
 //=========================================================================================================
@@ -29,6 +31,13 @@ static const float kTo3DFrontOffset = -1.0f;  // 2D¨3D: •Ç‚©‚ç‘O•û‚Ö–ß‚·—Êi•„
 
 static const float kGroundSearchUp = 3.0f;   // 2D¨3D: ’…’n’n“_‚Ì’TõŠJŽnYiã•ûŒüj
 static const float kGroundSearchDown = 10.0f;  // 2D¨3D: ’Tõ‚Ì‰º•ûŒü‹——£
+
+static bool g_ShowBillBoard = false;
+static XMFLOAT3 g_BillBoardPosition = { 0.0f, 0.0f, 0.0f };
+
+static ID3D11Device* g_pDevice = nullptr;
+static ID3D11DeviceContext* g_pContext = nullptr;
+static ID3D11ShaderResourceView* g_BillBoardTexture = nullptr;
 
 //=========================================================================================================
 // ó‘Ô
@@ -430,7 +439,23 @@ static bool TrySwitch2DTo3D()
 
 void PlayerModeSwitchManager_Init()
 {
-	g_Mode = MODE_3D;
+	g_Mode = MODE_3D;	
+
+	g_pDevice = Direct3D_GetDevice();
+
+	TexMetadata metadata;
+	ScratchImage image;
+	// Use a texture for the mode switch prompt (change path to your actual texture)
+	LoadFromWICFile(L"asset\\texture\\UI\\Keyboard\\KeyboardChange.png", WIC_FLAGS_NONE, &metadata, image);
+	CreateShaderResourceView(g_pDevice, image.GetImages(), image.GetImageCount(), metadata, &g_BillBoardTexture);
+
+	g_ShowBillBoard = false;
+}
+
+void PlayerModeSwitchManager_Finalize()
+{
+	SAFE_RELEASE(g_BillBoardTexture);
+	g_ShowBillBoard = false;
 }
 
 PLAYER_MODE PlayerModeSwitchManager_GetMode()
@@ -451,6 +476,47 @@ void PlayerModeSwitchManager_Update()
 		ImGui::End();
 	}
 
+	if (g_Mode == MODE_3D)
+	{
+		SWITCH_TARGET tgt;
+		if (GetSwitchTargetFromPlayer3D(&tgt))
+		{
+			g_ShowBillBoard = true;
+
+			PLAYER* p3 = GetPlayer3D();
+			if (p3)
+			{
+				XMFLOAT3 halfSize = Player3D_GetSolidHalfSize();
+				g_BillBoardPosition = XMFLOAT3(
+					p3->Position.x,
+					p3->Position.y + halfSize.y * 2.0f + 2.0f,
+					p3->Position.z
+				);
+			}
+		}
+		else
+		{
+			g_ShowBillBoard = false;
+		}
+	}
+	else
+	{
+		PLAYER* p2 = GetPlayer2D();
+		if (p2)
+		{
+			g_ShowBillBoard = true;
+			g_BillBoardPosition = XMFLOAT3(
+				p2->Position.x,
+				p2->Position.y + 2.0f,
+				p2->Position.z
+			);
+		}
+		else
+		{
+			g_ShowBillBoard = false;
+		}
+	}
+
 	// ƒgƒŠƒK[“ü—Í‚Å‚Ì‚ÝØ‚è‘Ö‚¦‚é
 	if (!IsInputTrigger(ChangeKey, gPad)) return;
 
@@ -458,4 +524,30 @@ void PlayerModeSwitchManager_Update()
 		TrySwitch3DTo2D();
 	else
 		TrySwitch2DTo3D();
+}
+
+void PlayerModeSwitchManager_Draw()
+{
+	if (!g_ShowBillBoard || !g_BillBoardTexture) return;
+
+	g_pContext = Direct3D_GetDeviceContext();
+
+	Shader_Begin();
+
+	g_pContext->PSSetShaderResources(0, 1, &g_BillBoardTexture);
+
+	XMFLOAT2 size = { 5.0f, 5.0f };  // Billboard size
+	XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	DrawBillBoard(g_BillBoardPosition, size, color, 0, 1, 1);
+}
+
+bool PlayerModeSwitchManager_ShouldShowBillBoard()
+{
+	return g_ShowBillBoard;
+}
+
+XMFLOAT3 PlayerModeSwitchManager_GetBillBoardPosition()
+{
+	return g_BillBoardPosition;
 }

@@ -27,5 +27,10 @@ struct SWITCH_TARGET
 };
 
 void PlayerModeSwitchManager_Init();// 初期化
+void PlayerModeSwitchManager_Finalize();
 void PlayerModeSwitchManager_Update();// 更新
+void PlayerModeSwitchManager_Draw();
 PLAYER_MODE PlayerModeSwitchManager_GetMode();// モード取得
+
+bool PlayerModeSwitchManager_ShouldShowBillBoard();
+DirectX::XMFLOAT3 PlayerModeSwitchManager_GetBillBoardPosition();
