@@ -252,20 +252,20 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 
 	if (!Model[FIELD_STAGE_1])
 	{
-		Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\test.fbx");
-	}
-	if (!Model[FIELD_STAGE_2])
-	{
-		Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\test.fbx");
-	}
-	if (!Model[FIELD_STAGE_3])
-	{
-		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\test.fbx");
-	}
-
-	if (!Model[FIELD_PORTAL_K])
-	{
-		Model[FIELD_PORTAL_K] = ModelLoad("asset\\model\\test.fbx");
+		Model[FIELD_STAGE_1] = ModelLoad("asset\\model\\arch.fbx");
+	}													
+	if (!Model[FIELD_STAGE_2])							
+	{													
+		Model[FIELD_STAGE_2] = ModelLoad("asset\\model\\arch.fbx");
+	}													
+	if (!Model[FIELD_STAGE_3])							
+	{													
+		Model[FIELD_STAGE_3] = ModelLoad("asset\\model\\arch.fbx");
+	}													
+														
+	if (!Model[FIELD_PORTAL_K])							
+	{													
+		Model[FIELD_PORTAL_K] = ModelLoad("asset\\model\\arch.fbx");
 	}
 
 	if (!Model[FIELD_SEESAW_1])
