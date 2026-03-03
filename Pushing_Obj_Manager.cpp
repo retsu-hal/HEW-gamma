@@ -1,7 +1,6 @@
 //Pushing_Obj_Manager.cpp
 #include "Pushing_Obj_Manager.h"
 
-#include "field.h"
 #include "collision.h"
 #include "player3D.h"
 #include "keyboard.h"
@@ -46,8 +45,6 @@ static bool Field_IsPushable(FIELD t)
     switch (t)
     {
     case FIELD_OBJ_BOX:
-        return true;
-    case FIELD_OBJ_3:
         return true;
     default:
         return false;
