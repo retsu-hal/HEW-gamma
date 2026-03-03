@@ -83,3 +83,4 @@ float GetMouseSensPitch();
 
 // Add alongside Camera_Reset2DState()
 void Camera_ResetLightState();
+float GetLightCameraYaw();

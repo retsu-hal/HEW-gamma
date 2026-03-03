@@ -6,10 +6,13 @@
 #include "player3D.h"
 #include "PlayerModeSwitchManager.h"
 #include "Bill_Board.h"
+#include "newKeyBind.h" 
 
 #include "debug.h"
 
 using namespace DirectX;
+
+extern Controller gPad;
 
 static bool g_LightMode = false;
 static bool g_TabWasDown = false;
@@ -174,7 +177,7 @@ void SwitchLight_Update(void)
 	g_PlayerNearLight = (dist <= kPromptDistance);
 
 	// Tab toggle works from anywhere
-	bool tabIsDown = Keyboard_IsKeyDown(KK_TAB);
+	bool tabIsDown = IsInputPress(LightKey, gPad);
 	if (tabIsDown && !g_TabWasDown)
 	{
 		g_LightMode = !g_LightMode;
@@ -201,24 +204,54 @@ void SwitchLight_Update(void)
 	// --- Move the OBJ_3 with arrow / numpad keys ---
 	float speed = 5.0f / 60.0f;
 
-	if (Keyboard_IsKeyDown(KK_NUMPAD8) || Keyboard_IsKeyDown(KK_UP)) {
-		obj.pos.z += speed;
+	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
+
+	if (IsInputPress(UpKey, gPad))    inputDir.z += 1.0f;
+	if (IsInputPress(DownKey, gPad))  inputDir.z -= 1.0f;
+	if (IsInputPress(RightKey, gPad)) inputDir.x += 1.0f;
+	if (IsInputPress(LeftKey, gPad))  inputDir.x -= 1.0f;
+
+	if (gPad.IsConnected())
+	{
+		float lx = gPad.GetLeftStickX();
+		float ly = gPad.GetLeftStickY();
+
+		const float deadzone = 0.20f;
+		if (fabsf(lx) < deadzone) lx = 0.0f;
+		if (fabsf(ly) < deadzone) ly = 0.0f;
+
+		if (fabsf(lx) > 1e-6f || fabsf(ly) > 1e-6f)
+		{
+			inputDir.x = -lx;
+			inputDir.z = -ly;
+		}
 	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD2) || Keyboard_IsKeyDown(KK_DOWN)) {
-		obj.pos.z -= speed;
+
+	float len = sqrtf(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
+	if (len > 1e-6f)
+	{
+		inputDir.x /= len;
+		inputDir.z /= len;
+
+		float yawRad = XMConvertToRadians(GetLightCameraYaw());
+
+		float fwdX = sinf(yawRad);
+		float fwdZ = cosf(yawRad);
+
+
+		float rightX = fwdZ;
+		float rightZ = -fwdX;
+
+
+		float worldX = fwdX * inputDir.z + rightX * inputDir.x;
+		float worldZ = fwdZ * inputDir.z + rightZ * inputDir.x;
+
+		obj.pos.x += worldX * speed;
+		obj.pos.z += worldZ * speed;
 	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD7) || Keyboard_IsKeyDown(KK_LEFT)) {
-		obj.pos.x -= speed;
-	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD9) || Keyboard_IsKeyDown(KK_RIGHT)) {
-		obj.pos.x += speed;
-	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD4)) {
-		obj.pos.y -= speed;
-	}
-	if (Keyboard_IsKeyDown(KK_NUMPAD6)) {
-		obj.pos.y += speed;
-	}
+
+	if (Keyboard_IsKeyDown(KK_NUMPAD4)) obj.pos.y -= speed;
+	if (Keyboard_IsKeyDown(KK_NUMPAD6)) obj.pos.y += speed;
 
 	// --- Collision check and resolution (same system as Player3D) ---
 	SwitchLight_CheckCollision(obj.pos);

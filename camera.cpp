@@ -397,6 +397,10 @@ void Camera_ResetLightState()
 	g_CamLight_YawDeg = 0.0f;
 }
 
+float GetLightCameraYaw()
+{
+	return g_CamLight_YawDeg;
+}
 
 void Player2DCamera_DebugUpdate()
 {
