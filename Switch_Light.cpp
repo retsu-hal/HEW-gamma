@@ -193,6 +193,11 @@ void SwitchLight_Update(void)
 	}
 	g_TabWasDown = tabIsDown;
 
+	if (g_LightMode && PlayerModeSwitchManager_GetMode() == MODE_2D)
+	{
+		g_LightMode = false;
+	}
+
 	if (!g_LightMode) return;
 	if (g_LightObjIndex < 0) return;
 
