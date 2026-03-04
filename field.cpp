@@ -514,6 +514,8 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 
 	if (g_MapData[i].no == FIELD_OBJ_3)
 		return;
+
+
 	if (Model[g_MapData[i].no])
 	{
 		ModelDraw(Model[g_MapData[i].no]);
