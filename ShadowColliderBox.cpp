@@ -299,6 +299,7 @@ static bool IsCasterBetweenLightAndWall(
 	const float distToCaster = Length(toCenter);
 	if (distToCaster < 1e-4f) return false;
 
+
 	const XMFLOAT3 dir = Normalize(toCenter);
 
 	bool foundWall = false;
@@ -309,6 +310,7 @@ static bool IsCasterBetweenLightAndWall(
 		const MAPDATA& m = map[i];
 		if (&m == &caster) continue;
 		if (!Field_IsReceiver(m.no)) continue;
+
 
 		float t = 0.0f;
 		XMFLOAT3 n{};
@@ -781,7 +783,6 @@ void ShadowManager::UpdateAllShadows(
 	const std::vector<MAPDATA>& map,
 	const ShadowBuildConfig& config)
 {
-	// 1) caster候補のインデックスを収集
 	std::vector<int> newCasterIndices;
 	for (int i = 0; i < (int)map.size(); ++i)
 	{
@@ -789,13 +790,11 @@ void ShadowManager::UpdateAllShadows(
 			newCasterIndices.push_back(i);
 	}
 
-	// 2) caster集合が変わったら配列を作り直す
 	const bool castersChanged = (newCasterIndices != m_CasterIndices);
 	if (castersChanged)
 	{
 		m_CasterIndices = newCasterIndices;
 		m_Shadows.resize(m_CasterIndices.size());
-
 		for (size_t i = 0; i < m_Shadows.size(); ++i)
 		{
 			Shadow_Clear(m_Shadows[i]);
@@ -803,17 +802,27 @@ void ShadowManager::UpdateAllShadows(
 		}
 	}
 
-	// 3) 個別更新（必要なら再構築）
+	const int kMaxRebuildsPerFrame = 3;
+	int rebuildsThisFrame = 0;
+
 	for (size_t i = 0; i < m_CasterIndices.size(); ++i)
 	{
 		const int casterIdx = m_CasterIndices[i];
 		const MAPDATA& caster = map[casterIdx];
 		ShadowPrism& shadow = m_Shadows[i];
 
-		if (Shadow_NeedsRebuild(shadow, lightPos, caster, config.rebuildThreshold))
+
+		float rebuildThreshold = config.rebuildThreshold;
+		if (rebuildThreshold < 0.1f) rebuildThreshold = 0.1f; 
+
+		if (Shadow_NeedsRebuild(shadow, lightPos, caster, rebuildThreshold))
 		{
+			if (rebuildsThisFrame >= kMaxRebuildsPerFrame)
+				continue; 
+
 			Shadow_Build(shadow, caster, lightPos, map, config);
 			shadow.casterIndex = casterIdx;
+			rebuildsThisFrame++;
 		}
 	}
 }
