@@ -75,6 +75,8 @@ public:
 	bool Active = true;
 	float FirstMaxMoveSpeed = maxMoveSpeed;
 
+	bool fountainJumped = false;
+
 	// プレイヤー変身フラグ
 	bool isChange = false;
 	//  true: 2D状態

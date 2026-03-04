@@ -159,6 +159,9 @@
     <ClCompile Include="FieldPortal.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
+    <ClCompile Include="FieldFountain.cpp">
+      <Filter>ソースファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Bill_Board.h">
@@ -294,6 +297,9 @@
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
     <ClInclude Include="FieldPortal.h">
+      <Filter>ヘッダーファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="FieldFountain.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>
