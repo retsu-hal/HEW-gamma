@@ -354,15 +354,25 @@ void Game_Draw()
 		{
 			std::vector<MAPDATA>& Map = GetFieldMap();
 			float maxShadowDist = g_ShadowRadius;
+			float maxShadowDistSq = maxShadowDist * maxShadowDist;
+
+			float lx = LightPos.x;
+			float ly = LightPos.y;
+			float lz = LightPos.z;
 
 			for (size_t i = 0; i < Map.size(); ++i)
 			{
-				XMVECTOR v = XMLoadFloat3(&Map[i].pos) - XMLoadFloat3(&LightPos);
-				if (XMVectorGetX(XMVector3LengthSq(v)) > maxShadowDist * maxShadowDist)
+				float dx = Map[i].pos.x - lx;
+				float dy = Map[i].pos.y - ly;
+				float dz = Map[i].pos.z - lz;
+				float distSq = dx * dx + dy * dy + dz * dz;
+
+				if (distSq > maxShadowDistSq)
 					continue;
 
 				XMMATRIX world = Field_GetWorldMatrix((int)i);
 				Field_DrawShadowMap(world, world * lightViewProj, (int)i);
+			
 			}
 		}
 	}
