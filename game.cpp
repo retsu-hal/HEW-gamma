@@ -354,7 +354,7 @@ void Game_Draw()
 	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
 
-	if (g_ShadowDirty || LightMoved(LightPos, g_LastShadowLightPos))
+	//if (g_ShadowDirty || LightMoved(LightPos, g_LastShadowLightPos))
 	{
 		for (int face = 0; face < 6; face++)
 		{
