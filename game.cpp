@@ -397,9 +397,7 @@ void Game_Draw()
 		Shader_SetShadowSampler(g_pShadowSamplerState);
 		Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 0.0f);
 
-		{
-			SkyDome_Draw();
-		}
+
 		{
 			field_Draw();
 		}
@@ -462,6 +460,9 @@ void Game_Draw()
 				XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 				DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
 			}
+		}
+		{
+			SkyDome_Draw();
 		}
 		SwitchLight_Draw();
 
