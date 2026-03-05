@@ -7,6 +7,7 @@
 #include "Player2D.h"
 #include "keyboard.h"
 #include "UtilMath.h"
+#include "manager.h"
 using namespace mu;
 
 #include "debug.h"
@@ -38,6 +39,9 @@ static XMFLOAT3 g_BillBoardPosition = { 0.0f, 0.0f, 0.0f };
 static ID3D11Device* g_pDevice = nullptr;
 static ID3D11DeviceContext* g_pContext = nullptr;
 static ID3D11ShaderResourceView* g_BillBoardTexture = nullptr;
+
+PLAYER* p = GetPlayer3D();
+
 
 //=========================================================================================================
 // 状態
@@ -517,13 +521,28 @@ void PlayerModeSwitchManager_Update()
 		}
 	}
 
-	// トリガー入力でのみ切り替える
+
+	// タイトルシーン中は Player3D::isTitleScene フラグで切り替えを禁止（早期リターン）
+	PLAYER* p3 = GetPlayer3D();
+	if (p3 && p3->isTitleScene)
+	{
+		// 必要ならデバッグ出力
+		DEBUG_IMGUI_BEGIN({
+			ImGui::Begin("Debug - PlSwitch");
+			ImGui::Text("Mode switch blocked: Player3D::isTitleScene == true");
+			ImGui::End();
+			});
+		return;
+	}
+
+	// 切り替えキー（このファイルでは TABKey を使用）
 	if (!IsInputTrigger(ChangeKey, gPad)) return;
 
 	if (g_Mode == MODE_3D)
 		TrySwitch3DTo2D();
 	else
 		TrySwitch2DTo3D();
+
 }
 
 void PlayerModeSwitchManager_Draw()

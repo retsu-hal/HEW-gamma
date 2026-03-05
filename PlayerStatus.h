@@ -82,6 +82,8 @@ public:
 	//  true: 2Dó‘Ô
 	//  false:3Dó‘Ô
 
+	bool isTitleScene = false;
+
 	bool blockMovement = false; // ˆÚ“®‹Ö~ƒtƒ‰ƒO
 
 	bool ControllerMode = false;

@@ -176,6 +176,10 @@ void Title_Manager_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 	g_ShadowConfig.edgeSamples = 4;
 	g_ShadowConfig.thickness = 1.0f;
 	g_ShadowConfig.maxCastDist = 100.0f;
+
+	// グローバル変数を直接定義せず、Player3D のエクスポート関数を通じてフラグを設定
+	PLAYER* p = GetPlayer3D();
+	if (p) p->isTitleScene = true;
 }
 
 void Title_Manager_Finalize()
@@ -209,6 +213,8 @@ void Title_Manager_Update()
 		if(IsInputTrigger(EnterKey, gPad))
 		{
 			TitleAction_Start();
+			PLAYER* p = GetPlayer3D();
+			if (p) p->isTitleScene = false;
 		}
 
 		// Normal mode switching only when action hasn't started
