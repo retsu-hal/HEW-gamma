@@ -521,7 +521,7 @@ void PlayerModeSwitchManager_Update()
 		}
 	}
 
-
+	//test
 	// タイトルシーン中は Player3D::isTitleScene フラグで切り替えを禁止（早期リターン）
 	PLAYER* p3 = GetPlayer3D();
 	if (p3 && p3->isTitleScene)
