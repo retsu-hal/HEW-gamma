@@ -13,6 +13,7 @@
 #include	"fade.h"
 #include	"manager.h"
 #include	"SkyDome.h"
+#include "newKeyBind.h"
 
 #include	 <map>
 
@@ -205,7 +206,7 @@ void Title_Manager_Update()
 	// Check for Enter key to start title action (only if not already started)
 	if (!g_TitleActionStarted)
 	{
-		if (Keyboard_IsKeyDownTrigger(KK_ENTER))
+		if(IsInputTrigger(EnterKey, gPad))
 		{
 			TitleAction_Start();
 		}
