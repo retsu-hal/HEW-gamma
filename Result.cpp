@@ -5,6 +5,7 @@
 #include	"Result.h"
 #include "fade.h"
 #include "shader.h"
+#include"newKeyBind.h"
 
 //=========================================================================================================
 //グローバル変数
@@ -51,7 +52,7 @@ void Result_Update()
 	//キー入力チェック
 	//スタートボタンが押されたらシーンを切り替え
 	//フェード処理中はキーを受け付けない
-	if (Keyboard_IsKeyDownTrigger(KK_ENTER) && (GetFadeState() == FADE_NONE))
+	if (IsInputTrigger(EnterKey, gPad) && (GetFadeState() == FADE_NONE))
 	{
 		//フェードアウトさせてシーンを切り替える
 		XMFLOAT4	color(0.0f, 0.0f, 0.0f, 1.0f);

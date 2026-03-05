@@ -43,7 +43,7 @@ static ID3D11Texture2D* g_pShadowDepthTex = nullptr;
 static ID3D11DepthStencilView* g_pShadowDepthDSV = nullptr;
 
 XMFLOAT3 g_ShadowLightPos = XMFLOAT3(0.0f, 1.0f, 10.0f);//ライトの座標
-float g_ShadowRadius = 100.0f;//ライトの半径
+float g_ShadowRadius = 50.0f;//ライトの半径
 
 bool Direct3D_Initialize(HWND hWnd)
 {

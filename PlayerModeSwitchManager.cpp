@@ -59,14 +59,18 @@ static const auto TABKey = KK_TAB;
 // 2DâªÇ≈Ç´ÇÈÅuï«ÅvÇ©Ç«Ç§Ç©
 static bool Field_IsWall(FIELD t)
 {
-	switch (t)
+	if (GetScene() == SCENE_GAME)
 	{
-	case FIELD_OBJ_1:
-	case FIELD_WALL:
-		return true;
-	default:
-		return false;
+		switch (t)
+		{
+		case FIELD_OBJ_1:
+		case FIELD_WALL:
+			return true;
+		default:
+			return false;
+		}
 	}
+	return false;
 }
 
 //=========================================================================================================
