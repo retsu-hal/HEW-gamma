@@ -10,9 +10,9 @@
 #include "player3D.h"
 #include "FieldSeesaw.h"
 #include "FieldManhole.h"
-#include "manager.h"
 #include "FieldPortal.h"
-
+#include "FieldFountain.h"
+#include "manager.h"
 
 //=========================================================================================================
 // マクロ定義
@@ -169,6 +169,7 @@ void field_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 	Seesaw_Initialize();
 	Manhole_Initialize();
 	Portal_Initialize();
+	Fountain_Initialize();
 
 	// テクスチャ
 	TexMetadata metadata;
@@ -295,6 +296,7 @@ void field_Finalize(void)
 	Seesaw_Finalize();
 	Manhole_Finalize();
 	Portal_Finalize();
+	Fountain_Finalize();
 
 	g_MapData.clear();  // Clear the vector
 
@@ -328,6 +330,8 @@ void field_Update(void)
 	const float deltaTime = 1.0f / 60.0f;
 	Seesaw_UpdateAll(deltaTime);
 	Manhole_UpdateAll(deltaTime);
+	Fountain_UpdateAll(deltaTime);
+
 
 	for (size_t i = 0; i < g_MapData.size(); ++i)
 	{
@@ -358,12 +362,6 @@ void field_Update(void)
 		{
 			g_MapData[i].scale = XMFLOAT3(1.0f, 1.0f, 1.0f);
 			g_MapData[i].rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
-		}
-
-		else if (g_MapData[i].no == FIELD_FOUNTAIN)
-		{
-			g_MapData[i].scale = XMFLOAT3(0.005f, 0.005f, 0.005f);
-			g_MapData[i].rotate = XMFLOAT3(90.0f, 0.0f, 90.0f);
 		}
 
 		else if (g_MapData[i].no == FIELD_POLE)
@@ -435,6 +433,7 @@ void field_Draw(void)
 		Seesaw_DebugDraw();
 		Manhole_DebugDraw();
 		Portal_DebugDraw();
+		Fountain_DebugDraw();
 		});
 }
 
@@ -504,8 +503,19 @@ void Field_DrawShadowMap(const XMMATRIX& world, const XMMATRIX& matrix, int i)
 	if (g_MapData[i].no == FIELD_EMPTY_BOX)
 		return;
 
+	if (g_MapData[i].no == FIELD_FOUNTAIN)
+		return;
+
+	if (g_MapData[i].no == FIELD_PORTAL_K)
+		return;
+
+	if (g_MapData[i].no == FIELD_PORTAL_J)
+		return;
+
 	if (g_MapData[i].no == FIELD_OBJ_3)
 		return;
+
+
 	if (Model[g_MapData[i].no])
 	{
 		ModelDraw(Model[g_MapData[i].no]);
@@ -573,6 +583,7 @@ bool LoadMapFromFile(const char* filename)
 	Seesaw_ClearAll();
 	Manhole_ClearAll();
 	Portal_ClearAll();
+	Fountain_ClearAll();
 
 	// 追加: 読み込み開始時に初期位置をデフォルトへ
 	g_PlayerStartPos = XMFLOAT3(0.0f, 0.0f, 0.0f);
@@ -638,6 +649,17 @@ bool LoadMapFromFile(const char* filename)
 				continue;
 			}
 
+			if (c == 'F')
+			{
+				Fountain_Create(
+					(float)(x - 2),
+					(float)(y - 2),
+					(float)z,
+					g_MapData
+				);
+				continue;
+			}
+
 			FIELD type;
 			bool valid = true;
 
@@ -653,7 +675,6 @@ bool LoadMapFromFile(const char* filename)
 			case '3': type = FIELD_OBJ_3;    break;
 			case 'C': type = FIELD_BENCH;    break;
 			case 'D': type = FIELD_DUSTBOX;    break;
-			case 'F': type = FIELD_FOUNTAIN;    break;
 			case 'P': type = FIELD_POLE;    break;
 			case 'H': type = FIELD_FENCE;    break;
 			case '7': type = FIELD_STAGE_1;    break;
@@ -697,6 +718,7 @@ bool LoadMapFromFile(const char* filename)
 					data.rotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
 					g_MapData.push_back(data);
 				}
+
 
 				// ポータル入口（K）の mapIndex を登録
 				if (type == FIELD_PORTAL_K)

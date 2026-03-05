@@ -166,10 +166,24 @@ static bool FindPushableTarget(PUSH_TARGET* outT)
     PUSH_TARGET best{};
     best.fieldIndex = -1;
 
-    for (size_t i = 0; i < map.size(); ++i)
+    float maxDistSq = kPushMaxDist * kPushMaxDist;
+
+      for (size_t i = 0; i < map.size(); ++i)
     {
         const MAPDATA& m = map[i];
         if (!Field_IsPushable(m.no)) continue;
+
+        float dx = m.pos.x - rayO.x;
+        float dy = m.pos.y - rayO.y;
+        float dz = m.pos.z - rayO.z;
+        float distSq = dx * dx + dy * dy + dz * dz;
+
+        XMFLOAT3 half = Field_GetHalfSize(m);
+        float objRadius = sqrtf(half.x * half.x + half.y * half.y + half.z * half.z);
+        float threshold = kPushMaxDist + objRadius;
+
+        if (distSq > threshold * threshold)
+            continue;
 
         XMFLOAT3 normal;
         float t;
@@ -205,6 +219,8 @@ static bool CanObjectMove(int fieldIndex, const XMFLOAT3& moveDir, float moveAmo
     newPos.x += moveDir.x * moveAmount;
     newPos.z += moveDir.z * moveAmount;
 
+    float objMaxRadius = sqrtf(objHalf.x * objHalf.x + objHalf.y * objHalf.y + objHalf.z * objHalf.z);
+
     // Check collision with other solid objects
     for (size_t i = 0; i < map.size(); ++i)
     {
@@ -212,10 +228,23 @@ static bool CanObjectMove(int fieldIndex, const XMFLOAT3& moveDir, float moveAmo
 
         const MAPDATA& other = map[i];
 
-        // Skip non-solid objects
-        if (other.no == FIELD_GOAL) continue;
+        if (other.no == FIELD_GOAL || other.no == FIELD_STAGE_1 ||
+            other.no == FIELD_STAGE_2 || other.no == FIELD_STAGE_3 ||
+            other.no == FIELD_PORTAL_K || other.no == FIELD_PORTAL_J ||
+            other.no == FIELD_FOUNTAIN || other.no == FIELD_EMPTY_BOX)
+            continue;
+
 
         XMFLOAT3 otherHalf = Field_GetHalfSize(other);
+        float otherMaxRadius = sqrtf(otherHalf.x * otherHalf.x + otherHalf.y * otherHalf.y + otherHalf.z * otherHalf.z);
+
+        float distSq = (newPos.x - other.pos.x) * (newPos.x - other.pos.x) +
+            (newPos.y - other.pos.y) * (newPos.y - other.pos.y) +
+            (newPos.z - other.pos.z) * (newPos.z - other.pos.z);
+        float maxDist = objMaxRadius + otherMaxRadius;
+
+        if (distSq > maxDist * maxDist)
+            continue;
 
         // Simple AABB overlap check
         float dx = fabsf(newPos.x - other.pos.x);
@@ -272,6 +301,29 @@ void PlayerPushManager_Finalize()
     SAFE_RELEASE(g_BillBoardTexture);
     g_PushState = PUSH_STATE_NONE;
     g_CurrentTarget.fieldIndex = -1;
+}
+
+static bool IsTargetStillValid(int fieldIndex, float maxDist)
+{
+    PLAYER* p3 = GetPlayer3D();
+    if (!p3) return false;
+
+    std::vector<MAPDATA>& map = GetFieldMap();
+    if (fieldIndex < 0 || fieldIndex >= (int)map.size()) return false;
+
+    const MAPDATA& m = map[fieldIndex];
+    if (!Field_IsPushable(m.no)) return false;
+
+    XMFLOAT3 playerPos = p3->Position;
+    playerPos.y += Player3D_GetSolidHalfSize().y;
+
+    float dx = m.pos.x - playerPos.x;
+    float dy = m.pos.y - playerPos.y;
+    float dz = m.pos.z - playerPos.z;
+    float distSq = dx * dx + dy * dy + dz * dz;
+
+    float threshold = maxDist + 1.0f;
+    return distSq <= threshold * threshold;
 }
 
 void PlayerPushManager_Update()
@@ -358,12 +410,12 @@ void PlayerPushManager_Update()
         }
 
         // Verify target is still valid and in range
-        PUSH_TARGET newTarget;
-        if (!FindPushableTarget(&newTarget) || newTarget.fieldIndex != g_CurrentTarget.fieldIndex)
+        if (!IsTargetStillValid(g_CurrentTarget.fieldIndex, kPushMaxDist)) 
         {
             // Lost the target
             g_PushState = PUSH_STATE_NONE;
             g_CurrentTarget.fieldIndex = -1;
+            p3->isPushing = false;
             p3->CurrentAnimIndex = PLAYER_ANIM_IDLE;
             break;
         }

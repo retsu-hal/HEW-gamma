@@ -159,7 +159,7 @@
     <ClCompile Include="FieldPortal.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
-    <ClCompile Include="Switch_Light.cpp">
+    <ClCompile Include="FieldFountain.cpp">
       <Filter>ソースファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -299,7 +299,7 @@
     <ClInclude Include="FieldPortal.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
-    <ClInclude Include="Switch_Light.h">
+    <ClInclude Include="FieldFountain.h">
       <Filter>ヘッダーファイル</Filter>
     </ClInclude>
   </ItemGroup>

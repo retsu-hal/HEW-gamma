@@ -153,6 +153,7 @@
     <ClCompile Include="CollisionGeometry.cpp" />
     <ClCompile Include="CollisionState.cpp" />
     <ClCompile Include="controller.cpp" />
+    <ClCompile Include="FieldFountain.cpp" />
     <ClCompile Include="FieldPortal.cpp" />
     <ClCompile Include="Switch_Light.cpp" />
     <ClCompile Include="UtilDebug.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="Collision.h" />
     <ClInclude Include="controller.h" />
     <ClInclude Include="debug.h" />
+    <ClInclude Include="FieldFountain.h" />
     <ClInclude Include="FieldPortal.h" />
     <ClInclude Include="Switch_Light.h" />
     <ClInclude Include="UtilDebug.h" />

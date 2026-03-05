@@ -15,6 +15,7 @@ using namespace mu;
 
 #include "FieldSeesaw.h"
 #include "FieldPortal.h"
+#include "FieldFountain.h"
 
 
 
@@ -142,6 +143,7 @@ void Player3D_Update()
 
 	});
 
+	g_Player3D.fountainJumped = false;
 
 	if (!g_Player3D.Active) return;
 
@@ -256,7 +258,10 @@ void Player3D_Move()
 
 	if (IsInputTrigger(JumpKey, gPad))
 	{
-		g_Player3D.state = PLAYER_STATE_JUMP;
+		if (!g_Player3D.fountainJumped)
+		{
+			g_Player3D.state = PLAYER_STATE_JUMP;
+		}
 	}
 
 	MODEL* jumpModel = g_Player3D.Model[PLAYER_ANIM_JUMP];
@@ -693,7 +698,10 @@ void Player3D_Idle()
 {
 	if (IsInputTrigger(JumpKey, gPad))
 	{
-		g_Player3D.state = PLAYER_STATE_JUMP;
+		if (!g_Player3D.fountainJumped)
+		{
+			g_Player3D.state = PLAYER_STATE_JUMP;
+		}
 		return;
 	}
 
@@ -741,6 +749,12 @@ void Player3D_CheckGoal()
 		}
 
 		return; // ポータル処理後は Goal/Stage 判定をスキップ
+	}
+
+	if (hit.type == FIELD_FOUNTAIN)
+	{
+		Fountain_PlayerInteraction();
+		return;
 	}
 
 

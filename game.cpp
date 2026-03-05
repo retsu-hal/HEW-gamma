@@ -45,11 +45,11 @@ static bool LightMoved(const XMFLOAT3& a, const XMFLOAT3& b, float threshold = 0
 	return (dx * dx + dy * dy + dz * dz) > threshold * threshold;
 }
 
-// BGM管琁E
-static int g_Bgm3D = -1;  // 3Dモード�EBGM
-static int g_Bgm2D = -1;  // 2Dモード�EBGM
-static PLAYER_MODE g_PrevMode = MODE_3D;  // 前フレームのモーチE
-static const float CROSSFADE_DURATION = 2.0f;  // クロスフェード時間（秒！E
+// BGM邂｡逅・
+static int g_Bgm3D = -1;  // 3D繝｢繝ｼ繝峨・BGM
+static int g_Bgm2D = -1;  // 2D繝｢繝ｼ繝峨・BGM
+static PLAYER_MODE g_PrevMode = MODE_3D;  // 蜑阪ヵ繝ｬ繝ｼ繝縺ｮ繝｢繝ｼ繝・
+static const float CROSSFADE_DURATION = 2.0f;  // 繧ｯ繝ｭ繧ｹ繝輔ぉ繝ｼ繝画凾髢難ｼ育ｧ抵ｼ・
 
 
 static ID3D11Device* g_pDevice = nullptr;
@@ -140,22 +140,22 @@ void Game_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pContext)
 		LoadMapFromFile("asset\\MapData\\stage_select.txt");
 	}
 
-	// BGM初期匁E
-	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3Dモード�EBGMファイル名を持E��E
-	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2Dモード�EBGMファイル名を持E��E
+	// BGM蛻晄悄蛹・
+	g_Bgm3D = LoadAudio("asset/Audio/stage.wav");  // 3D繝｢繝ｼ繝峨・BGM繝輔ぃ繧､繝ｫ蜷阪ｒ謖・ｮ・
+	g_Bgm2D = LoadAudio("asset/Audio/stageR.wav");  // 2D繝｢繝ｼ繝峨・BGM繝輔ぃ繧､繝ｫ蜷阪ｒ謖・ｮ・
 
-	// 初期状態�E3DモードなのでBGM3Dを�E甁E
+	// 蛻晄悄迥ｶ諷九・3D繝｢繝ｼ繝峨↑縺ｮ縺ｧBGM3D繧貞・逕・
 	if (g_Bgm3D >= 0)
 	{
-		PlayAudio(g_Bgm3D, true);  // ループ�E甁E
+		PlayAudio(g_Bgm3D, true);  // 繝ｫ繝ｼ繝怜・逕・
 		SetAudioVolume(g_Bgm3D, 1.0f);
 	}
 
-	// 2Dモード�EBGMは無音で征E��E
+	// 2D繝｢繝ｼ繝峨・BGM縺ｯ辟｡髻ｳ縺ｧ蠕・ｩ・
 	if (g_Bgm2D >= 0)
 	{
-		PlayAudio(g_Bgm2D, true);  // ループ�E甁E
-		SetAudioVolume(g_Bgm2D, 0.0f);  // 無音
+		PlayAudio(g_Bgm2D, true);  // 繝ｫ繝ｼ繝怜・逕・
+		SetAudioVolume(g_Bgm2D, 0.0f);  // 辟｡髻ｳ
 	}
 
 	g_PrevMode = MODE_3D;
@@ -186,7 +186,7 @@ void Game_Finalize()
 	SAFE_RELEASE(g_Goal_2_Texture);
 	SAFE_RELEASE(g_Goal_3_Texture);
 
-	// BGM解放
+	// BGM隗｣謾ｾ
 	if (g_Bgm3D >= 0)
 	{
 		UnloadAudio(g_Bgm3D);
@@ -218,18 +218,18 @@ void Game_Finalize()
 
 void Game_Update()
 {
-	// BGM更新�E�フェード�E琁E��E
+	// BGM譖ｴ譁ｰ・医ヵ繧ｧ繝ｼ繝牙・逅・ｼ・
 	UpdateAudio();
 
-	// モード�Eり替え検�EとクロスフェーチE
+	// 繝｢繝ｼ繝牙・繧頑崛縺域､懷・縺ｨ繧ｯ繝ｭ繧ｹ繝輔ぉ繝ｼ繝・
 	PLAYER_MODE currentMode = PlayerModeSwitchManager_GetMode();
 
 	if (currentMode != g_PrevMode)
 	{
-		// モードが刁E��替わっぁE
+		// 繝｢繝ｼ繝峨′蛻・ｊ譖ｿ繧上▲縺・
 		if (currentMode == MODE_3D)
 		{
-			// 2DↁED刁E��替え！EDのBGMをフェードイン、EDのBGMをフェードアウチE
+			// 2D竊・D蛻・ｊ譖ｿ縺茨ｼ・D縺ｮBGM繧偵ヵ繧ｧ繝ｼ繝峨う繝ｳ縲・D縺ｮBGM繧偵ヵ繧ｧ繝ｼ繝峨い繧ｦ繝・
 			if (g_Bgm3D >= 0)
 			{
 				FadeInAudio(g_Bgm3D, CROSSFADE_DURATION, 1.0f);
@@ -241,7 +241,7 @@ void Game_Update()
 		}
 		else if (currentMode == MODE_2D)
 		{
-			// 3DↁED刁E��替え！EDのBGMをフェードイン、EDのBGMをフェードアウチE
+			// 3D竊・D蛻・ｊ譖ｿ縺茨ｼ・D縺ｮBGM繧偵ヵ繧ｧ繝ｼ繝峨う繝ｳ縲・D縺ｮBGM繧偵ヵ繧ｧ繝ｼ繝峨い繧ｦ繝・
 			if (g_Bgm2D >= 0)
 			{
 				FadeInAudio(g_Bgm2D, CROSSFADE_DURATION, 1.0f);
@@ -262,7 +262,7 @@ void Game_Update()
 	field_Update();
 	SkyDome_Update();
 
-	// モード�Eり替え�E更新は常に行う
+	// 繝｢繝ｼ繝牙・繧頑崛縺医・譖ｴ譁ｰ縺ｯ蟶ｸ縺ｫ陦後≧
 	PlayerModeSwitchManager_Update();
 	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
 	{
@@ -308,7 +308,7 @@ void Game_Update()
 
 
 #ifdef _DEBUG
-	if (Keyboard_IsKeyDownTrigger(KK_LEFTALT))// F1�L�[�Ńf�o�b�O���[�h�̃I���I�t�؂�ւ�
+	if (Keyboard_IsKeyDownTrigger(KK_LEFTALT))// F1キーでデバッグモードのオンオフ切り替え
 	{
 		g_2DPlayerDebugMode = !g_2DPlayerDebugMode;
 	}
@@ -318,13 +318,13 @@ void Game_Update()
 	if (!SwitchLight_IsLightMode())
 	{
 		if (PlayerModeSwitchManager_GetMode() == MODE_3D)
-		{// 3Dモード�E更新
+		{// 3D繝｢繝ｼ繝峨・譖ｴ譁ｰ
 			Player3D_Update();
 			Player3DCamera_Update();
 
 		}
 		else
-		{// 2Dモード�E更新
+		{// 2D繝｢繝ｼ繝峨・譖ｴ譁ｰ
 			Player2D_Update();
 			Player2DCamera_Update();
 
@@ -365,25 +365,27 @@ void Game_Draw()
 			XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, LightPos, lightRadius);
 			Shader_SetShadowMatrix(lightViewProj);
 
+		{
+			std::vector<MAPDATA>& Map = GetFieldMap();
+			float maxShadowDist = g_ShadowRadius;
+			float maxShadowDistSq = maxShadowDist * maxShadowDist;
+
+			float lx = LightPos.x;
+			float ly = LightPos.y;
+			float lz = LightPos.z;
 
 			{
-				XMMATRIX world = Light_GetWorldMatrix();
-				Light_DrawRaw(world, world * lightViewProj);
-			}
+				float dx = Map[i].pos.x - lx;
+				float dy = Map[i].pos.y - ly;
+				float dz = Map[i].pos.z - lz;
+				float distSq = dx * dx + dy * dy + dz * dz;
 
-			{
-				std::vector<MAPDATA>& Map = GetFieldMap();
-				float maxShadowDist = g_ShadowRadius;
+				if (distSq > maxShadowDistSq)
+					continue;
 
-				for (size_t i = 0; i < Map.size(); ++i)
-				{
-					XMVECTOR v = XMLoadFloat3(&Map[i].pos) - XMLoadFloat3(&LightPos);
-					if (XMVectorGetX(XMVector3LengthSq(v)) > maxShadowDist * maxShadowDist)
-						continue;
-
-					XMMATRIX world = Field_GetWorldMatrix((int)i);
-					Field_DrawShadowMap(world, world * lightViewProj, (int)i);
-				}
+				XMMATRIX world = Field_GetWorldMatrix((int)i);
+				Field_DrawShadowMap(world, world * lightViewProj, (int)i);
+			
 			}
 		}
 
