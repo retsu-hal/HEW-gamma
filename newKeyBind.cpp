@@ -16,6 +16,8 @@ InputKey ResetKey = { KK_R,			XINPUT_GAMEPAD_BACK };		//リセット
 InputKey MenuKey = { KK_ESCAPE,	XINPUT_GAMEPAD_START };		//メニュー
 InputKey LightKey = { KK_TAB,	XINPUT_GAMEPAD_Y };
 
+InputKey EnterKey = { KK_ENTER,	XINPUT_GAMEPAD_B };		//決定
+
 //押している時
 bool IsInputPress(const InputKey& key, const Controller& pad)
 {

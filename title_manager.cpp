@@ -13,6 +13,7 @@
 #include	"fade.h"
 #include	"manager.h"
 #include	"SkyDome.h"
+#include "newKeyBind.h"
 
 #include	 <map>
 
@@ -175,6 +176,10 @@ void Title_Manager_Initialize(ID3D11Device* pDevice, ID3D11DeviceContext* pConte
 	g_ShadowConfig.edgeSamples = 4;
 	g_ShadowConfig.thickness = 1.0f;
 	g_ShadowConfig.maxCastDist = 100.0f;
+
+	// グローバル変数を直接定義せず、Player3D のエクスポート関数を通じてフラグを設定
+	PLAYER* p = GetPlayer3D();
+	if (p) p->isTitleScene = true;
 }
 
 void Title_Manager_Finalize()
@@ -205,9 +210,11 @@ void Title_Manager_Update()
 	// Check for Enter key to start title action (only if not already started)
 	if (!g_TitleActionStarted)
 	{
-		if (Keyboard_IsKeyDownTrigger(KK_ENTER))
+		if(IsInputTrigger(EnterKey, gPad))
 		{
 			TitleAction_Start();
+			PLAYER* p = GetPlayer3D();
+			if (p) p->isTitleScene = false;
 		}
 
 		// Normal mode switching only when action hasn't started

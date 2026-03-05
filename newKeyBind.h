@@ -13,6 +13,7 @@ extern InputKey ChangeKey;
 extern InputKey ResetKey;
 extern InputKey MenuKey;
 extern InputKey LightKey;
+extern InputKey EnterKey;
 
 bool IsInputTrigger(const InputKey& key, const Controller& controller);	//‰Ÿ‚³‚ê‚½Žž
 

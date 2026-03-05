@@ -344,7 +344,7 @@ void Game_Update()
 
 
 void Game_Draw()
-{ 
+{
 	Camera_Draw();
 
 	g_BallLight.SetEnable(TRUE);
@@ -354,7 +354,7 @@ void Game_Draw()
 	XMFLOAT3 lightPos = GetLight_Position();
 	float lightRadius = g_ShadowRadius;
 
-	if (g_ShadowDirty || LightMoved(LightPos, g_LastShadowLightPos))
+	//if (g_ShadowDirty || LightMoved(LightPos, g_LastShadowLightPos))
 	{
 		for (int face = 0; face < 6; face++)
 		{
@@ -365,110 +365,108 @@ void Game_Draw()
 			XMMATRIX lightViewProj = Direct3D_GetCubemapFaceViewProj(face, LightPos, lightRadius);
 			Shader_SetShadowMatrix(lightViewProj);
 
-		{
-			std::vector<MAPDATA>& Map = GetFieldMap();
-			float maxShadowDist = g_ShadowRadius;
-			float maxShadowDistSq = maxShadowDist * maxShadowDist;
-
-			float lx = LightPos.x;
-			float ly = LightPos.y;
-			float lz = LightPos.z;
-
 			{
-				float dx = Map[i].pos.x - lx;
-				float dy = Map[i].pos.y - ly;
-				float dz = Map[i].pos.z - lz;
-				float distSq = dx * dx + dy * dy + dz * dz;
+				std::vector<MAPDATA>& Map = GetFieldMap();
+				float maxShadowDist = g_ShadowRadius;
+				float maxShadowDistSq = maxShadowDist * maxShadowDist;
+				float lx = LightPos.x, ly = LightPos.y, lz = LightPos.z;
 
-				if (distSq > maxShadowDistSq)
-					continue;
+				for (size_t i = 0; i < Map.size(); ++i)
+				{
+					float dx = Map[i].pos.x - lx;
+					float dy = Map[i].pos.y - ly;
+					float dz = Map[i].pos.z - lz;
+					if (dx * dx + dy * dy + dz * dz > maxShadowDistSq)
+						continue;
 
-				XMMATRIX world = Field_GetWorldMatrix((int)i);
-				Field_DrawShadowMap(world, world * lightViewProj, (int)i);
-			
+					XMMATRIX world = Field_GetWorldMatrix((int)i);
+					Field_DrawShadowMap(world, world * lightViewProj, (int)i);
+				}
 			}
-		}
 
-		Direct3D_EndShadowPass();
+			Direct3D_EndShadowPass();
+		}
 		g_LastShadowLightPos = LightPos;
 		g_ShadowDirty = false;
 	}
-			
-	Shader_Begin();
-	Shader_SetLight(g_BallLight.Light);
-	Shader_SetShadowMap(g_pShadowCubemapSRV);
-	Shader_SetShadowSampler(g_pShadowSamplerState);
-	Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 0.0f);
 
-	{
-		SkyDome_Draw();
-	}
-	{
-		field_Draw();
-	}
 
-	if (PlayerModeSwitchManager_GetMode() == MODE_3D)
-	{
+		Shader_Begin();
+		Shader_SetLight(g_BallLight.Light);
+		Shader_SetShadowMap(g_pShadowCubemapSRV);
+		Shader_SetShadowSampler(g_pShadowSamplerState);
+		Shader_SetShadowLightData(LightPos, lightRadius, 1.0f, 0.0f);
+
+		{
+			SkyDome_Draw();
+		}
+		{
+			field_Draw();
+		}
+
+		if (PlayerModeSwitchManager_GetMode() == MODE_3D)
+		{
+			g_BallLight.SetEnable(FALSE);
+			Shader_SetLight(g_BallLight.Light);
+
+
+			Player3D_Draw();
+			PlayerPushManager_Draw();
+			PlayerModeSwitchManager_Draw();
+			g_BallLight.SetEnable(TRUE);
+			Shader_SetLight(g_BallLight.Light);
+		}
+		else
+		{
+
+			Player2D_Draw();
+
+		}
+
+		// ===== UNBIND shadow map and DISABLE light before SkyDome =====
+
 		g_BallLight.SetEnable(FALSE);
 		Shader_SetLight(g_BallLight.Light);
 
 
-		Player3D_Draw();
-		PlayerPushManager_Draw();
-		PlayerModeSwitchManager_Draw();
-		g_BallLight.SetEnable(TRUE);
-		Shader_SetLight(g_BallLight.Light);
-	}
-	else
-	{
-		
-		Player2D_Draw();
-	
-	}
+		DEBUG_IMGUI_BEGIN({
+			Collision_DebugDraw();
+			});
 
-	// ===== UNBIND shadow map and DISABLE light before SkyDome =====
 
-	g_BallLight.SetEnable(FALSE);
-	Shader_SetLight(g_BallLight.Light);
-	
 
-	DEBUG_IMGUI_BEGIN({
-		Collision_DebugDraw();
-		});
-
-	
-
-	for (const auto& mapData : GetFieldMap())
-	{
-
-		if (mapData.no == FIELD_STAGE_1)
+		for (const auto& mapData : GetFieldMap())
 		{
-			g_pContext->PSSetShaderResources(0, 1, &g_Goal_1_Texture);
 
-			XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
-			XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-			DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
-		}
-		if (mapData.no == FIELD_STAGE_2)
-		{
-			g_pContext->PSSetShaderResources(0, 1, &g_Goal_2_Texture);
+			if (mapData.no == FIELD_STAGE_1)
+			{
+				g_pContext->PSSetShaderResources(0, 1, &g_Goal_1_Texture);
 
-			XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
-			XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-			DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
-		}
-		if (mapData.no == FIELD_STAGE_3)
-		{
-			g_pContext->PSSetShaderResources(0, 1, &g_Goal_3_Texture);
+				XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
+				XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+				DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
+			}
+			if (mapData.no == FIELD_STAGE_2)
+			{
+				g_pContext->PSSetShaderResources(0, 1, &g_Goal_2_Texture);
 
-			XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
-			XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-			DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
+				XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
+				XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+				DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
+			}
+			if (mapData.no == FIELD_STAGE_3)
+			{
+				g_pContext->PSSetShaderResources(0, 1, &g_Goal_3_Texture);
+
+				XMFLOAT2 size = { 1.0f, 1.0f };  // Billboard size
+				XMFLOAT4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+				DrawBillBoard({ mapData.pos.x ,mapData.pos.y + 2.0f,mapData.pos.z }, size, color, 0, 1, 1);
+			}
 		}
-	}
-	SwitchLight_Draw();
+		SwitchLight_Draw();
+
+
+		SetDepthTest(FALSE);
 	
-
-	SetDepthTest(FALSE);
 }
 

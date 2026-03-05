@@ -315,9 +315,9 @@ void Player3D_Move()
 		if (fabsf(lx) < deadzone) lx = 0.0f;
 		if (fabsf(ly) < deadzone) ly = 0.0f;
 
-		padDir.x = -lx;
+		padDir.x = lx;
 		padDir.y = 0.0f;
-		padDir.z = -ly;
+		padDir.z = ly;
 
 		if (Length2D(padDir) > 1e-6f)
 			padActive = true;

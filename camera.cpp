@@ -8,6 +8,7 @@
 #include "UtilMath.h"
 #include "LightSource.h"
 #include "Switch_Light.h"
+#include "Input.h" // 追加: Controller のグローバル gPad を使う
 
 #include <iostream>
 
@@ -48,6 +49,10 @@ static float    gFollowLerp = 0.15f;               // 追従補間（0..1）
 // マウス感度
 static float g_MouseSensYaw = 1.0f;
 static float g_MouseSensPitch = 1.0f;
+
+// コントローラ（右スティック）感度（追加）
+static float g_ControllerSensYaw = 2.5f;
+static float g_ControllerSensPitch = 2.5f;
 
 //---------------------------------------------------------------------------------------------------------
 // 2Dカメラ（固定Yawで追従）
@@ -255,6 +260,32 @@ void Player3DCamera_Update()
 		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
 	}
 
+	// 追加: コントローラーの右スティックでもカメラを操作
+	// gPad は Input.h で宣言されたグローバル (Controller gPad) を利用
+	if (gPad.IsConnected())
+	{
+		float rsx = 0.0f;
+		float rsy = 0.0f;
+		// 既存コードで Left スティックが使われているので、Right スティックは同様の命名と思われるメソッドを使用
+		// Controller 実装に合わせて関数名が違う場合はここを修正してください
+		rsx = gPad.GetRightStickX();
+		rsy = gPad.GetRightStickY();
+
+		// デッドゾーン処理（微小入力を無視）
+		const float deadzone = 0.20f;
+		if (fabsf(rsx) < deadzone) rsx = 0.0f;
+		if (fabsf(rsy) < deadzone) rsy = 0.0f;
+
+		if (fabsf(rsx) > 1e-6f || fabsf(rsy) > 1e-6f)
+		{
+			gYawDeg += rsx * g_ControllerSensYaw;
+			gPitchDeg -= rsy * g_ControllerSensPitch;
+
+			if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+			if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+		}
+	}
+
 	// ホイールズーム（距離制御）
 	const float zoomSpeed = 0.06f;
 	const float minDistance = 2.5f;
@@ -414,6 +445,24 @@ void Player2DCamera_DebugUpdate()
 		gPitchDeg -= msLocal.y * 1.0f;
 		if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
 		if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+	}
+
+	// 追加: デバッグ時は右スティックでも操作可能
+	if (gPad.IsConnected())
+	{
+		float rsx = gPad.GetRightStickX();
+		float rsy = gPad.GetRightStickY();
+		const float deadzone = 0.20f;
+		if (fabsf(rsx) < deadzone) rsx = 0.0f;
+		if (fabsf(rsy) < deadzone) rsy = 0.0f;
+
+		if (fabsf(rsx) > 1e-6f || fabsf(rsy) > 1e-6f)
+		{
+			gYawDeg += rsx * g_ControllerSensYaw;
+			gPitchDeg -= rsy * g_ControllerSensPitch;
+			if (gPitchDeg < kPitchMin) gPitchDeg = kPitchMin;
+			if (gPitchDeg > kPitchMax) gPitchDeg = kPitchMax;
+		}
 	}
 
 	XMFLOAT3 playerPos = GetPlayer2DPosition();

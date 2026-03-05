@@ -211,8 +211,8 @@ void SwitchLight_Update(void)
 
 	XMFLOAT3 inputDir(0.0f, 0.0f, 0.0f);
 
-	if (IsInputPress(UpKey, gPad))    inputDir.z += 1.0f;
-	if (IsInputPress(DownKey, gPad))  inputDir.z -= 1.0f;
+	if (IsInputPress(UpKey, gPad))    inputDir.y += 1.0f;
+	if (IsInputPress(DownKey, gPad))  inputDir.y -= 1.0f;
 	if (IsInputPress(RightKey, gPad)) inputDir.x += 1.0f;
 	if (IsInputPress(LeftKey, gPad))  inputDir.x -= 1.0f;
 
